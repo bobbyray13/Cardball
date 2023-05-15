@@ -49,16 +49,16 @@ app:
   - Use the GameContext to access the game state and game dispatch methods.
   - Set up the game:
     - Prompt the user to enter names for both teams and select which team will be Home and Away.
-  = Initialize the draft:
-  - Load the player database from ./assets/PlayerDatabase.csv.
-  - Display the list of available players.
-  - Start the draft with the Away team.
-  - Until each team has one player for each required position (C, 1B, 2B, 3B, SS, LF, CF, RF, DH, P):
-    - Prompt the user to select a player for the team that is currently selecting.
-    - Remove the selected player from the list of available players.
-    - Alternate turns between the teams.
-  - Prompt the user to set the lineup order for each team and assign the starting positions.
-  - When the user submits the lineups, display both lineups.
+  - Initialize the draft:
+    - Load the player database from ./assets/PlayerDatabase.csv.
+    - Display the list of available players.
+    - Start the draft with the Away team.
+    - Until each team has one player for each required position (C, 1B, 2B, 3B, SS, LF, CF, RF, DH, P):
+      - Prompt the user to select a player for the team that is currently selecting.
+      - Remove the selected player from the list of available players.
+      - Alternate turns between the teams.
+    - Prompt the user to set the lineup order for each team and assign the starting positions.
+    - When the user submits the lineups, display both lineups.
   - Start the game by initializing the game state.
   - Display the players for each team.
   - Display the game state using the Game component.

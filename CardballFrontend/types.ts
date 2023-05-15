@@ -1,4 +1,16 @@
 // types.ts
+
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
+export type RootStackParamList = {
+  Home: undefined;
+  Draft: undefined;
+};
+
+export type HomeComponentProps = {
+  navigation: NativeStackNavigationProp<RootStackParamList, 'Home'>;
+}
+
 interface Player {
     id: number;
     name: string;
@@ -7,7 +19,7 @@ interface Player {
     skills: Skills;
   }
   
-  interface Team {
+export interface Team {
     id: number;
     name: string;
     players: Player[];
