@@ -1,0 +1,244 @@
+game:
+  description: The main game loop
+  steps:
+    - initialize_game() # Initialize the game with the given teams and set up initial parameters like innings and score.
+    - for each inning:
+      - play_inning_half_top(awayTeam, homeTeam) # Away team is onOffense in the top of the inning
+      - play_inning_half_bottom(homeTeam, awayTeam) # Home team is onOffense in the bottom of the inning
+      - check_if_game_is_over() # checks scores; if game is tied after 9 innings, play another inning; else, declare the leading team as the winner and end the game
+    - if game is not over after 9 innings, continue to next inning
+
+play_inning_half(onOffense, onDefense):
+  - initialize_inning() # set outs to 0
+  - while outs < 3:
+    - play_atBat(onOffense, onDefense)
+  - switch_team_roles()
+
+GameContextProvider:
+  description: The main context provider for the game, managing and providing game state to other components.
+  actions:
+    - initializeGame(): # Initialize the game state, such as loading teams and players from a database or an API.
+    - playInningHalf(onOffense, onDefense): # Play half an inning of the game, managing actions such as at-bats, runs, and outs.
+    - checkIfGameIsOver(): # Check if the game is over according to the game rules (e.g., a certain score or number of innings have been reached).
+    - incrementOuts(): # Increment the number of outs in the current half-inning.
+    - endHalfInning(): # End the current half-inning and prepare for the next one.
+    - incrementInningNumber(): # Increment the current inning number.
+    - addRunToScore(): # Add a run to the score of the team that is currently up to bat.
+    - substitutePlayer(): # Substitute one player for another, possibly with conditions such as the same position.
+    - switchRole(): # Switch the roles of the teams (i.e., the team that is up to bat becomes on defense, and vice versa).
+    - pitchRoll(): # Perform a "pitch roll" to determine the outcome of a pitch.
+    - swingRoll(): # Perform a "swing roll" to determine the outcome of a swing.
+    - stealBase(): # Attempt to steal a base, with a success or failure outcome.
+    - playAtBat(): # Play an "at bat", which could include multiple pitches and swings, and possibly result in a hit or an out.
+
+  properties:
+    - game: # The state of the game, including the score, the inning number, and which team is up to bat.
+    - inning: # The state of the current inning, including the number of outs and which half (top or bottom) it is.
+    - teams: # The teams playing in the game, including their players and scores.
+    - players: # All players in the game, including their stats and current positions.
+    - atBat: # The state of the current "at bat", including the batter and pitcher and the number of strikes, balls, and fouls.
+
+  steps:
+    - Initialize the game when the component is first rendered using the useEffect hook and the initializeGame() function.
+    - Provide the game state and the game action functions to child components using the GameContext.Provider component. The state and functions can then be accessed by child components using the useContext hook with GameContext.
+
+app:
+  description: The main application component
+  steps:
+  - Render the GameProvider to provide access to the game state across the entire application.
+  - Use the GameContext to access the game state and game dispatch methods.
+  - Set up the game:
+    - Prompt the user to enter names for both teams and select which team will be Home and Away.
+  = Initialize the draft:
+  - Load the player database from ./assets/PlayerDatabase.csv.
+  - Display the list of available players.
+  - Start the draft with the Away team.
+  - Until each team has one player for each required position (C, 1B, 2B, 3B, SS, LF, CF, RF, DH, P):
+    - Prompt the user to select a player for the team that is currently selecting.
+    - Remove the selected player from the list of available players.
+    - Alternate turns between the teams.
+  - Prompt the user to set the lineup order for each team and assign the starting positions.
+  - When the user submits the lineups, display both lineups.
+  - Start the game by initializing the game state.
+  - Display the players for each team.
+  - Display the game state using the Game component.
+  - Display team information using the Team components.
+  - Display player information using the Player components.
+  - Display inning information using the Inning component.
+  - Use the GameScreen component to render the game on the screen. This component will change depending on the game state (HomeScreen for game initialization, GameScreen for ongoing game).
+  - Handle user interactions like player substitution, base stealing, and batting using the AtBat component.
+  - Use the useEffect hook to update the game state as the game progresses. This could involve updating the score, inning, outs, and other game-related information.
+  - Handle errors and display error messages to the user.
+  - Handle game end scenario and display appropriate message to the user.
+
+inning:
+  description: An inning in the game
+  properties:
+    - number: # The current inning number, incremented after both the top and bottom halves are completed.
+    - outs: (0-3) # Represents the number of outs in the current half of the inning.
+    - half:
+      -top
+      -bottom
+  actions:
+    - increment_outs(): # Increment the number of outs by 1. If outs reach 3, end the current half of the inning.
+      - if outs < 3:
+        - outs += 1
+      - else:
+        - end_half_inning()
+    - end_half_inning(): # Switch the top and bottom halves, and switch team roles.
+      - if top:
+        - top = false
+        - bottom = true
+        - homeTeam.role = onOffense
+        - awayTeam.role = onDefense
+      - else:
+        - bottom = false
+        - top = true
+        - increment_inning_number()
+        - homeTeam.role = onDefense
+        - awayTeam.role = onOffense
+    - increment_inning_number(): # if the bottom of an inning just ended, increase the inning number by 1
+      - number += 1
+
+team:
+  description: A team in the game
+  properties:
+    - name
+    - players
+    - lineup # the order in which the playerType players become upToBat
+    - score # number of runs the team has scored cumulatively in the game
+    - role: (onOffense or onDefense) # role changes after each half-inning
+  actions:
+    - add_run_to_score()
+    - substitute_player() # user can substitute players before each atBat
+    - steal_base() # user can instruct a player who is onBase to steal a base before each atBat. That player becomes upToSteal
+    - switch_role(): # Switches the role of the team between onOffense and onDefense
+      - if role = onOffense:
+        - role = onDefense
+      - else:
+        - role = onOffense
+
+
+player:
+  description: A player on a team
+  playerType:
+    - batter
+    - pitcher
+  properties:
+    - name
+    - position # defensive position
+      - C # Catcher
+      - 1B # First Base
+      - 2B # Second Base
+      - 3B # Third Base
+      - SS # Short Stop
+      - LF # Left Field
+      - CF # Center Field
+      - RF # Right Field
+      - DH # Designated Hitter
+      - P # Pitcher
+      - BN # Bench (up to 10 players on the bench at the same time)
+    - role: (upToBat, upToPitch, upToSteal, upToDefend, onBase, onBench)
+      # The role determines the player's current activity during the game:
+      # upToBat: The player is currently batting
+      # upToPitch: The player is currently pitching
+      # upToSteal: The player is attempting to steal a base
+      # upToDefend: The player is fielding a ball
+      # onBase: The player is occupying a base but not currently stealing
+      # onBench: The player is on the bench
+    - skills:
+      - bat_skill # skill modifier for swing roll when batting
+      - pit_skill # skill modifier for pitch roll when pitching
+      - pow_skill # skill modifier for contact roll when batting
+      - run_skill # skill modifier for steal roll when stealing a base
+      - fld_skill # skill modifier for defense roll when fielding a ball
+  actions:
+    - pitch_roll() # action for pitching
+    - swing_roll() # action for batting
+    - contact_roll() # action for batting
+    - direction_roll() # action for batting
+    - steal_roll() # action for attempting to steal a base
+    - throw_roll() # action for fielding a ball
+
+base:
+  description: A base on the field
+  properties:
+    - isOccupied
+  types:
+    - first
+    - second
+    - third
+    - home
+
+atBat:
+  description: A player's turn at bat
+  steps:
+    - upToBat_steps_up() # the next player in the lineup of upTeam becomes upToBat
+    - print_game_state() # display score, number of outs, inning and top or bottom, who is upToBat, who is upToPitch, whether 1st, 2nd or 3rd base is occupied and if so, by who
+    - if user wants to substitute a player:
+      - display_in_game_players() # display a list of players who are currently in the game
+      - user_selects_player_to_sub_out() # user selects a player to substitute out
+      - display_bench_players() # display a list of players on the bench who share a playerType with the player to be substituted out
+      - user_selects_player_to_sub_in() # user selects a player from the bench to substitute in
+      - substitute_player(): 
+        - player_to_sub_out goes to bench
+        - player_to_sub_in replaces player_to_sub_out's position
+      - print_game_state() # same as above
+      - if user wants to substitute a player:
+        - repeat substitution process
+      - else:
+        - resume game with atBat()
+    - if user wants to steal a base and conditions permit:
+      - steal_base() # user can instruct a baserunner to steal a base before each atBat
+      - upToSteal_performs_steal_roll() # baserunner makes a "Steal Roll" by rolling a 6-sided dice and adding their run_skill modifier
+      - upToDefend_performs_throw_roll() # the player who is currently inPlay(C) on the team who is onDefense becomes upToDefend and makes a "Throw Roll" which is a 6-sided dice roll plus their fld_skill
+      - if steal roll >= throw roll:
+        - upToSteal_is_safe() # the upToSteal now occupies the next base
+      - else:
+        - upToSteal_is_out() # the upToSteal is out and they are no longer on base
+        - increment_outs() # increment the count of outs
+    - pitching_performs_pitch_roll() # Player who is Pitching makes a "Pitch Roll" by rolling a 6-sided dice and adding their pit_skill modifier
+    - upToBat_performs_swing_roll() # Player who is up to Bat makes a "Swing Roll" by rolling a 6-sided dice and adding their bat_skill modifier
+    - if upToBat's roll > upToPitch's roll (contact):
+      - upToBat_performs_contact_roll() # upToBat rolls a 20-sided dice and adds their pow_skill modifier (power roll) and a 6-sided dice (direction roll)
+      - determine_upToDefend_based_on_roll():
+        - if direction roll is 1, upToDefend is either 3B or LF, based on highest fld_skill
+        - if direction roll is 2, upToDefend is either SS, 3B, LF, or CF, based on highest fld_skill
+        - if direction roll is 3, upToDefend is either SS or CF, based on highest fld_skill
+        - if direction roll is 4, upToDefend is either 2B or CF, based on highest fld_skill
+        - if direction roll is 5, upToDefend is either 2B, 1B, CF, or RF, based on highest fld_skill
+        - if direction roll is 6, upToDefend is either 1B or RF, based on highest fld_skill
+        - if power roll total is 11 or higher, upToDefend is either LF, CF, or RF, based on highest fld_skill
+        - if power roll total is 10 or lower, upToDefend is either 3B, SS, 2B, or 1B, based on highest fld_skill
+        - if multiple players have the same highest fld_skill, choose one at random
+      - uptoDefend_performs_throw_roll() # designated defender rolls a 20-sided dice and adds their fld_skill modifier (fielding roll)
+      - if upToDefend's roll is higher than upToBat's power roll:
+        - upToBat_is_out()
+        - increment_outs() # increment the count of outs
+      - else:
+        - determine_type_of_hit_based_on_upToBat_roll()
+        - advance_runners()
+        - if runner_reaches_home_base, add_run_to_team_score()
+    - if upToBat's roll < upToPitch's roll (no contact):
+      - count_as_strikeout()
+      - increment_outs() # increment the count of outs
+    - if upToBat's roll = upToPitch's roll (tie):
+      - count_as_foul()
+    - if three_fouls_in_a_row, count_as_walk()
+
+# Possible types of hits:
+# - single
+# - double
+# - triple
+# - home run
+
+# Possible outcomes of an at-bat:
+# - hit
+# - strikeout
+# - foul ball
+# - walk
+
+# Possible outcomes of a game:
+# - win
+# - loss
+# - tie

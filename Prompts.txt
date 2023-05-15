@@ -1,0 +1,531 @@
+You are a world class react native expo developer working in Windows. You write clean, elegant typescript with excellent user interface and beautiful layouts. You carefully follow and update pseudocode in pseudocode.yaml and typescript types in types.ts. Your applications work and look equally well on Android, iOS, and web browsers. You test your applications using the Expo Go app on an android mobile device.
+We are developing a text based baseball game with python/flask back end and typescript front end.
+
+---------------------------------------------------
+
+pseudocode.yaml:
+game:
+  description: The main game loop
+  steps:
+    - initialize_game() # Initialize the game with the given teams and set up initial parameters like innings and score.
+    - for each inning:
+      - play_inning_half_top(awayTeam, homeTeam) # Away team is onOffense in the top of the inning
+      - play_inning_half_bottom(homeTeam, awayTeam) # Home team is onOffense in the bottom of the inning
+      - check_if_game_is_over() # checks scores; if game is tied after 9 innings, play another inning; else, declare the leading team as the winner and end the game
+    - if game is not over after 9 innings, continue to next inning
+
+play_inning_half(onOffense, onDefense):
+  - initialize_inning() # set outs to 0
+  - while outs < 3:
+    - play_atBat(onOffense, onDefense)
+  - switch_team_roles()
+
+GameContextProvider:
+  description: The main context provider for the game, managing and providing game state to other components.
+  actions:
+    - initializeGame(): # Initialize the game state, such as loading teams and players from a database or an API.
+    - playInningHalf(onOffense, onDefense): # Play half an inning of the game, managing actions such as at-bats, runs, and outs.
+    - checkIfGameIsOver(): # Check if the game is over according to the game rules (e.g., a certain score or number of innings have been reached).
+    - incrementOuts(): # Increment the number of outs in the current half-inning.
+    - endHalfInning(): # End the current half-inning and prepare for the next one.
+    - incrementInningNumber(): # Increment the current inning number.
+    - addRunToScore(): # Add a run to the score of the team that is currently up to bat.
+    - substitutePlayer(): # Substitute one player for another, possibly with conditions such as the same position.
+    - switchRole(): # Switch the roles of the teams (i.e., the team that is up to bat becomes on defense, and vice versa).
+    - pitchRoll(): # Perform a "pitch roll" to determine the outcome of a pitch.
+    - swingRoll(): # Perform a "swing roll" to determine the outcome of a swing.
+    - stealBase(): # Attempt to steal a base, with a success or failure outcome.
+    - playAtBat(): # Play an "at bat", which could include multiple pitches and swings, and possibly result in a hit or an out.
+
+  properties:
+    - game: # The state of the game, including the score, the inning number, and which team is up to bat.
+    - inning: # The state of the current inning, including the number of outs and which half (top or bottom) it is.
+    - teams: # The teams playing in the game, including their players and scores.
+    - players: # All players in the game, including their stats and current positions.
+    - atBat: # The state of the current "at bat", including the batter and pitcher and the number of strikes, balls, and fouls.
+
+  steps:
+    - Initialize the game when the component is first rendered using the useEffect hook and the initializeGame() function.
+    - Provide the game state and the game action functions to child components using the GameContext.Provider component. The state and functions can then be accessed by child components using the useContext hook with GameContext.
+
+app:
+  description: The main application component
+  steps:
+  - Render the GameProvider to provide access to the game state across the entire application.
+  - Use the GameContext to access the game state and game dispatch methods.
+  - Set up the game:
+    - Prompt the user to enter names for both teams and select which team will be Home and Away.
+  = Initialize the draft:
+  - Load the player database from ./assets/PlayerDatabase.csv.
+  - Display the list of available players.
+  - Start the draft with the Away team.
+  - Until each team has one player for each required position (C, 1B, 2B, 3B, SS, LF, CF, RF, DH, P):
+    - Prompt the user to select a player for the team that is currently selecting.
+    - Remove the selected player from the list of available players.
+    - Alternate turns between the teams.
+  - Prompt the user to set the lineup order for each team and assign the starting positions.
+  - When the user submits the lineups, display both lineups.
+  - Start the game by initializing the game state.
+  - Display the players for each team.
+  - Display the game state using the Game component.
+  - Display team information using the Team components.
+  - Display player information using the Player components.
+  - Display inning information using the Inning component.
+  - Use the GameScreen component to render the game on the screen. This component will change depending on the game state (HomeScreen for game initialization, GameScreen for ongoing game).
+  - Handle user interactions like player substitution, base stealing, and batting using the AtBat component.
+  - Use the useEffect hook to update the game state as the game progresses. This could involve updating the score, inning, outs, and other game-related information.
+  - Handle errors and display error messages to the user.
+  - Handle game end scenario and display appropriate message to the user.
+
+inning:
+  description: An inning in the game
+  properties:
+    - number: # The current inning number, incremented after both the top and bottom halves are completed.
+    - outs: (0-3) # Represents the number of outs in the current half of the inning.
+    - half:
+      -top
+      -bottom
+  actions:
+    - increment_outs(): # Increment the number of outs by 1. If outs reach 3, end the current half of the inning.
+      - if outs < 3:
+        - outs += 1
+      - else:
+        - end_half_inning()
+    - end_half_inning(): # Switch the top and bottom halves, and switch team roles.
+      - if top:
+        - top = false
+        - bottom = true
+        - homeTeam.role = onOffense
+        - awayTeam.role = onDefense
+      - else:
+        - bottom = false
+        - top = true
+        - increment_inning_number()
+        - homeTeam.role = onDefense
+        - awayTeam.role = onOffense
+    - increment_inning_number(): # if the bottom of an inning just ended, increase the inning number by 1
+      - number += 1
+
+team:
+  description: A team in the game
+  properties:
+    - name
+    - players
+    - lineup # the order in which the playerType players become upToBat
+    - score # number of runs the team has scored cumulatively in the game
+    - role: (onOffense or onDefense) # role changes after each half-inning
+  actions:
+    - add_run_to_score()
+    - substitute_player() # user can substitute players before each atBat
+    - steal_base() # user can instruct a player who is onBase to steal a base before each atBat. That player becomes upToSteal
+    - switch_role(): # Switches the role of the team between onOffense and onDefense
+      - if role = onOffense:
+        - role = onDefense
+      - else:
+        - role = onOffense
+
+
+player:
+  description: A player on a team
+  playerType:
+    - batter
+    - pitcher
+  properties:
+    - name
+    - position # defensive position
+      - C # Catcher
+      - 1B # First Base
+      - 2B # Second Base
+      - 3B # Third Base
+      - SS # Short Stop
+      - LF # Left Field
+      - CF # Center Field
+      - RF # Right Field
+      - DH # Designated Hitter
+      - P # Pitcher
+      - BN # Bench (up to 10 players on the bench at the same time)
+    - role: (upToBat, upToPitch, upToSteal, upToDefend, onBase, onBench)
+      # The role determines the player's current activity during the game:
+      # upToBat: The player is currently batting
+      # upToPitch: The player is currently pitching
+      # upToSteal: The player is attempting to steal a base
+      # upToDefend: The player is fielding a ball
+      # onBase: The player is occupying a base but not currently stealing
+      # onBench: The player is on the bench
+    - skills:
+      - bat_skill # skill modifier for swing roll when batting
+      - pit_skill # skill modifier for pitch roll when pitching
+      - pow_skill # skill modifier for contact roll when batting
+      - run_skill # skill modifier for steal roll when stealing a base
+      - fld_skill # skill modifier for defense roll when fielding a ball
+  actions:
+    - pitch_roll() # action for pitching
+    - swing_roll() # action for batting
+    - contact_roll() # action for batting
+    - direction_roll() # action for batting
+    - steal_roll() # action for attempting to steal a base
+    - throw_roll() # action for fielding a ball
+
+base:
+  description: A base on the field
+  properties:
+    - isOccupied
+  types:
+    - first
+    - second
+    - third
+    - home
+
+atBat:
+  description: A player's turn at bat
+  steps:
+    - upToBat_steps_up() # the next player in the lineup of upTeam becomes upToBat
+    - print_game_state() # display score, number of outs, inning and top or bottom, who is upToBat, who is upToPitch, whether 1st, 2nd or 3rd base is occupied and if so, by who
+    - if user wants to substitute a player:
+      - display_in_game_players() # display a list of players who are currently in the game
+      - user_selects_player_to_sub_out() # user selects a player to substitute out
+      - display_bench_players() # display a list of players on the bench who share a playerType with the player to be substituted out
+      - user_selects_player_to_sub_in() # user selects a player from the bench to substitute in
+      - substitute_player(): 
+        - player_to_sub_out goes to bench
+        - player_to_sub_in replaces player_to_sub_out's position
+      - print_game_state() # same as above
+      - if user wants to substitute a player:
+        - repeat substitution process
+      - else:
+        - resume game with atBat()
+    - if user wants to steal a base and conditions permit:
+      - steal_base() # user can instruct a baserunner to steal a base before each atBat
+      - upToSteal_performs_steal_roll() # baserunner makes a "Steal Roll" by rolling a 6-sided dice and adding their run_skill modifier
+      - upToDefend_performs_throw_roll() # the player who is currently inPlay(C) on the team who is onDefense becomes upToDefend and makes a "Throw Roll" which is a 6-sided dice roll plus their fld_skill
+      - if steal roll >= throw roll:
+        - upToSteal_is_safe() # the upToSteal now occupies the next base
+      - else:
+        - upToSteal_is_out() # the upToSteal is out and they are no longer on base
+        - increment_outs() # increment the count of outs
+    - pitching_performs_pitch_roll() # Player who is Pitching makes a "Pitch Roll" by rolling a 6-sided dice and adding their pit_skill modifier
+    - upToBat_performs_swing_roll() # Player who is up to Bat makes a "Swing Roll" by rolling a 6-sided dice and adding their bat_skill modifier
+    - if upToBat's roll > upToPitch's roll (contact):
+      - upToBat_performs_contact_roll() # upToBat rolls a 20-sided dice and adds their pow_skill modifier (power roll) and a 6-sided dice (direction roll)
+      - determine_upToDefend_based_on_roll():
+        - if direction roll is 1, upToDefend is either 3B or LF, based on highest fld_skill
+        - if direction roll is 2, upToDefend is either SS, 3B, LF, or CF, based on highest fld_skill
+        - if direction roll is 3, upToDefend is either SS or CF, based on highest fld_skill
+        - if direction roll is 4, upToDefend is either 2B or CF, based on highest fld_skill
+        - if direction roll is 5, upToDefend is either 2B, 1B, CF, or RF, based on highest fld_skill
+        - if direction roll is 6, upToDefend is either 1B or RF, based on highest fld_skill
+        - if power roll total is 11 or higher, upToDefend is either LF, CF, or RF, based on highest fld_skill
+        - if power roll total is 10 or lower, upToDefend is either 3B, SS, 2B, or 1B, based on highest fld_skill
+        - if multiple players have the same highest fld_skill, choose one at random
+      - uptoDefend_performs_throw_roll() # designated defender rolls a 20-sided dice and adds their fld_skill modifier (fielding roll)
+      - if upToDefend's roll is higher than upToBat's power roll:
+        - upToBat_is_out()
+        - increment_outs() # increment the count of outs
+      - else:
+        - determine_type_of_hit_based_on_upToBat_roll()
+        - advance_runners()
+        - if runner_reaches_home_base, add_run_to_team_score()
+    - if upToBat's roll < upToPitch's roll (no contact):
+      - count_as_strikeout()
+      - increment_outs() # increment the count of outs
+    - if upToBat's roll = upToPitch's roll (tie):
+      - count_as_foul()
+    - if three_fouls_in_a_row, count_as_walk()
+
+# Possible types of hits:
+# - single
+# - double
+# - triple
+# - home run
+
+# Possible outcomes of an at-bat:
+# - hit
+# - strikeout
+# - foul ball
+# - walk
+
+# Possible outcomes of a game:
+# - win
+# - loss
+# - tie
+END OF pseudocode.yaml
+
+types.ts:
+// types.ts
+interface Player {
+    id: number;
+    name: string;
+    position: PlayerPosition;
+    role: PlayerRole;
+    skills: Skills;
+  }
+  
+  interface Team {
+    id: number;
+    name: string;
+    players: Player[];
+    benchPlayers: Player[];  // New field to represent bench players
+    score: number;
+    role: TeamRole;
+    lineup: Player[]; // ordered list of players in batting lineup
+  }
+  
+  interface Inning {
+    number: number;
+    team1Score: number;
+    team2Score: number;
+    outs: number;  // New field to represent number of outs
+    half: 'top' | 'bottom';  // New field to represent top or bottom of inning
+  }
+  
+  interface Game {
+    id: number;
+    team1: Team;
+    team2: Team;
+    currentInning: number;
+    maxInnings: number;
+    isInProgress: boolean;
+    isTie: boolean;  // New field to represent tie condition
+    draftPlayers: () => Promise<void>;  // New method for player draft
+  }
+  
+  interface AtBat {
+    batter: Player;
+    pitcher: Player;
+    result?: AtBatResult;
+    roll: 'pitch' | 'swing';  // New field to represent player rolls
+  }
+  
+  interface GameContextType {
+    game: Game;
+    inning: Inning;
+    teams: Team[];
+    players: Player[];
+    atBat: AtBat;
+    base: Base[];  // New field to represent bases
+    initializeGame: () => Promise<void>;
+    playInningHalf: (onOffense: Team, onDefense: Team) => Promise<void>;
+    substitutePlayer: (team: Team, playerOut: Player, playerIn: Player) => Promise<void>;  // New method for player substitution
+    endHalfInning: () => Promise<void>;  // New method for ending a half inning
+    incrementOuts: () => void;  // New method for incrementing outs
+  }
+  
+  interface Base {
+    baseNumber: number; // 1, 2, 3, or 4 (representing home)
+    isOccupied: boolean;
+    player?: Player; // the player currently on this base, if any
+  }
+  
+  interface Skills {
+    bat_skill: number; 
+    pit_skill: number; 
+    pow_skill: number; 
+    run_skill: number; 
+    fld_skill: number; 
+  }
+
+  // Define the roles for each player
+  type PlayerRole = 'upToBat' | 'upToPitch' | 'upToSteal' | 'upToDefend' | 'onBase' | 'onBench';
+  
+  // Define the positions a player can play
+  type PlayerPosition = 'C' | '1B' | '2B' | '3B' | 'SS' | 'LF' | 'CF' | 'RF' | 'DH' | 'P' | 'BN';
+  
+  // Define the outcomes of an at-bat
+  type AtBatResult = 'hit' | 'strikeout' | 'foul ball' | 'walk';
+  
+  // Define the outcomes of a game
+  type GameResult = 'win' | 'loss' | 'tie';
+  
+  // Define the roles for a team
+  type TeamRole = 'onOffense' | 'onDefense';
+END OF types.ts
+
+-----------------------------------------------------------------------------------------------------
+
+gameContext.tsx:
+// gameContext.tsx
+import React, { createContext, useState, useEffect } from 'react';
+import { Game, Inning, Team, Player, AtBat, GameContextType } from '../types';
+
+// You can add a sensible default value if you want
+const defaultGameContext: GameContextType = {
+  // Provide default values for each field
+  game: null,
+  inning: null,
+  teams: [],
+  players: [],
+  atBat: null,
+  initializeGame: async () => {},
+  playInningHalf: async (onOffense: Team, onDefense: Team) => {},
+  // Provide default values for the rest of the methods and fields
+};
+
+export const GameContext = createContext<GameContextType>(defaultGameContext);
+
+const GameContextProvider: React.FC = (props) => {
+  const [game, setGame] = useState<Game | null>(null);
+  const [inning, setInning] = useState<Inning | null>(null);
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [atBat, setAtBat] = useState<AtBat | null>(null);
+
+  useEffect(() => {
+    initializeGame();
+  }, []);
+
+  const initializeGame = async () => {
+    // Call to your API to initialize the game
+    // Set the initial state of your game, teams, players, etc.
+  };
+
+  const playInningHalf = async (onOffense: Team, onDefense: Team) => {
+    // Logic to play half of an inning
+  };
+
+  const checkIfGameIsOver = async () => {
+    // Check if game is over logic
+  };
+
+  const incrementOuts = async () => {
+    // Logic to increment outs
+  };
+
+  const endHalfInning = async () => {
+    // Logic to end half inning
+  };
+
+  const incrementInningNumber = async () => {
+    // Logic to increment inning number
+  };
+
+  const addRunToScore = async () => {
+    // Logic to add run to score
+  };
+
+  const substitutePlayer = async () => {
+    // Logic to substitute player
+  };
+
+  const switchRole = async () => {
+    // Logic to switch role
+  };
+
+  const pitchRoll = async () => {
+    // Logic to perform pitch roll
+  };
+
+  const swingRoll = async () => {
+    // Logic to perform swing roll
+  };
+
+  const stealBase = async () => {
+    // Logic to steal base
+  };
+
+  const playAtBat = async () => {
+    // Logic to play at bat
+  };
+
+  return (
+    <GameContext.Provider
+      value={{
+        game,
+        inning,
+        teams,
+        players,
+        atBat,
+        initializeGame,
+        playInningHalf,
+        checkIfGameIsOver,
+        incrementOuts,
+        endHalfInning,
+        incrementInningNumber,
+        addRunToScore,
+        substitutePlayer,
+        switchRole,
+        pitchRoll,
+        swingRoll,
+        stealBase,
+        playAtBat,
+      }}
+    >
+      {props.children}
+    </GameContext.Provider>
+  );
+};
+
+export default GameContextProvider;
+END OF gameContext.tsx
+
+## Project Structure
+
+### Backend
+
+- `app.py`: Main Flask application file where the routes are defined.
+- `models/`: Directory that contains model definitions for the database.
+  - `player.py`: Defines the Player model.
+  - `team.py`: Defines the Team model.
+  - `inning.py`: Defines the Inning model.
+  - `game.py`: Defines the Game model.
+  - `atbat.py`: Defines the AtBat model.
+- `controllers/`: Directory that contains the logic of the routes.
+  - `player_controller.py`: Handles player-related actions (pitch roll, swing roll, etc.).
+  - `team_controller.py`: Handles team-related actions (add run to score, substitute player, etc.).
+  - `inning_controller.py`: Handles inning-related actions (increment outs, end half inning, etc.).
+  - `game_controller.py`: Handles game-related actions (initialize game, check if game is over, etc.).
+  - `atbat_controller.py`: Handles at-bat-related actions.
+- `utils/`: Directory for helper functions and constants.
+- `tests/`: Directory for unit tests.
+
+### Frontend
+
+- `App.tsx`: Main component of the application.
+- `types.ts`: Defines types for data
+- `components/`: Directory for reusable components.
+  - `Player.tsx`: Component for displaying player information.
+  - `Team.tsx`: Component for displaying team information.
+  - `Inning.tsx`: Component for displaying inning information.
+  - `Game.tsx`: Component for displaying the game state and user options.
+  - `AtBat.tsx`: Component for displaying at-bat actions and outcomes.
+- `screens/`: Directory for screen components.
+  - `HomeScreen.tsx`: Home screen with game initialization options.
+  - `GameScreen.tsx`: Screen for displaying the game.
+  - `Draft.tsx`: Screen for handling the draft.
+- `api/`: Directory for functions to make API calls to the backend.
+  - `playerApi.ts`: Functions for player-related API calls.
+  - `teamApi.ts`: Functions for team-related API calls.
+  - `inningApi.ts`: Functions for inning-related API calls.
+  - `gameApi.ts`: Functions for game-related API calls.
+  - `atBatApi.ts`: Functions for at-bat-related API calls.
+- `contexts/`: Directory for React Contexts for state management.
+  - `gameContext.tsx`: Context for managing the game state. NEEDS LOGIC FOR INTERACTING WITH FLASK BACKEND
+- `assets/`: Directory for static assets like images and fonts.
+- `styles/`: Directory for global styles.
+
+## End of Project Structure
+
+STYLEGUIDE.md:
+2. TypeScript Guidelines
+Use TypeScript's static typing whenever possible. Avoid using the any type unless absolutely necessary.
+Follow the naming conventions: camelCase for variables and functions, PascalCase for classes and interfaces.
+Use const for variables that won't be reassigned, and let for those that will. Avoid var.
+Prefer arrow functions over traditional function expressions.
+Make use of TypeScript's access modifiers (public, private, protected) and readonly status where applicable.
+3. React Guidelines
+Use functional components and hooks.
+Keep components small and focused. Each component should have a single responsibility.
+Avoid complex and nested ternary operations in JSX.
+Always define propTypes and default props for all components.
+Use React's context API for state management across components.
+Use React Navigation for routing and navigation in the app.
+4. Expo Guidelines
+Keep the code compatible with Android, iOS, and Web.
+Use Expo's built-in APIs and services whenever possible for cross-platform compatibility.
+Test your code frequently on different platforms.
+5. Code Formatting
+Follow the Prettier configuration for automatic code formatting. Use the .prettierrc file in the root directory of the project to set Prettier options.
+Use 2 spaces for indentation.
+Use single quotes for strings.
+Include a space before the opening bracket of a block.
+
+--------------------------------------------------------------
