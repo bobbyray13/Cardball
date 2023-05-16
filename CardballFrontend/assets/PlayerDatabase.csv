@@ -1,21 +1,21 @@
-name,position,bat_skill,pow_skill,pit_skill,fld_skill,run_skill,playerType
-C. Raleigh,C,-1,2,0,1,0,Batter
-P. Goldschmidt,1B,3,1,0,3,0,Batter
-J. McNeil,2B,-1,0,0,0,0,Batter
-C. Seager,SS,2,1,0,0,0,Batter
-N. Arenado,3B,2,3,0,3,0,Batter
-K. Schwarber,DH,0,3,0,0,0,Batter
-J. Rodriguez,CF,2,2,0,2,0,Batter
-J. Kelenic,RF,0,1,0,1,0,Batter
-B. Nimmo,LF,0,0,0,1,0,Batter
-L. Gilbert,P,0,0,1,0,0,Pitcher
-D. Wilson,C,-2,-2,0,2,0,Batter
-T. Martinez,1B,0,1,0,2,0,Batter
-R. Cano,2B,2,2,0,1,0,Batter
-A. Rodriguez,SS,2,3,0,1,0,Batter
-K. Seager,3B,1,2,0,0,0,Batter
-I. Suzuki,LF,3,0,0,3,0,Batter
-K. Griffey Jr.,CF,2,3,0,3,0,Batter
-J. Buhner,RF,0,2,0,1,0,Batter
-E. Martinez,DH,3,2,0,0,0,Batter
-R. Johnson,P,0,0,3,0,0,Pitcher
+name,position,bat_skill,pow_skill,pit_skill,fld_skill,run_skill,playerType, id
+C. Raleigh,C,-1,2,0,1,0,Batter, 1
+P. Goldschmidt,1B,3,1,0,3,0,Batter, 2
+J. McNeil,2B,-1,0,0,0,0,Batter, 3
+C. Seager,SS,2,1,0,0,0,Batter, 4
+N. Arenado,3B,2,3,0,3,0,Batter, 5
+K. Schwarber,DH,0,3,0,0,0,Batter, 6
+J. Rodriguez,CF,2,2,0,2,0,Batter, 7
+J. Kelenic,RF,0,1,0,1,0,Batter, 8
+B. Nimmo,LF,0,0,0,1,0,Batter, 9
+L. Gilbert,P,0,0,1,0,0,Pitcher, 10
+D. Wilson,C,-2,-2,0,2,0,Batter, 11
+T. Martinez,1B,0,1,0,2,0,Batter, 12
+R. Cano,2B,2,2,0,1,0,Batter, 13
+A. Rodriguez,SS,2,3,0,1,0,Batter, 14
+K. Seager,3B,1,2,0,0,0,Batter, 15
+I. Suzuki,LF,3,0,0,3,0,Batter, 16
+K. Griffey Jr.,CF,2,3,0,3,0,Batter, 17
+J. Buhner,RF,0,2,0,1,0,Batter, 18
+E. Martinez,DH,3,2,0,0,0,Batter, 19
+R. Johnson,P,0,0,3,0,0,Pitcher, 20

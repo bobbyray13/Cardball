@@ -1,10 +1,11 @@
+//App.tsx:
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Button, View, Text, StyleSheet } from 'react-native';
 import { DraftScreen } from './screens/DraftScreen';
 import { StatusBar } from 'expo-status-bar';
-
+import { GameProvider } from './contexts/gameContext';
 import { RootStackParamList, HomeComponentProps } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -31,11 +32,14 @@ const styles = StyleSheet.create({
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeComponent} />
-        <Stack.Screen name="Draft" component={DraftScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <GameProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Home">
+          <Stack.Screen name="Home" component={HomeComponent} />
+          <Stack.Screen name="Draft" component={DraftScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GameProvider>
   );
 }
+//END OF App.tsx

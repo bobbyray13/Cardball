@@ -35,6 +35,7 @@ This is a text-based baseball game with a Python/Flask backend and a TypeScript/
 - `screens/`: Directory for screen components.
   - `HomeScreen.tsx`: Home screen with game initialization options.
   - `GameScreen.tsx`: Screen for displaying the game.
+  - `TeamSelect.tsx`: Screen for naming teams and picking Home/Away.
   - `DraftScreen.tsx`: Screen for handling the draft.
 - `api/`: Directory for functions to make API calls to the backend.
   - `playerApi.ts`: Functions for player-related API calls.

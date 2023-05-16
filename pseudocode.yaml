@@ -1,3 +1,4 @@
+// pseudocode.yaml
 game:
   description: The main game loop
   steps:
