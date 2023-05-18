@@ -1,18 +1,17 @@
 // DraftScreen.tsx:
 import React, { useState, useContext, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
-import { DraftScreenNavigationProp } from '../types';
-import { Player, PlayerPosition, Team as TeamType, PlayerRole } from '../types';
-import { getPlayers } from '../api/playerAPI';
+import { View, Text, Button, FlatList, StyleSheet } from 'react-native';
+import { DraftScreenNavigationProp, PlayerType } from '../types';
+import { Player, PlayerPosition, Team as TeamType, PlayerRole, Game } from '../types';
+import { getPlayers, } from '../api/playerAPI';
 import { GameContext, } from '../contexts/gameContext';
+import { draftPlayer as apiDraftPlayer } from '../api/playerAPI';
 
 type Props = {
   navigation: DraftScreenNavigationProp;
 };
 
 export const DraftScreen: React.FC<Props> = ({ navigation }) => {
-  const [homeTeam, setHomeTeam] = useState('');
-  const [awayTeam, setAwayTeam] = useState('');
   const gameContext = useContext(GameContext);
   const [availablePlayers, setAvailablePlayers] = useState<Player[]>([]);
   const [draftTurn, setDraftTurn] = useState<'Home' | 'Away'>('Away');
@@ -23,35 +22,14 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   const { game, setGame } = gameContext;
-
-  const submitTeams = () => {
-    if (homeTeam && awayTeam) {
-      setGame(prevGame => {
-        if (prevGame === null) return null;
-
-        return {
-          ...prevGame,
-          homeTeam: { ...prevGame.homeTeam, name: homeTeam },
-          awayTeam: { ...prevGame.awayTeam, name: awayTeam },
-          currentInningDetails: prevGame.currentInningDetails || {
-            number: 1,
-            homeTeamScore: 0,
-            awayTeamScore: 0,
-            outs: 0,
-            half: 'top'
-          },
-        };
-      });
-      navigation.navigate('Home');
-    } else {
-      // Handle the case where homeTeam or awayTeam is empty
-    }
-};
+  
+  console.log(game);
 
   useEffect(() => {
     const initializeDraft = async () => {
         try {
             const players = await getPlayers();
+            console.log("Fetched players: ", players);
             setAvailablePlayers(players);
           } catch (err) {
             console.error('Failed to fetch players:', err);
@@ -61,65 +39,79 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
     initializeDraft();
   }, []);
 
-  const draftPlayer = (player: Player) => {
+  const draftPlayer = async (player: Player) => {
+    console.log('Drafting player:', player);
+    console.log('Current game state:', game);
+
     // Determine the team that's currently drafting
     const draftingTeam = draftTurn === 'Away' ? 'awayTeam' : 'homeTeam';
-  
+
+    console.log(draftingTeam)
+
+    if (game && game[draftingTeam]) {  // Check if game and the team being drafted are not null
+      // Attempt to draft player via the API
+      try {
+        await apiDraftPlayer(game[draftingTeam].id, player.id); // Replace /*teamId goes here*/ with game[draftingTeam].id
+        console.log('Successfully drafted player:', player.name);
+      } catch (err) {
+        console.error('Failed to draft player:', err);
+      }
+    } else {
+      console.error('Game or drafting team is not available:', game);
+    }
+
     // Update the drafting team with the new player
     setGame((prevGame) => {
-        if (prevGame) {
-          const updatedTeam = {
-            ...prevGame[draftingTeam === 'homeTeam' ? 'homeTeam' : 'awayTeam'],
-            players: [...prevGame[draftingTeam === 'homeTeam' ? 'homeTeam' : 'awayTeam'].players, player],
-          };
-      
-          if (draftingTeam === 'homeTeam') {
-            return {
-              ...prevGame,
-              homeTeam: updatedTeam,
-            };
-          } else {
-            return {
-              ...prevGame,
-              awayTeam: updatedTeam,
-            };
-          }
+      if (prevGame) {
+        // Copy the previous game state to a new object
+        const gameCopy = { ...prevGame };
+        const teamCopy = { ...gameCopy[draftingTeam] };
+
+        // Add player to batters or pitchers list based on the player type
+        if (player.playerType === PlayerType.Batter) {
+            teamCopy.batters = [...teamCopy.batters, player];
+        } else if (player.playerType === PlayerType.Pitcher) {
+            teamCopy.pitchers = [...teamCopy.pitchers, player];
         }
-        return null;
-      });
-      
-  
+
+        // Add the player to the bench
+        teamCopy.benchPlayers = [...teamCopy.benchPlayers, player];
+
+        // Update the game state with the new team
+        gameCopy[draftingTeam] = teamCopy;
+
+        console.log('New game state:', gameCopy);
+
+        return gameCopy;
+      }
+      return null;
+    });
+
     // Remove the player from the available players
-    setAvailablePlayers((prevPlayers) =>
-      prevPlayers.filter((p) => p.id !== player.id)
-    );
-  
+    setAvailablePlayers((prevPlayers) => {
+      const updatedPlayers = prevPlayers.filter((p) => p.id !== player.id);
+      console.log('Updated available players:', updatedPlayers);
+      return updatedPlayers;
+    });
+
     // Alternate the draft turn
     setDraftTurn((prevTurn) => (prevTurn === 'Away' ? 'Home' : 'Away'));
+
+    // Re-fetch the players after drafting a player
+    try {
+      const players = await getPlayers();
+      setAvailablePlayers(players);
+    } catch (err) {
+      console.error('Failed to re-fetch players:', err);
+    }
   };
-
-
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>Enter Team Names:</Text>
-      <TextInput
-        style={styles.input}
-        placeholder="Home Team"
-        onChangeText={setHomeTeam}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Away Team"
-        onChangeText={setAwayTeam}
-      />
-      <Button title="Submit" onPress={submitTeams} />
-      <Text>Home Team: {homeTeam}</Text>
-      <Text>Away Team: {awayTeam}</Text>
       <Text>Draft for {draftTurn} team</Text>
       <FlatList
         data={availablePlayers}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) => `${item.name}-${item.position}-${item.year}`}
         renderItem={({ item }) => (
           <View>
             <Text>{item.name} - {item.position}</Text>
@@ -149,5 +141,5 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 10,
   },
-});
-// END OF DraftScreen.tsx
+})
+//END OF DraftScreen.tsx:

@@ -1,38 +1,11 @@
-//gameContext.tsx
 import React, { createContext, useState } from 'react';
 import { Game, GameContextProps, GameProviderProps } from '../types';
-import { createTeam } from '../components/Team';
-import { Team, Player } from '../types'
+import { Team, Player,PlayerType } from '../types'
 
 export const GameContext = createContext<GameContextProps | undefined>(undefined);
 
 export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
     const [game, setGame] = useState<Game | null>(null);
-
-    const initializeGame = async (homeTeamName: string, awayTeamName: string) => {
-        const homeTeam = createTeam(1, homeTeamName);
-        const awayTeam = createTeam(2, awayTeamName);
-        
-        setGame({
-            id: 1,
-            homeTeam,
-            awayTeam,
-            currentInning: { number: 1, homeTeamScore: 0, awayTeamScore: 0, outs: 0, half: 'top' },
-            currentInningDetails: {
-                number: 1,
-                homeTeamScore: 0,
-                awayTeamScore: 0,
-                outs: 0,
-                half: 'top',
-            },
-            maxInnings: 9,
-            isInProgress: false,
-            isTie: false,
-            draftPlayers: async () => {
-                // Your draft players logic here
-            },
-        });
-    };
 
     const playInningHalf = async (onOffense: Team, onDefense: Team) => {
         // Initialize the inning
@@ -54,19 +27,22 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         });
     }
 
-    const substitutePlayer = async (team: Team, playerOut: Player, playerIn: Player): Promise<void> => {
-        // Swap out the player from the lineup
-        const newLineup = team.lineup.map(player => player.id === playerOut.id ? playerIn : player);
+    const substitutePlayer = async (team: Team, playerOut: Player, playerIn: Player, playerType: PlayerType): Promise<void> => {
+        // Choose the array to substitute player based on player type
+        const playerArray = playerType === PlayerType.Pitcher ? team.pitchers : team.batters;
     
-        // Swap out the player from the players list
-        const newPlayers = team.players.map(player => player.id === playerOut.id ? playerIn : player);
+        // Swap out the player from the lineup or pitchers list
+        const newLineupOrPitchers = playerArray.map(player => player.id === playerOut.id ? playerIn : player);
     
         // Swap out the player from the bench
         const newBenchPlayers = team.benchPlayers.map(player => player.id === playerIn.id ? playerOut : player);
     
         // Update the team
-        team.lineup = newLineup;
-        team.players = newPlayers;
+        if (playerType === PlayerType.Pitcher) {
+            team.pitchers = newLineupOrPitchers;
+        } else {
+            team.batters = newLineupOrPitchers;
+        }
         team.benchPlayers = newBenchPlayers;
     
         // Return a resolved Promise
@@ -119,7 +95,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
         <GameContext.Provider value={{ 
             game, 
             setGame, 
-            initializeGame,
             playInningHalf,
             substitutePlayer,
             endHalfInning,

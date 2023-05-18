@@ -1,21 +1,21 @@
-name,position,bat_skill,pow_skill,pit_skill,fld_skill,run_skill,playerType
-C. Raleigh,C,-1,2,0,1,0,Batter
-P. Goldschmidt,1B,3,1,0,3,0,Batter
-J. McNeil,2B,-1,0,0,0,0,Batter
-C. Seager,SS,2,1,0,0,0,Batter
-N. Arenado,3B,2,3,0,3,0,Batter
-K. Schwarber,DH,0,3,0,0,0,Batter
-J. Rodriguez,CF,2,2,0,2,0,Batter
-J. Kelenic,RF,0,1,0,1,0,Batter
-B. Nimmo,LF,0,0,0,1,0,Batter
-L. Gilbert,P,0,0,1,0,0,Pitcher
-D. Wilson,C,-2,-2,0,2,0,Batter
-T. Martinez,1B,0,1,0,2,0,Batter
-R. Cano,2B,2,2,0,1,0,Batter
-A. Rodriguez,SS,2,3,0,1,0,Batter
-K. Seager,3B,1,2,0,0,0,Batter
-I. Suzuki,LF,3,0,0,3,0,Batter
-K. Griffey Jr.,CF,2,3,0,3,0,Batter
-J. Buhner,RF,0,2,0,1,0,Batter
-E. Martinez,DH,3,2,0,0,0,Batter
-R. Johnson,P,0,0,3,0,0,Pitcher
+name,position,bat_skill,pow_skill,pit_skill,fld_skill,run_skill,playerType,year
+C. Raleigh,C,-1,2,0,1,0,Batter,2020
+P. Goldschmidt,1B,3,1,0,3,0,Batter,2020
+J. McNeil,2B,-1,0,0,0,0,Batter,2020
+C. Seager,SS,2,1,0,0,0,Batter,2020
+N. Arenado,3B,2,3,0,3,0,Batter,2020
+K. Schwarber,DH,0,3,0,0,0,Batter,2020
+J. Rodriguez,CF,2,2,0,2,0,Batter,2020
+J. Kelenic,RF,0,1,0,1,0,Batter,2020
+B. Nimmo,LF,0,0,0,1,0,Batter,2020
+L. Gilbert,P,0,0,1,0,0,Pitcher,2020
+D. Wilson,C,-2,-2,0,2,0,Batter,2020
+T. Martinez,1B,0,1,0,2,0,Batter,2020
+R. Cano,2B,2,2,0,1,0,Batter,2020
+A. Rodriguez,SS,2,3,0,1,0,Batter,2020
+K. Seager,3B,1,2,0,0,0,Batter,2020
+I. Suzuki,LF,3,0,0,3,0,Batter,2020
+K. Griffey Jr.,CF,2,3,0,3,0,Batter,2020
+J. Buhner,RF,0,2,0,1,0,Batter,2020
+E. Martinez,DH,3,2,0,0,0,Batter,2020
+R. Johnson,P,0,0,3,0,0,Pitcher,2020

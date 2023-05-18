@@ -6,6 +6,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 export type RootStackParamList = {
   Home: undefined;
   Draft: undefined;
+  TeamSelect: undefined;
 };
 
 export type HomeComponentProps = {
@@ -17,30 +18,47 @@ export type DraftScreenNavigationProp = StackNavigationProp<
   'Draft'
 >;
 
+export type TeamSelectScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'TeamSelect'
+>;
+
+export enum PlayerType {
+  Batter = "Batter",
+  Pitcher = "Pitcher"
+}
+
 export interface Player {
-    id: number;
-    name: string;
-    position: PlayerPosition;
-    role: PlayerRole;
-    skills: Skills;
-  }
+  name: string;
+  position: PlayerPosition;
+  bat_skill: number;
+  pow_skill: number;
+  pit_skill: number;
+  fld_skill: number;
+  run_skill: number;
+  playerType: PlayerType;
+  id: number;
+  year: number;
+  role: PlayerRole;
+}
   
 export interface Team {
   id: number;  // Unique identifier for the team
   name: string;  // Name of the team
-  players: Player[];  // List of players in the team
   benchPlayers: Player[];  // List of players in the team's bench
   score: number;  // Team's current score
   role: TeamRole;  // Role of the team (either on offense or on defense)
   lineup: Player[];  // Ordered list of players in batting lineup
+  batters: Player[]; // List of players in the team who are Batters
+  pitchers: Player[]; // List of players in the team who are Pitchers
 }
   
 export interface Inning {
   number: number;
   homeTeamScore: number;
   awayTeamScore: number;
-  outs: number;  // New field to represent number of outs
-  half: 'top' | 'bottom';  // New field to represent top or bottom of inning
+  outs: number;
+  half: 'top' | 'bottom';
 }
   
 export interface Game {
@@ -51,23 +69,22 @@ export interface Game {
     currentInningDetails: Inning;
     maxInnings: number;
     isInProgress: boolean;
-    isTie: boolean;  // New field to represent tie condition
-    draftPlayers: () => Promise<void>;  // New method for player draft
+    isTie: boolean;
+    draftPlayers: () => Promise<void>;
   }
   
   interface AtBat {
     batter: Player;
     pitcher: Player;
     result?: AtBatResult;
-    roll: 'pitch' | 'swing';  // New field to represent player rolls
+    roll: 'pitch' | 'swing';
   }
 
 export interface GameContextProps {
     game: Game | null;
     setGame: React.Dispatch<React.SetStateAction<Game | null>>;
-    initializeGame: (homeTeamName: string, awayTeamName: string) => Promise<void>;
     playInningHalf: (onOffense: Team, onDefense: Team) => Promise<void>;
-    substitutePlayer: (team: Team, playerOut: Player, playerIn: Player) => Promise<void>;
+    substitutePlayer: (team: Team, playerOut: Player, playerIn: Player, playerType: PlayerType) => Promise<void>;
     endHalfInning: () => Promise<void>;
     incrementOuts: () => void;
   }
