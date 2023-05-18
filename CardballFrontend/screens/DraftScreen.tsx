@@ -22,7 +22,7 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
   }
 
   const { game, setGame } = gameContext;
-  
+
   console.log(game);
 
   useEffect(() => {
@@ -42,61 +42,46 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
   const draftPlayer = async (player: Player) => {
     console.log('Drafting player:', player);
     console.log('Current game state:', game);
-
+  
     // Determine the team that's currently drafting
     const draftingTeam = draftTurn === 'Away' ? 'awayTeam' : 'homeTeam';
-
-    console.log(draftingTeam)
-
+  
+    console.log(draftingTeam);
+  
     if (game && game[draftingTeam]) {  // Check if game and the team being drafted are not null
       // Attempt to draft player via the API
       try {
-        await apiDraftPlayer(game[draftingTeam].id, player.id); // Replace /*teamId goes here*/ with game[draftingTeam].id
+        const response = await apiDraftPlayer(game[draftingTeam].id, player.id);
         console.log('Successfully drafted player:', player.name);
+        console.log('Updated player data:', response.data.player);
+  
+        // Update game state with the updated team
+        setGame((prevGame) => {
+          if (prevGame) {
+            const gameCopy = { ...prevGame };
+            gameCopy[draftingTeam] = response.data.team;
+            return gameCopy;
+          }
+          return null;
+        });
+  
       } catch (err) {
         console.error('Failed to draft player:', err);
       }
     } else {
       console.error('Game or drafting team is not available:', game);
     }
-
-    // Update the drafting team with the new player
-    setGame((prevGame) => {
-      if (prevGame) {
-        // Copy the previous game state to a new object
-        const gameCopy = { ...prevGame };
-        const teamCopy = { ...gameCopy[draftingTeam] };
-
-        // Add player to batters or pitchers list based on the player type
-        if (player.playerType === PlayerType.Batter) {
-            teamCopy.batters = [...teamCopy.batters, player];
-        } else if (player.playerType === PlayerType.Pitcher) {
-            teamCopy.pitchers = [...teamCopy.pitchers, player];
-        }
-
-        // Add the player to the bench
-        teamCopy.benchPlayers = [...teamCopy.benchPlayers, player];
-
-        // Update the game state with the new team
-        gameCopy[draftingTeam] = teamCopy;
-
-        console.log('New game state:', gameCopy);
-
-        return gameCopy;
-      }
-      return null;
-    });
-
+  
     // Remove the player from the available players
     setAvailablePlayers((prevPlayers) => {
       const updatedPlayers = prevPlayers.filter((p) => p.id !== player.id);
       console.log('Updated available players:', updatedPlayers);
       return updatedPlayers;
     });
-
+  
     // Alternate the draft turn
     setDraftTurn((prevTurn) => (prevTurn === 'Away' ? 'Home' : 'Away'));
-
+  
     // Re-fetch the players after drafting a player
     try {
       const players = await getPlayers();
@@ -105,6 +90,7 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
       console.error('Failed to re-fetch players:', err);
     }
   };
+  
 
   return (
     <View style={styles.container}>

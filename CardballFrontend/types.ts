@@ -83,10 +83,7 @@ export interface Game {
 export interface GameContextProps {
     game: Game | null;
     setGame: React.Dispatch<React.SetStateAction<Game | null>>;
-    playInningHalf: (onOffense: Team, onDefense: Team) => Promise<void>;
     substitutePlayer: (team: Team, playerOut: Player, playerIn: Player, playerType: PlayerType) => Promise<void>;
-    endHalfInning: () => Promise<void>;
-    incrementOuts: () => void;
   }
 
 export interface GameProviderProps {

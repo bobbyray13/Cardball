@@ -1,6 +1,6 @@
 #app.py
 from flask import Flask, jsonify, request
-from draft import draft_player
+from draft import draft_player, draft_blueprint
 from game_state import create_new_game
 from flask_migrate import Migrate
 from database import db
@@ -20,18 +20,22 @@ with app.app_context():
 @app.route('/api/games', methods=['POST'])
 def create_game():
     data = request.get_json()
+    print(f"Received data: {data}")  # Debug: Print received data
     home_team_name = data['home_team_name']
     away_team_name = data['away_team_name']
+    print(f"Received request to create game with home team: {home_team_name}, away team: {away_team_name}")
     
     home_team = Team.query.filter_by(name=home_team_name).first()
     if home_team is None:
         home_team = Team(name=home_team_name)
         db.session.add(home_team)
+        print(f"Home team: {home_team}")  # Debug: Print home team
     
     away_team = Team.query.filter_by(name=away_team_name).first()
     if away_team is None:
         away_team = Team(name=away_team_name)
         db.session.add(away_team)
+        print(f"Away team: {away_team}")  # Debug: Print away team
 
     game = create_new_game(home_team, away_team)
     if game is None:
@@ -80,10 +84,12 @@ def create_team():
     db.session.commit()
     return jsonify(team.as_dict())
 
-@app.route('/api/draft', methods=['POST'])
-def draft():
-    data = request.get_json()
-    return draft_player(data['team_id'], data['player_id'])
+app.register_blueprint(draft_blueprint)
+
+#@app.route('/api/draft', methods=['POST'])
+#def draft():
+#    data = request.get_json()
+#    return draft_player(data['team_id'], data['player_id'])
 
 @app.route('/api/games/<int:game_id>/play_inning_half', methods=['POST'])
 def play_inning_half(game_id):

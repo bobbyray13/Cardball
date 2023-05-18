@@ -20,7 +20,7 @@ export const loadPlayers = async () => {
   return result.message;
 };
 
-export const draftPlayer = async (teamId: number, playerId: number): Promise<void> => {
+export const draftPlayer = async (teamId: number, playerId: number): Promise<any> => {
   const baseUrl = Constants.expoConfig?.extra?.BASE_URL;
   if (!baseUrl) {
     console.error('BASE_URL is not set in the app configuration');
@@ -42,8 +42,14 @@ export const draftPlayer = async (teamId: number, playerId: number): Promise<voi
     if (!response.ok) {
       throw new Error('Failed to draft player.');
     }
+
+    // Parse response as JSON and return it
+    const data = await response.json();
+    return data;
+
   } catch (error) {
     console.error('Failed to draft player:', error);
+    throw error; // Propagate the error so it can be handled by the caller
   }
 };
 //END OF playerAPI.ts
