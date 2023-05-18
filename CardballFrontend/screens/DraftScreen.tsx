@@ -6,6 +6,7 @@ import { Player, PlayerPosition, Team as TeamType, PlayerRole, Game } from '../t
 import { getPlayers, } from '../api/playerAPI';
 import { GameContext, } from '../contexts/gameContext';
 import { draftPlayer as apiDraftPlayer } from '../api/playerAPI';
+import { getGameState } from '../api/playerAPI';
 
 type Props = {
   navigation: DraftScreenNavigationProp;
@@ -39,9 +40,9 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
     initializeDraft();
   }, []);
 
-  const draftPlayer = async (player: Player) => {
+  const handleDraftPlayer = async (player: Player) => {
     console.log('Drafting player:', player);
-    console.log('Current game state:', game);
+    // console.log('Current game state:', game);
   
     // Determine the team that's currently drafting
     const draftingTeam = draftTurn === 'Away' ? 'awayTeam' : 'homeTeam';
@@ -49,21 +50,22 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
     console.log(draftingTeam);
   
     if (game && game[draftingTeam]) {  // Check if game and the team being drafted are not null
+
+      console.log('Attempting to draft player for team ID:', game[draftingTeam].id); // Log the team ID
+      console.log('Attempting to draft player with player ID:', player.id); // Log the player ID
+
       // Attempt to draft player via the API
       try {
         const response = await apiDraftPlayer(game[draftingTeam].id, player.id);
+
+        // console.log('API response:', response);
         console.log('Successfully drafted player:', player.name);
-        console.log('Updated player data:', response.data.player);
+        // console.log('Updated player data:', response.data.player);
   
-        // Update game state with the updated team
-        setGame((prevGame) => {
-          if (prevGame) {
-            const gameCopy = { ...prevGame };
-            gameCopy[draftingTeam] = response.data.team;
-            return gameCopy;
-          }
-          return null;
-        });
+        // Fetch updated game state from backend
+        const updatedGameState = await getGameState(game_id);
+        // Update game state in the context
+        setGame(updatedGameState);
   
       } catch (err) {
         console.error('Failed to draft player:', err);
@@ -101,7 +103,7 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
         renderItem={({ item }) => (
           <View>
             <Text>{item.name} - {item.position}</Text>
-            <Button title="Draft Player" onPress={() => draftPlayer(item)} />
+            <Button title="Draft Player" onPress={() => handleDraftPlayer(item)} />
           </View>
         )}
       />

@@ -1,5 +1,6 @@
 //playerAPI.ts:
 import Constants from 'expo-constants';
+import { Game } from '../types';
 
 export const getPlayers = async () => {
     const response = await fetch('http://192.168.4.46:5000/api/players');
@@ -20,6 +21,28 @@ export const loadPlayers = async () => {
   return result.message;
 };
 
+export const getGameState = async (gameId: number): Promise<Game> => {
+  const baseUrl = Constants.expoConfig?.extra?.BASE_URL;
+  if (!baseUrl) {
+    throw new Error('BASE_URL is not set in the app configuration');
+  }
+  try {
+    const response = await fetch(`${baseUrl}/api/game_state/${gameId}`);
+
+    if (!response.ok) {
+      throw new Error('Failed to get game state.');
+    }
+
+    // Parse response as JSON and return it
+    const data: Game = await response.json();
+    return data;
+
+  } catch (error) {
+    console.error('Failed to get game state:', error);
+    throw error; // Propagate the error so it can be handled by the caller
+  }
+};
+
 export const draftPlayer = async (teamId: number, playerId: number): Promise<any> => {
   const baseUrl = Constants.expoConfig?.extra?.BASE_URL;
   if (!baseUrl) {
@@ -28,7 +51,7 @@ export const draftPlayer = async (teamId: number, playerId: number): Promise<any
   }
 
   try {
-    const response = await fetch(`${baseUrl}/draft`, {
+    const response = await fetch(`http://192.168.4.46:5000/api/draft`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -40,7 +63,7 @@ export const draftPlayer = async (teamId: number, playerId: number): Promise<any
     });
 
     if (!response.ok) {
-      throw new Error('Failed to draft player.');
+      throw new Error('number1 Failed to draft player.');
     }
 
     // Parse response as JSON and return it
@@ -48,7 +71,7 @@ export const draftPlayer = async (teamId: number, playerId: number): Promise<any
     return data;
 
   } catch (error) {
-    console.error('Failed to draft player:', error);
+    console.error('number2 Failed to draft player:', error);
     throw error; // Propagate the error so it can be handled by the caller
   }
 };

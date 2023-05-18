@@ -1,9 +1,20 @@
 # game_state.py
 from models import Game, Team, GameLog
 from flask_sqlalchemy import SQLAlchemy
-from flask import jsonify
+from flask import jsonify, Blueprint
 from datetime import datetime
 from database import db
+
+game_state_blueprint = Blueprint('game_state', __name__)
+
+
+@game_state_blueprint.route('/api/game_state/<int:game_id>', methods=['GET'])
+def get_game_state(game_id):
+    game = Game.query.get(game_id)
+    if game:
+        return jsonify(game.serialize()), 200
+    else:
+        return jsonify({'message': 'Game not found.'}), 404
 
 def create_game_log(game: Game, message: str):
     game_log = GameLog(game_id=game.id, log_message=message)

@@ -21,7 +21,7 @@ def draft_player(team_id, player_id):
         team.pitchers.append(player)
 
     # Add player to bench
-    team.benchPlayers.append(player)
+    team.bench_players.append(player)
     player.active = False
 
     db.session.commit()
@@ -29,7 +29,7 @@ def draft_player(team_id, player_id):
     updated_team = Team.query.options(joinedload(Team.batters), joinedload(Team.pitchers)).get(team_id)
 
     if updated_team:
-        return jsonify({'message': 'Player drafted successfully.', 'team': updated_team.serialize(), 'player': player.serialize()}), 200
+        return jsonify({'message': 'Player drafted successfully.'}), 200
     else:
         return jsonify({'message': 'Error retrieving updated team.'}), 500
 

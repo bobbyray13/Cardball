@@ -75,7 +75,7 @@ class Team(db.Model, Serializer):
             'role' : self.role,
             'batters' : [player.serialize() for player in self.batters],
             'pitchers' : [player.serialize() for player in self.pitchers],
-            'bench_players' : [player.serialize() for player in self.bench_players],
+            'benchPlayers' : [player.serialize() for player in self.bench_players],
             'players' : [player.serialize() for player in self.players],
             'game_id' : self.game_id
         }
@@ -102,16 +102,16 @@ class Game(db.Model, Serializer):
     def serialize(self):
         return {
             'id': self.id,
-            'home_team': self.home_team.serialize() if self.home_team else None,
-            'away_team': self.away_team.serialize() if self.away_team else None,
+            'homeTeam': self.home_team.serialize() if self.home_team else None,
+            'awayTeam': self.away_team.serialize() if self.away_team else None,
             'current_inning': self.current_inning,
-            'current_half': self.current_half,
-            'current_outs': self.current_outs,
-            'home_team_score': self.home_team_score,
-            'away_team_score': self.away_team_score,
-            'is_in_progress': self.is_in_progress,
-            'start_time': self.start_time.isoformat() if self.start_time else None,
-            'end_time': self.end_time.isoformat() if self.end_time else None,
+            'half': self.current_half,
+            'outs': self.current_outs,
+            'homeTeamScore': self.home_team_score,
+            'awayTeamScore': self.away_team_score,
+            'isInProgress': self.is_in_progress,
+            'startTime': self.start_time.isoformat() if self.start_time else None,
+            'endTime': self.end_time.isoformat() if self.end_time else None,
         }
 
 

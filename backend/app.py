@@ -1,13 +1,15 @@
 #app.py
 from flask import Flask, jsonify, request
 from draft import draft_player, draft_blueprint
-from game_state import create_new_game
+from game_state import create_new_game, game_state_blueprint
 from flask_migrate import Migrate
 from database import db
 from datetime import datetime
+from flask_cors import CORS
 import csv
 
 app = Flask(__name__)
+CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Bobby/Documents/Programming/reactprojects/Cardball/backend/cardball.db'
 db.init_app(app)
 migrate = Migrate(app, db)
@@ -85,6 +87,9 @@ def create_team():
     return jsonify(team.as_dict())
 
 app.register_blueprint(draft_blueprint)
+
+app.register_blueprint(game_state_blueprint)
+
 
 #@app.route('/api/draft', methods=['POST'])
 #def draft():
