@@ -18,14 +18,18 @@ export const TeamSelect: React.FC<Props> = ({ navigation }) => {
     throw new Error("GameContext must be used within a GameProvider");
   }
 
-  const { setGame } = gameContext;
+  const { setGame, setGameId } = gameContext;
 
   const submitTeams = async () => {
     if (homeTeam && awayTeam) {
       try {
-        console.log(homeTeam, awayTeam);  // Add this line
+        console.log(homeTeam, awayTeam);
         const game = await createGame(homeTeam, awayTeam);
         setGame(game);
+
+        if (game.id) {
+          setGameId(game.id); // Ensure gameId is set as soon as game is created
+        }
 
         console.log(game)
         

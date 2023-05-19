@@ -36,7 +36,6 @@ GameContextProvider:
     - game: # The state of the game, including the score, the inning number, and which team is up to bat.
     - inning: # The state of the current inning, including the number of outs and which half (top or bottom) it is.
     - teams: # The teams playing in the game, including their players and scores.
-    - players: # All players in the game, including their stats and current positions.
     - atBat: # The state of the current "at bat", including the batter and pitcher and the number of strikes, balls, and fouls.
 
   steps:
@@ -105,8 +104,7 @@ team:
   description: A team in the game
   properties:
     - name
-    - players
-    - lineup # the order in which the playerType players become upToBat
+    - players # All players on the team, including their stats and current positions.
     - score # number of runs the team has scored cumulatively in the game
     - role: (onOffense or onDefense) # role changes after each half-inning
   actions:
@@ -139,14 +137,19 @@ player:
       - DH # Designated Hitter
       - P # Pitcher
       - BN # Bench (up to 10 players on the bench at the same time)
-    - role: (upToBat, upToPitch, upToSteal, upToDefend, onBase, onBench)
+    - status: (inLineupBatter(number), activePitcher, onBenchBatter, onBenchPitcher)
+      # The status determines the player's current activity during the game:
+      # inLineupBatter: The batter is in the lineup for this game (number) represents their place in the order 1-9
+      # activePitcher: The pitcher is currently active
+      # onBenchBatter: The batter is currently on the bench
+      # onBenchPitcher: The pitcher is currently on the bench 
+    - role: (upToBat, upToPitch, upToSteal, upToDefend, onBase,)
       # The role determines the player's current activity during the game:
       # upToBat: The player is currently batting
       # upToPitch: The player is currently pitching
       # upToSteal: The player is attempting to steal a base
       # upToDefend: The player is fielding a ball
       # onBase: The player is occupying a base but not currently stealing
-      # onBench: The player is on the bench
     - skills:
       - bat_skill # skill modifier for swing roll when batting
       - pit_skill # skill modifier for pitch roll when pitching

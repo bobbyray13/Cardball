@@ -14,24 +14,28 @@ def draft_player(team_id, player_id):
     if not team or not player:
         return jsonify({'message': 'Team or player not found.'}), 404
 
+    # Set player's team
+    player.team_id = team.id
+    player.drafted = True  # Add this line
+
     # Add player to team based on player type
     if player.playerType == 'Batter':
         team.batters.append(player)
     elif player.playerType == 'Pitcher':
         team.pitchers.append(player)
 
-    # Add player to bench
-    team.bench_players.append(player)
-    player.active = False
+    # Add logic to add player to appropriate bench
 
     db.session.commit()
+    db.session.refresh(team)
 
-    updated_team = Team.query.options(joinedload(Team.batters), joinedload(Team.pitchers)).get(team_id)
+    updated_team = Team.query.options(joinedload(Team.batters), joinedload(Team.pitchers), joinedload(Team.players)).get(team_id)
 
     if updated_team:
         return jsonify({'message': 'Player drafted successfully.'}), 200
     else:
         return jsonify({'message': 'Error retrieving updated team.'}), 500
+
 
 @draft_blueprint.route('/api/draft', methods=['POST'])
 def draft():

@@ -7,7 +7,6 @@ from database import db
 from datetime import datetime
 
 class Serializer(object):
-    """Class for serializing SQLAlchemy models."""
 
     def serialize(self):
         return {c: getattr(self, c) for c in inspect(self).attrs.keys()}
@@ -20,8 +19,8 @@ class Player(db.Model, Serializer):
     __tablename__ = 'players'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    position = Column(String)
+    name = Column(String(50), nullable=False)
+    position = Column(String(30), nullable=False)
     bat_skill = Column(Integer)
     pow_skill = Column(Integer)
     pit_skill = Column(Integer)
@@ -29,11 +28,12 @@ class Player(db.Model, Serializer):
     run_skill = Column(Integer)
     playerType = Column(String)
     year = Column(Integer)
-    role = Column(String)  # 'bench', 'batter', or 'pitcher'
-    in_lineup = Column(Boolean, default=False)  # whether the player is in the lineup
+    status = Column(String(30), nullable=False)  # 'inLineupBatter', 'activePitcher', 'onBenchBatter', 'onBenchPitcher'
+    role = Column(String)  # 'upToBat', 'upToPitch', 'upToSteal', 'upToDefend', 'onBase'
+    drafted = Column(Boolean, default=False)
 
     team_id = Column(Integer, ForeignKey('teams.id'))
-    team = relationship('Team', back_populates='players')
+    team_name = relationship('Team', back_populates='players')
 
     def serialize(self):
         return {
@@ -47,25 +47,36 @@ class Player(db.Model, Serializer):
             'run_skill' : self.run_skill,
             'playerType' : self.playerType,
             'year' : self.year,
+            'status' : self.status,
             'role' : self.role,
-            'in_lineup' : self.in_lineup,
+            'team_id' : self.team_id,
+            'team_name' : self.team.name if self.team else None,
+            'drafted' : self.drafted
         }
 
 class Team(db.Model, Serializer):
     __tablename__ = 'teams'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String(50), unique=True, nullable=False)
+    name = Column(String(50), nullable=False)
     score = Column(Integer, default=0)
     role = Column(String)  # 'onDefense' or 'onOffense'
 
-    players = relationship('Player', back_populates='team')
+    players = relationship('Player', backref='team', lazy='dynamic')
     game_id = Column(Integer, ForeignKey('games.id'))
 
     # Relationships for different types of players
+    game = relationship('Game', back_populates='home_team', foreign_keys=[game_id])
     batters = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.playerType=='Batter')", viewonly=True)
     pitchers = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.playerType=='Pitcher')", viewonly=True)
-    bench_players = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.role=='bench')", viewonly=True)
+    bench_batters = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.status=='benchBatter')", viewonly=True)
+    bench_pitchers = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.status=='benchPitcher')", viewonly=True)
+
+    #get all batters, pitchers, bench batters, and bench pitchers for a team:
+    #team_batters = Team.query.get(some_team_id).batters
+    #team_pitchers = Team.query.get(some_team_id).pitchers
+    #team_bench_batters = Team.query.get(some_team_id).bench_batters
+    #team_bench_pitchers = Team.query.get(some_team_id).bench_pitchers
 
     def serialize(self):
         return {
@@ -75,7 +86,6 @@ class Team(db.Model, Serializer):
             'role' : self.role,
             'batters' : [player.serialize() for player in self.batters],
             'pitchers' : [player.serialize() for player in self.pitchers],
-            'benchPlayers' : [player.serialize() for player in self.bench_players],
             'players' : [player.serialize() for player in self.players],
             'game_id' : self.game_id
         }
@@ -113,6 +123,9 @@ class Game(db.Model, Serializer):
             'startTime': self.start_time.isoformat() if self.start_time else None,
             'endTime': self.end_time.isoformat() if self.end_time else None,
         }
+
+#team_players = Team.query.get(some_team_id).players - get all players from a team
+#player_team = Player.query.get(some_player_id).team - get the team of a player
 
 
 class GameLog(db.Model):

@@ -1,7 +1,8 @@
 #app.py
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Blueprint
 from draft import draft_player, draft_blueprint
 from game_state import create_new_game, game_state_blueprint
+#from substitute_player import substitute_player_blueprint
 from flask_migrate import Migrate
 from database import db
 from datetime import datetime
@@ -11,13 +12,18 @@ import csv
 app = Flask(__name__)
 CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Bobby/Documents/Programming/reactprojects/Cardball/backend/cardball.db'
-db.init_app(app)
-migrate = Migrate(app, db)
 
+db.init_app(app)
+
+migrate = Migrate(app, db)
 
 with app.app_context():
     from models import Player, Team, Game, GameLog
-    db.create_all()
+
+# Register blueprints here
+app.register_blueprint(draft_blueprint)
+app.register_blueprint(game_state_blueprint)
+#app.register_blueprint(substitute_player_blueprint)
 
 @app.route('/api/games', methods=['POST'])
 def create_game():
@@ -52,7 +58,7 @@ def create_game():
 
 @app.route('/api/players', methods=['GET'])
 def get_players():
-    players = Player.query.all()
+    players = Player.query.filter_by(drafted=False).all()
     return jsonify([player.serialize() for player in players])
 
 @app.route('/api/load_players', methods=['POST'])
@@ -85,11 +91,6 @@ def create_team():
     db.session.add(team)
     db.session.commit()
     return jsonify(team.as_dict())
-
-app.register_blueprint(draft_blueprint)
-
-app.register_blueprint(game_state_blueprint)
-
 
 #@app.route('/api/draft', methods=['POST'])
 #def draft():

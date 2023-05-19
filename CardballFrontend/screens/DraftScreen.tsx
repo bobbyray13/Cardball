@@ -22,15 +22,15 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
     throw new Error("GameContext must be used within a GameProvider");
   }
 
-  const { game, setGame } = gameContext;
+  const { game, setGame, gameId } = gameContext;
 
-  console.log(game);
+  console.log("gameContext set successfully");
 
   useEffect(() => {
     const initializeDraft = async () => {
         try {
             const players = await getPlayers();
-            console.log("Fetched players: ", players);
+            console.log("Fetched players: ", players.map((player: Player) => player.name));
             setAvailablePlayers(players);
           } catch (err) {
             console.error('Failed to fetch players:', err);
@@ -49,24 +49,24 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
   
     console.log(draftingTeam);
   
-    if (game && game[draftingTeam]) {  // Check if game and the team being drafted are not null
-
-      console.log('Attempting to draft player for team ID:', game[draftingTeam].id); // Log the team ID
-      console.log('Attempting to draft player with player ID:', player.id); // Log the player ID
+    if (game && game[draftingTeam]) {
+      console.log('Attempting to draft player for team ID:', game[draftingTeam].id);
+      console.log('Attempting to draft player with player ID:', player.id);
+      console.log('Attempting to draft player with game ID', gameId)
 
       // Attempt to draft player via the API
       try {
-        const response = await apiDraftPlayer(game[draftingTeam].id, player.id);
-
-        // console.log('API response:', response);
+        await apiDraftPlayer(game[draftingTeam].id, player.id);
         console.log('Successfully drafted player:', player.name);
-        // console.log('Updated player data:', response.data.player);
-  
+
         // Fetch updated game state from backend
-        const updatedGameState = await getGameState(game_id);
-        // Update game state in the context
-        setGame(updatedGameState);
-  
+        if (gameId) {
+          const updatedGameState = await getGameState(gameId);
+          setGame(updatedGameState);
+        } else {
+          console.error('Game ID not set in context');
+        }
+
       } catch (err) {
         console.error('Failed to draft player:', err);
       }
@@ -77,20 +77,14 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
     // Remove the player from the available players
     setAvailablePlayers((prevPlayers) => {
       const updatedPlayers = prevPlayers.filter((p) => p.id !== player.id);
-      console.log('Updated available players:', updatedPlayers);
+      console.log("Current game state: ", JSON.stringify(game, null, 2));
+
+      console.log('Updated available players:', updatedPlayers.map(player => player.name));
       return updatedPlayers;
     });
   
     // Alternate the draft turn
     setDraftTurn((prevTurn) => (prevTurn === 'Away' ? 'Home' : 'Away'));
-  
-    // Re-fetch the players after drafting a player
-    try {
-      const players = await getPlayers();
-      setAvailablePlayers(players);
-    } catch (err) {
-      console.error('Failed to re-fetch players:', err);
-    }
   };
   
 

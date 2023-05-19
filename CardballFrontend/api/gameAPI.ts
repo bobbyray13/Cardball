@@ -1,6 +1,6 @@
 // gameAPI.ts
 export const createGame = async (homeTeamName: string, awayTeamName: string) => {
-    console.log(`Creating game with home team: ${homeTeamName}, away team: ${awayTeamName}`);  // Add this line
+    console.log(`Creating game with home team: ${homeTeamName}, away team: ${awayTeamName}`);
 
     const response = await fetch('http://192.168.4.46:5000/api/games', {
         method: 'POST',
@@ -11,7 +11,7 @@ export const createGame = async (homeTeamName: string, awayTeamName: string) => 
     });
     const game = await response.json();
 
-    console.log(`Game created: ${JSON.stringify(game)}`); // Add this line to log the created game
+    console.log(`Game created:`);
 
     return game;
 };
