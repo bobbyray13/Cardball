@@ -6,6 +6,9 @@ from sqlalchemy.inspection import inspect
 from database import db
 from datetime import datetime
 
+# def checkIfDatabaseIsEmpty():
+#     return db.session.query(db.exists().where(Player.id)).scalar() == False
+
 class Serializer(object):
 
     def serialize(self):
@@ -28,12 +31,14 @@ class Player(db.Model, Serializer):
     run_skill = Column(Integer)
     playerType = Column(String)
     year = Column(Integer)
-    status = Column(String(30), nullable=False)  # 'inLineupBatter', 'activePitcher', 'onBenchBatter', 'onBenchPitcher'
+    status = Column(String(30), nullable=False, default='tbd')  # 'inLineupBatter', 'activePitcher', 'onBenchBatter', 'onBenchPitcher', 'tbd'
     role = Column(String)  # 'upToBat', 'upToPitch', 'upToSteal', 'upToDefend', 'onBase'
     drafted = Column(Boolean, default=False)
 
+    __table_args__ = (db.UniqueConstraint('name', 'year', name='unique_name_and_year'),)
+
     team_id = Column(Integer, ForeignKey('teams.id'))
-    team_name = relationship('Team', back_populates='players')
+    team = relationship('Team', back_populates='players')
 
     def serialize(self):
         return {
@@ -62,11 +67,9 @@ class Team(db.Model, Serializer):
     score = Column(Integer, default=0)
     role = Column(String)  # 'onDefense' or 'onOffense'
 
-    players = relationship('Player', backref='team', lazy='dynamic')
-    game_id = Column(Integer, ForeignKey('games.id'))
+    players = relationship('Player', lazy='dynamic')
 
     # Relationships for different types of players
-    game = relationship('Game', back_populates='home_team', foreign_keys=[game_id])
     batters = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.playerType=='Batter')", viewonly=True)
     pitchers = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.playerType=='Pitcher')", viewonly=True)
     bench_batters = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.status=='benchBatter')", viewonly=True)
@@ -87,7 +90,6 @@ class Team(db.Model, Serializer):
             'batters' : [player.serialize() for player in self.batters],
             'pitchers' : [player.serialize() for player in self.pitchers],
             'players' : [player.serialize() for player in self.players],
-            'game_id' : self.game_id
         }
 
 class Game(db.Model, Serializer):

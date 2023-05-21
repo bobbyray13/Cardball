@@ -7,6 +7,9 @@ export type RootStackParamList = {
   Home: undefined;
   Draft: undefined;
   TeamSelect: undefined;
+  PostDraft: undefined;
+  LineupSelect: undefined;
+  PlayBall: undefined;
 };
 
 export type HomeComponentProps = {
@@ -48,6 +51,7 @@ export interface Team {
   benchPlayers: Player[];  // List of players in the team's bench
   score: number;  // Team's current score
   role: TeamRole;  // Role of the team (either on offense or on defense)
+  players: Player[];
   lineup: Player[];  // Ordered list of players in batting lineup
   batters: Player[]; // List of players in the team who are Batters
   pitchers: Player[]; // List of players in the team who are Pitchers

@@ -23,21 +23,18 @@ def create_game_log(game: Game, message: str):
 
 def create_new_game(home_team: Team, away_team: Team) -> Game:
     new_game = Game(
-        home_team_id=home_team.id,
-        away_team_id=away_team.id,
+        home_team=home_team,
+        away_team=away_team,
         home_team_score=0,
         away_team_score=0,
         current_inning=1,
-        current_half=True,
+        current_half='top',
         current_outs=0,
     )
     db.session.add(new_game)
-    db.session.commit()  # Add this line
+    db.session.commit()
 
     create_game_log(new_game, "Game started")
-
-    home_team.game_id = new_game.id
-    away_team.game_id = new_game.id
 
     return new_game
 #END OF game_state.py

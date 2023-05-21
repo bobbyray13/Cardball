@@ -1,12 +1,14 @@
 // DraftScreen.tsx:
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { View, Text, Button, FlatList, StyleSheet } from 'react-native';
 import { DraftScreenNavigationProp, PlayerType } from '../types';
 import { Player, PlayerPosition, Team as TeamType, PlayerRole, Game } from '../types';
-import { getPlayers, } from '../api/playerAPI';
+import { getPlayers } from '../api/playerAPI';
+//import { isDatabaseEmpty } from '../api/playerAPI';'
 import { GameContext, } from '../contexts/gameContext';
 import { draftPlayer as apiDraftPlayer } from '../api/playerAPI';
 import { getGameState } from '../api/playerAPI';
+import { loadPlayers } from '../api/playerAPI';
 
 type Props = {
   navigation: DraftScreenNavigationProp;
@@ -24,26 +26,46 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
 
   const { game, setGame, gameId } = gameContext;
 
-  console.log("gameContext set successfully");
+  const [playersDrafted, setPlayersDrafted] = useState(0);
+
+  const [isDrafting, setIsDrafting] = useState(false);
+
+  useEffect(() => {
+    console.log('Current game state:', JSON.stringify(game, null, 2));
+  }, [playersDrafted]);
 
   useEffect(() => {
     const initializeDraft = async () => {
         try {
+            console.log('Resetting players...');
+            await fetch('http://192.168.4.46:5000/api/reset_players', {
+                method: 'POST',
+            });
+            // Check if database is empty
+            // const dbEmpty = await isDatabaseEmpty();
+            // console.log('Database empty:', dbEmpty);
+            // if (dbEmpty) {
+            console.log('Loading players...');
+            const loadMessage = await loadPlayers();
+            console.log(loadMessage);
+            // }
+
             const players = await getPlayers();
             console.log("Fetched players: ", players.map((player: Player) => player.name));
             setAvailablePlayers(players);
-          } catch (err) {
+        } catch (err) {
             console.error('Failed to fetch players:', err);
-          }
+        }
     };
 
     initializeDraft();
-  }, []);
+}, []);
 
-  const handleDraftPlayer = async (player: Player) => {
+  const handleDraftPlayer = useCallback(async (player: Player) => {
     console.log('Drafting player:', player);
-    // console.log('Current game state:', game);
-  
+    setIsDrafting(true);
+    let shouldUpdateState = false;
+
     // Determine the team that's currently drafting
     const draftingTeam = draftTurn === 'Away' ? 'awayTeam' : 'homeTeam';
   
@@ -67,6 +89,7 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
           console.error('Game ID not set in context');
         }
 
+        shouldUpdateState = true;
       } catch (err) {
         console.error('Failed to draft player:', err);
       }
@@ -75,18 +98,37 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
     }
   
     // Remove the player from the available players
-    setAvailablePlayers((prevPlayers) => {
-      const updatedPlayers = prevPlayers.filter((p) => p.id !== player.id);
-      console.log("Current game state: ", JSON.stringify(game, null, 2));
+    if (shouldUpdateState) {
+      setAvailablePlayers((prevPlayers) => {
+        const updatedPlayers = prevPlayers.filter((p) => p.id !== player.id);
 
-      console.log('Updated available players:', updatedPlayers.map(player => player.name));
-      return updatedPlayers;
-    });
+        console.log("Current game state: ", JSON.stringify(game, null, 2));
+        console.log('Updated available players:', updatedPlayers.map(player => player.name));
+        
+        return updatedPlayers;
+      });
+
+      // Increment the number of players drafted
+      setPlayersDrafted(prevCount => {
+        const updatedCount = prevCount + 1;
+        
+        console.log('number of players drafted:', updatedCount)
+
+        return updatedCount;
+      });
+
+      // Alternate the draft turn
+      setDraftTurn((prevTurn) => (prevTurn === 'Away' ? 'Home' : 'Away'));
+    }  
+
+    setIsDrafting(false);
+  }, [game, setGame, gameId, draftTurn, navigation]);;
   
-    // Alternate the draft turn
-    setDraftTurn((prevTurn) => (prevTurn === 'Away' ? 'Home' : 'Away'));
-  };
-  
+  useEffect(() => {
+    if (playersDrafted >= 20) {
+      navigation.navigate('PostDraft');
+    }
+  }, [playersDrafted, navigation]);
 
   return (
     <View style={styles.container}>
@@ -97,7 +139,11 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
         renderItem={({ item }) => (
           <View>
             <Text>{item.name} - {item.position}</Text>
-            <Button title="Draft Player" onPress={() => handleDraftPlayer(item)} />
+            <Button
+              title={isDrafting ? "Drafting..." : "Draft Player"}
+              onPress={() => handleDraftPlayer(item)}
+              disabled={isDrafting}
+            />
           </View>
         )}
       />

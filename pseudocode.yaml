@@ -136,7 +136,7 @@ player:
       - RF # Right Field
       - DH # Designated Hitter
       - P # Pitcher
-      - BN # Bench (up to 10 players on the bench at the same time)
+      - BN # Bench (up to 26 players on the bench at the same time)
     - status: (inLineupBatter(number), activePitcher, onBenchBatter, onBenchPitcher)
       # The status determines the player's current activity during the game:
       # inLineupBatter: The batter is in the lineup for this game (number) represents their place in the order 1-9

@@ -2,6 +2,12 @@
 import Constants from 'expo-constants';
 import { Game } from '../types';
 
+// export const isDatabaseEmpty = async () => {
+//   const response = await fetch('http://192.168.4.46:5000/api/database_empty');
+//   const data = await response.json();
+//   return data.database_empty;
+// };
+
 export const getPlayers = async () => {
     const response = await fetch('http://192.168.4.46:5000/api/players');
     const players = await response.json();
@@ -14,7 +20,8 @@ export const loadPlayers = async () => {
   });
 
   if (!response.ok) {
-      throw new Error('Failed to load players');
+      const errorMessage = await response.text();
+      throw new Error('Failed to load players' + errorMessage);
   }
 
   const result = await response.json();

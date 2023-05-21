@@ -1,0 +1,618 @@
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.4.46 - - [20/May/2023 20:54:12] "GET /api/players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.4.46 - - [20/May/2023 20:54:18] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.4.46 - - [20/May/2023 20:54:36] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.4.46 - - [20/May/2023 21:05:37] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.4.46 - - [20/May/2023 21:06:12] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.4.46 - - [20/May/2023 21:06:19] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:40] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:40] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:40] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:41] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:41] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:46] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:46] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:47] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:47] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:48] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:48] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:49] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:49] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:51] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:51] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:52] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:52] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:54] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:54] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:56] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:56] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:57] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:57] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:58] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:58] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:59] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:13:59] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:00] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:00] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:01] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:01] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:02] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:02] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:03] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:03] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:04] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:04] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:05] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:05] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:06] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:06] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:07] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:07] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:08] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:08] "GET /api/game_state/28 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:31] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:31] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:31] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:32] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:32] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:35] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:35] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:36] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:36] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:37] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:37] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:38] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:38] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:38] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:39] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:39] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:39] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:40] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:40] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:41] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:41] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:42] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:42] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:44] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:44] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:46] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:46] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:49] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:49] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:50] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:50] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:51] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:51] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:52] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:52] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:53] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:53] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:53] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:53] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:54] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:54] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:55] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:55] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:56] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:14:56] "GET /api/game_state/29 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:42] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:43] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:43] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:43] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:43] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:45] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:45] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:45] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:45] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:46] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:46] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:47] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:47] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:47] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:47] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:47] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:47] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:48] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:48] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:48] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:48] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:49] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:49] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:58] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:15:58] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:00] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:00] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:00] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:00] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:16] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:16] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:16] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:16] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:36] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:36] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:37] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:37] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:38] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:38] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:46] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:46] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:47] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:47] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:47] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:16:47] "GET /api/game_state/30 HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:34] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:34] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:34] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:34] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:34] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:40] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:40] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:43] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:44] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:45] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:45] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:46] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:46] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:47] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:47] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:48] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:48] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:51] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:51] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:52] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:52] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:53] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:53] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:54] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:54] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:55] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:55] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:56] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:56] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:57] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:57] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:58] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:58] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:59] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:59] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:24:59] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:25:00] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:25:01] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:25:01] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:25:02] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:25:02] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:25:03] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:25:03] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:25:04] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 21:25:04] "GET /api/game_state/31 HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:55:53] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:55:53] "GET /api/game_state/32 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:55:54] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:55:54] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:55:54] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:24] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:24] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:24] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:24] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:24] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:38] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:38] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:40] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:40] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:42] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:42] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:51] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:51] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:57] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:57] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:59] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:59] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:57:59] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:00] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:01] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:01] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:01] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:01] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:02] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:02] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:03] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:03] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:04] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:04] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:05] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:05] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:06] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:06] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:07] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:07] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:07] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:08] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:08] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:08] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:09] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:09] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:10] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:10] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:11] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 22:58:11] "GET /api/game_state/33 HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:06:19] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:06:19] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:06:19] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:06:19] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:06:19] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:06:25] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:06:25] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:06:49] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:06:49] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:07] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:07] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:07] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:07] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:20] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:20] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:20] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:20] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:21] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:21] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:21] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:21] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:21] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:22] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:22] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:22] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:22] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:22] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:23] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:23] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:23] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:23] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:24] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:24] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:24] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:25] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:25] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:25] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:25] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:25] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:25] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:25] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:25] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:25] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:28] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:28] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:28] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:07:28] "GET /api/game_state/34 HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:09] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:09] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:09] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:09] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:09] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:13] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:13] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:16] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:16] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:18] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:18] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:19] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:19] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:20] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:20] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:20] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:20] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:22] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:22] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:23] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:23] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:24] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:24] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:24] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:24] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:25] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:25] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:26] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:26] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:27] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:27] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:27] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:27] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:28] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:28] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:29] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:29] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:29] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:29] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:30] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:30] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:31] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:31] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:32] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:10:32] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:00] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:00] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:00] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:00] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:00] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:05] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:05] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:07] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:07] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:08] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:08] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:09] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:09] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:11] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:11] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:12] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:12] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:13] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:13] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:15] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:15] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:16] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:16] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:17] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:17] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:20] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:21] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:21] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:21] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:22] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:22] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:23] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:24] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:25] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:25] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:26] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:26] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:27] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:27] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:27] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:28] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:28] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:28] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:29] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [20/May/2023 23:13:29] "GET /api/game_state/36 HTTP/1.1" 200 -

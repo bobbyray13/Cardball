@@ -2,12 +2,14 @@
 from flask import Flask, jsonify, request, Blueprint
 from draft import draft_player, draft_blueprint
 from game_state import create_new_game, game_state_blueprint
+#from models import checkIfDatabaseIsEmpty
 #from substitute_player import substitute_player_blueprint
 from flask_migrate import Migrate
 from database import db
 from datetime import datetime
 from flask_cors import CORS
 import csv
+import logging
 
 app = Flask(__name__)
 CORS(app)
@@ -17,6 +19,8 @@ db.init_app(app)
 
 migrate = Migrate(app, db)
 
+logging.basicConfig(filename='server.log', level=logging.DEBUG)
+
 with app.app_context():
     from models import Player, Team, Game, GameLog
 
@@ -24,6 +28,26 @@ with app.app_context():
 app.register_blueprint(draft_blueprint)
 app.register_blueprint(game_state_blueprint)
 #app.register_blueprint(substitute_player_blueprint)
+
+@app.route('/api/reset_players', methods=['POST'])
+def reset_players():
+    players = Player.query.all()
+    for player in players:
+        player.drafted = False
+        player.team_id = None
+    db.session.commit()
+
+    return jsonify({'message': 'All players reset successfully.'}), 200
+
+# @app.route('/api/database_empty', methods=['GET'])
+# def database_empty():
+#     logging.info("Checking if database is empty")
+#     try:
+#         is_empty = checkIfDatabaseIsEmpty()
+#         return jsonify({'database_empty': is_empty})
+#     except Exception as e:
+#         return jsonify({'error while verifying empty database': str(e)}, 400)
+
 
 @app.route('/api/games', methods=['POST'])
 def create_game():
@@ -67,19 +91,23 @@ def load_players():
         with open('./assets/PlayerDatabase.csv', 'r') as file:
             reader = csv.DictReader(file)
             for row in reader:
-                player = Player(
-                    name=row['name'],
-                    position=row['position'],
-                    bat_skill=int(row['bat_skill']),
-                    pow_skill=int(row['pow_skill']),
-                    pit_skill=int(row['pit_skill']),
-                    fld_skill=int(row['fld_skill']),
-                    run_skill=int(row['run_skill']),
-                    playerType=row['playerType'],
-                    year=int(row['year'])
-                )
-                db.session.add(player)
-            db.session.commit()
+                logging.info(f"Reading row: {row}")  # Log each row that is being read
+                existing_player = Player.query.filter_by(name=row['name'], year=row['year']).first()
+                if existing_player is None:
+                    player = Player(
+                        name=row['name'],
+                        position=row['position'],
+                        bat_skill=int(row['bat_skill']),
+                        pow_skill=int(row['pow_skill']),
+                        pit_skill=int(row['pit_skill']),
+                        fld_skill=int(row['fld_skill']),
+                        run_skill=int(row['run_skill']),
+                        playerType=row['playerType'],
+                        year=int(row['year'])
+                    )
+                    db.session.add(player)
+                    logging.info(f"Added player to session: {player.name}")  # Log each player that is being added
+                    db.session.commit()
         return jsonify({'message': 'Players loaded successfully.'})
     except Exception as e:
         return jsonify({'message': 'Error occurred: ' + str(e)}), 500
