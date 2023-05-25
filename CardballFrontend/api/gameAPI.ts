@@ -1,4 +1,6 @@
 // gameAPI.ts
+import { getGameState  } from "./playerAPI";
+
 export const createGame = async (homeTeamName: string, awayTeamName: string) => {
     console.log(`Creating game with home team: ${homeTeamName}, away team: ${awayTeamName}`);
 
@@ -29,7 +31,11 @@ export const endHalfInning = async (gameId: number) => {
         method: 'POST',
     });
     const game = await response.json();
-    return game;
+
+    // Once half-inning ends, get the updated game state
+    const updatedGameState = await getGameState(gameId);
+
+    return updatedGameState;
 };
 
 export const incrementOuts = async (gameId: number) => {

@@ -7,7 +7,6 @@ from database import db
 
 game_state_blueprint = Blueprint('game_state', __name__)
 
-
 @game_state_blueprint.route('/api/game_state/<int:game_id>', methods=['GET'])
 def get_game_state(game_id):
     game = Game.query.get(game_id)

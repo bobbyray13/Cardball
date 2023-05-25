@@ -1,31 +1,17 @@
 //playerAPI.ts:
 import Constants from 'expo-constants';
 import { Game } from '../types';
+import axios from 'axios';
+import { LineupData } from '../types';
 
-// export const isDatabaseEmpty = async () => {
-//   const response = await fetch('http://192.168.4.46:5000/api/database_empty');
-//   const data = await response.json();
-//   return data.database_empty;
-// };
-
-export const getPlayers = async () => {
-    const response = await fetch('http://192.168.4.46:5000/api/players');
-    const players = await response.json();
-    return players;
-};
-
-export const loadPlayers = async () => {
-  const response = await fetch('http://192.168.4.46:5000/api/load_players', {
-      method: 'POST',
-  });
-
-  if (!response.ok) {
-      const errorMessage = await response.text();
-      throw new Error('Failed to load players' + errorMessage);
+export const updateLineup = async (teamId: number, lineupData: {lineup: number[], fieldPositions: Record<number, string>}): Promise<void> => {
+  console.log("Sending lineupData to server: ", lineupData);
+  try {
+    await axios.put(`http://192.168.4.46:5000/api/teams/${teamId}/lineup`, lineupData);
+  } catch (error) {
+    console.error('Failed to update lineup playerAPI.ts', error);
+    throw error;
   }
-
-  const result = await response.json();
-  return result.message;
 };
 
 export const getGameState = async (gameId: number): Promise<Game> => {
@@ -46,8 +32,28 @@ export const getGameState = async (gameId: number): Promise<Game> => {
 
   } catch (error) {
     console.error('Failed to get game state:', error);
-    throw error; // Propagate the error so it can be handled by the caller
+    throw error;
   }
+};
+
+export const getPlayers = async () => {
+    const response = await fetch('http://192.168.4.46:5000/api/players');
+    const players = await response.json();
+    return players;
+};
+
+export const loadPlayers = async () => {
+  const response = await fetch('http://192.168.4.46:5000/api/load_players', {
+      method: 'POST',
+  });
+
+  if (!response.ok) {
+      const errorMessage = await response.text();
+      throw new Error('Failed to load players' + errorMessage);
+  }
+
+  const result = await response.json();
+  return result.message;
 };
 
 export const draftPlayer = async (teamId: number, playerId: number): Promise<any> => {
@@ -79,7 +85,7 @@ export const draftPlayer = async (teamId: number, playerId: number): Promise<any
 
   } catch (error) {
     console.error('number2 Failed to draft player:', error);
-    throw error; // Propagate the error so it can be handled by the caller
+    throw error;
   }
 };
 //END OF playerAPI.ts

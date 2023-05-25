@@ -1,14 +1,19 @@
-//gameContext.tsx
 import React, { createContext, useState, useEffect } from 'react';
 import { Game, GameContextProps, GameProviderProps } from '../types';
 import { Team, Player, PlayerType } from '../types'
 import { getGameState } from '../api/playerAPI';
+import { endHalfInning } from '../api/gameAPI';
 
-export const GameContext = createContext<GameContextProps & { gameId: number | null, setGameId: React.Dispatch<React.SetStateAction<number | null>> } | undefined>(undefined);
+export const GameContext = createContext<GameContextProps | undefined>(undefined);
 
 export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [game, setGame] = useState<Game | null>(null);
   const [gameId, setGameId] = useState<number | null>(null);
+
+  const endHalfInningAndUpdateState = async (gameId: number) => {
+    const updatedGameState = await endHalfInning(gameId);
+    setGame(updatedGameState);
+  };
 
   useEffect(() => {
     async function loadInitialGameState() {
@@ -57,8 +62,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
 };
 
     return (
-        <GameContext.Provider value={{ game, setGame, substitutePlayer, gameId, setGameId }}>
-          {children}
+        <GameContext.Provider value={{ game, setGame, substitutePlayer, gameId, setGameId, endHalfInningAndUpdateState }}>
+        {children}
         </GameContext.Provider>
     );
 };

@@ -1,6 +1,6 @@
 // DraftScreen.tsx:
 import React, { useState, useContext, useEffect, useCallback } from 'react';
-import { View, Text, Button, FlatList, StyleSheet } from 'react-native';
+import { View, Text, Button, FlatList, StyleSheet, TextInput, Modal } from 'react-native';
 import { DraftScreenNavigationProp, PlayerType } from '../types';
 import { Player, PlayerPosition, Team as TeamType, PlayerRole, Game } from '../types';
 import { getPlayers } from '../api/playerAPI';
@@ -30,8 +30,17 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
 
   const [isDrafting, setIsDrafting] = useState(false);
 
+  const [searchValue, setSearchValue] = useState('');
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const [draftingTeam, setDraftingTeam] = useState<TeamType | null>(null);
+
+  const filteredPlayers = availablePlayers.filter(player =>
+    player.name.toLowerCase().includes(searchValue.toLowerCase())
+  );
+
   useEffect(() => {
-    console.log('Current game state:', JSON.stringify(game, null, 2));
   }, [playersDrafted]);
 
   useEffect(() => {
@@ -41,14 +50,9 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
             await fetch('http://192.168.4.46:5000/api/reset_players', {
                 method: 'POST',
             });
-            // Check if database is empty
-            // const dbEmpty = await isDatabaseEmpty();
-            // console.log('Database empty:', dbEmpty);
-            // if (dbEmpty) {
             console.log('Loading players...');
             const loadMessage = await loadPlayers();
             console.log(loadMessage);
-            // }
 
             const players = await getPlayers();
             console.log("Fetched players: ", players.map((player: Player) => player.name));
@@ -67,27 +71,28 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
     let shouldUpdateState = false;
 
     // Determine the team that's currently drafting
-    const draftingTeam = draftTurn === 'Away' ? 'awayTeam' : 'homeTeam';
+    const draftingTeamKey = draftTurn === 'Away' ? 'awayTeam' : 'homeTeam';
   
-    console.log(draftingTeam);
+    console.log(draftingTeamKey);
   
-    if (game && game[draftingTeam]) {
-      console.log('Attempting to draft player for team ID:', game[draftingTeam].id);
+    if (game && game[draftingTeamKey]) {
+      console.log('Attempting to draft player for team ID:', game[draftingTeamKey].id);
       console.log('Attempting to draft player with player ID:', player.id);
       console.log('Attempting to draft player with game ID', gameId)
 
       // Attempt to draft player via the API
       try {
-        await apiDraftPlayer(game[draftingTeam].id, player.id);
+        await apiDraftPlayer(game[draftingTeamKey].id, player.id);
         console.log('Successfully drafted player:', player.name);
 
         // Fetch updated game state from backend
-        if (gameId) {
-          const updatedGameState = await getGameState(gameId);
-          setGame(updatedGameState);
-        } else {
-          console.error('Game ID not set in context');
-        }
+      if (gameId) {
+        const updatedGameState = await getGameState(gameId);
+        setGame(updatedGameState);
+        setDraftingTeam(updatedGameState[draftingTeamKey]); // Update the drafting team state
+      } else {
+        console.error('Game ID not set in context');
+      }
 
         shouldUpdateState = true;
       } catch (err) {
@@ -102,7 +107,6 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
       setAvailablePlayers((prevPlayers) => {
         const updatedPlayers = prevPlayers.filter((p) => p.id !== player.id);
 
-        console.log("Current game state: ", JSON.stringify(game, null, 2));
         console.log('Updated available players:', updatedPlayers.map(player => player.name));
         
         return updatedPlayers;
@@ -133,17 +137,42 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <Text>Draft for {draftTurn} team</Text>
+      <Button
+        title="View Drafted Players"
+        onPress={() => setIsModalVisible(true)}
+      />
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={isModalVisible}
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View style={styles.modalView}>
+          <Text style={styles.modalTitle}>Drafted Players:</Text>
+          {draftingTeam?.players.map((player) => (
+            <Text key={player.id}>
+              {player.name} - {player.position}
+            </Text>
+          ))}
+          <Button
+            title="Close"
+            onPress={() => setIsModalVisible(false)}
+          />
+        </View>
+      </Modal>
+      <TextInput
+        style={styles.input}
+        value={searchValue}
+        onChangeText={setSearchValue}
+        placeholder="Search players"
+      />
       <FlatList
-        data={availablePlayers}
+        data={filteredPlayers}
         keyExtractor={(item) => `${item.name}-${item.position}-${item.year}`}
         renderItem={({ item }) => (
           <View>
             <Text>{item.name} - {item.position}</Text>
-            <Button
-              title={isDrafting ? "Drafting..." : "Draft Player"}
-              onPress={() => handleDraftPlayer(item)}
-              disabled={isDrafting}
-            />
+            <Button title={isDrafting ? "Drafting..." : "Draft Player"} onPress={() => handleDraftPlayer(item)} disabled={isDrafting}/>
           </View>
         )}
       />
@@ -169,5 +198,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     padding: 10,
   },
+  modalView: {
+    marginTop: 50,
+    backgroundColor: "white",
+    borderRadius: 20,
+    padding: 35,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5
+  },
+  modalTitle: {
+    marginBottom: 15,
+    textAlign: "center",
+    fontSize: 20
+  }
 })
 //END OF DraftScreen.tsx:

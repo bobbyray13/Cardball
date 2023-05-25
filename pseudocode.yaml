@@ -125,7 +125,7 @@ player:
     - pitcher
   properties:
     - name
-    - position # defensive position
+    - position # defensive position (may only be one of each per team at any given time, except Bench)
       - C # Catcher
       - 1B # First Base
       - 2B # Second Base
@@ -136,7 +136,7 @@ player:
       - RF # Right Field
       - DH # Designated Hitter
       - P # Pitcher
-      - BN # Bench (up to 26 players on the bench at the same time)
+      - BN # Bench (no limit to how many players can be on the bench at once)
     - status: (inLineupBatter(number), activePitcher, onBenchBatter, onBenchPitcher)
       # The status determines the player's current activity during the game:
       # inLineupBatter: The batter is in the lineup for this game (number) represents their place in the order 1-9

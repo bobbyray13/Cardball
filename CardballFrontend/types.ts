@@ -9,7 +9,9 @@ export type RootStackParamList = {
   TeamSelect: undefined;
   PostDraft: undefined;
   LineupSelect: undefined;
+  LineupSelectHome: undefined;
   PlayBall: undefined;
+  GameplayScreen: undefined;
 };
 
 export type HomeComponentProps = {
@@ -24,6 +26,15 @@ export type DraftScreenNavigationProp = StackNavigationProp<
 export type TeamSelectScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
   'TeamSelect'
+>;
+
+export type LineupSelectScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'LineupSelect'
+>;
+export type LineupSelectHomeScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'LineupSelectHome'
 >;
 
 export enum PlayerType {
@@ -50,11 +61,17 @@ export interface Team {
   name: string;  // Name of the team
   benchPlayers: Player[];  // List of players in the team's bench
   score: number;  // Team's current score
-  role: TeamRole;  // Role of the team (either on offense or on defense)
+  role: TeamRole;  // Role of the team (either onOffense or onDefense)
   players: Player[];
-  lineup: Player[];  // Ordered list of players in batting lineup
+  lineup: number[];  // Ordered list of players in batting lineup
+  fieldPositions: Record<number, string>; // add this line
   batters: Player[]; // List of players in the team who are Batters
   pitchers: Player[]; // List of players in the team who are Pitchers
+}
+
+export interface LineupData {
+  lineup: number[];
+  fieldPositions: Record<number, string>;
 }
   
 export interface Inning {
@@ -84,10 +101,13 @@ export interface Game {
     roll: 'pitch' | 'swing';
   }
 
-export interface GameContextProps {
+  interface GameContextProps {
     game: Game | null;
-    setGame: React.Dispatch<React.SetStateAction<Game | null>>;
+    setGame: (game: Game | null) => void;
     substitutePlayer: (team: Team, playerOut: Player, playerIn: Player, playerType: PlayerType) => Promise<void>;
+    gameId: number | null;
+    setGameId: (id: number | null) => void;
+    endHalfInningAndUpdateState: (gameId: number) => Promise<void>;
   }
 
 export interface GameProviderProps {
@@ -107,6 +127,8 @@ export interface GameProviderProps {
     run_skill: number; 
     fld_skill: number; 
   }
+
+export { GameContextProps }
 
   // Define the roles for each player
 export type PlayerRole = 'upToBat' | 'upToPitch' | 'upToSteal' | 'upToDefend' | 'onBase' | 'onBench';

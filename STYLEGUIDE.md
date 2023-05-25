@@ -30,6 +30,8 @@ Follow the Prettier configuration for automatic code formatting. Use the .pretti
 Use 2 spaces for indentation.
 Use single quotes for strings.
 Include a space before the opening bracket of a block.
+6. Frontend/Backend integration.
+Updating the local state immediately when the user interacts with the UI, and then sending these changes to the backend. Once the backend confirms that it has saved the changes, the frontend can consider these changes "committed". If the backend indicates an error (e.g., the changes were invalid or couldn't be saved), the frontend should roll back its local state to match the backend.
 6. Git Practices
 Make frequent, smaller commits instead of infrequent, larger ones. Each commit should represent a single logical change.
 Write descriptive commit messages that explain what changes were made and why.
@@ -40,3 +42,4 @@ Use Jest for testing, along with testing-library/react for React components.
 Each new feature should be accompanied by tests that cover the main functionality.
 Conclusion
 It's important to remember that this guide is a living document. As we learn and grow as a team, we'll update this guide to reflect new insights and better practices. The ultimate goal is to create a codebase that is consistent, readable, and easy to maintain for everyone on the team.
+END OF STYLEGUIDE

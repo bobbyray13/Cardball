@@ -2,8 +2,8 @@
 from flask import Flask, jsonify, request, Blueprint
 from draft import draft_player, draft_blueprint
 from game_state import create_new_game, game_state_blueprint
-#from models import checkIfDatabaseIsEmpty
-#from substitute_player import substitute_player_blueprint
+from lineup_edit import lineup_blueprint
+#from lineup_edit import substitute_player_blueprint
 from flask_migrate import Migrate
 from database import db
 from datetime import datetime
@@ -24,29 +24,33 @@ logging.basicConfig(filename='server.log', level=logging.DEBUG)
 with app.app_context():
     from models import Player, Team, Game, GameLog
 
-# Register blueprints here
 app.register_blueprint(draft_blueprint)
 app.register_blueprint(game_state_blueprint)
+app.register_blueprint(lineup_blueprint)
 #app.register_blueprint(substitute_player_blueprint)
 
 @app.route('/api/reset_players', methods=['POST'])
 def reset_players():
-    players = Player.query.all()
-    for player in players:
-        player.drafted = False
-        player.team_id = None
-    db.session.commit()
+    # Get the current game (you may need to adjust this to fit your implementation)
+    current_game = Game.query.filter_by(is_in_progress=True).first()
+    if current_game is None:
+        return jsonify({'message': 'No game in progress.'}), 404
 
-    return jsonify({'message': 'All players reset successfully.'}), 200
+    home_team = current_game.home_team
+    away_team = current_game.away_team
 
-# @app.route('/api/database_empty', methods=['GET'])
-# def database_empty():
-#     logging.info("Checking if database is empty")
-#     try:
-#         is_empty = checkIfDatabaseIsEmpty()
-#         return jsonify({'database_empty': is_empty})
-#     except Exception as e:
-#         return jsonify({'error while verifying empty database': str(e)}, 400)
+    # Reset roles for teams in the current game
+    home_team.role = 'onDefense'
+    away_team.role = 'onOffense'
+
+    # Reset roles for all other teams
+    other_teams = Team.query.filter(Team.id != home_team.id, Team.id != away_team.id)
+    for team in other_teams:
+        team.role = None
+
+    # Rest of your reset_players implementation...
+
+
 
 
 @app.route('/api/games', methods=['POST'])
@@ -119,11 +123,6 @@ def create_team():
     db.session.add(team)
     db.session.commit()
     return jsonify(team.as_dict())
-
-#@app.route('/api/draft', methods=['POST'])
-#def draft():
-#    data = request.get_json()
-#    return draft_player(data['team_id'], data['player_id'])
 
 @app.route('/api/games/<int:game_id>/play_inning_half', methods=['POST'])
 def play_inning_half(game_id):

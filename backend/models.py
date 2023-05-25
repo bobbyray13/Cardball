@@ -3,11 +3,9 @@ from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.inspection import inspect
+from sqlalchemy.types import PickleType
 from database import db
 from datetime import datetime
-
-# def checkIfDatabaseIsEmpty():
-#     return db.session.query(db.exists().where(Player.id)).scalar() == False
 
 class Serializer(object):
 
@@ -29,7 +27,7 @@ class Player(db.Model, Serializer):
     pit_skill = Column(Integer)
     fld_skill = Column(Integer)
     run_skill = Column(Integer)
-    playerType = Column(String)
+    playerType = Column(String, nullable=False)
     year = Column(Integer)
     status = Column(String(30), nullable=False, default='tbd')  # 'inLineupBatter', 'activePitcher', 'onBenchBatter', 'onBenchPitcher', 'tbd'
     role = Column(String)  # 'upToBat', 'upToPitch', 'upToSteal', 'upToDefend', 'onBase'
@@ -68,18 +66,14 @@ class Team(db.Model, Serializer):
     role = Column(String)  # 'onDefense' or 'onOffense'
 
     players = relationship('Player', lazy='dynamic')
+    lineup = Column(PickleType) # List of integers between 1-9 indicating where in the lineup each player hits
+    fieldPositions = Column(PickleType)  # Dictionary {Player id : position}
 
     # Relationships for different types of players
     batters = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.playerType=='Batter')", viewonly=True)
     pitchers = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.playerType=='Pitcher')", viewonly=True)
     bench_batters = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.status=='benchBatter')", viewonly=True)
     bench_pitchers = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.status=='benchPitcher')", viewonly=True)
-
-    #get all batters, pitchers, bench batters, and bench pitchers for a team:
-    #team_batters = Team.query.get(some_team_id).batters
-    #team_pitchers = Team.query.get(some_team_id).pitchers
-    #team_bench_batters = Team.query.get(some_team_id).bench_batters
-    #team_bench_pitchers = Team.query.get(some_team_id).bench_pitchers
 
     def serialize(self):
         return {
@@ -90,6 +84,8 @@ class Team(db.Model, Serializer):
             'batters' : [player.serialize() for player in self.batters],
             'pitchers' : [player.serialize() for player in self.pitchers],
             'players' : [player.serialize() for player in self.players],
+            'lineup' : self.lineup,
+            'fieldPositions' : self.fieldPositions
         }
 
 class Game(db.Model, Serializer):
@@ -111,6 +107,9 @@ class Game(db.Model, Serializer):
     start_time = Column(DateTime)
     end_time = Column(DateTime)
 
+    lineup_position = Column(Integer, nullable=True)  # Position in the batting lineup (1-9, null if on bench)
+    field_position = Column(String(30), nullable=True)  # Position on the field (C, 1B, 2B, 3B, SS, LF, CF, RF, DH, BN, P, BP)
+
     def serialize(self):
         return {
             'id': self.id,
@@ -126,13 +125,15 @@ class Game(db.Model, Serializer):
             'endTime': self.end_time.isoformat() if self.end_time else None,
         }
 
-#team_players = Team.query.get(some_team_id).players - get all players from a team
-#player_team = Player.query.get(some_player_id).team - get the team of a player
-
-
 class GameLog(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     game_id = db.Column(db.Integer, db.ForeignKey('games.id'), nullable=False)
     log_message = db.Column(db.String(500), nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 #END OF models.py
+
+
+
+
+#team_players = Team.query.get(some_team_id).players - get all players from a team
+#player_team = Player.query.get(some_player_id).team - get the team of a player

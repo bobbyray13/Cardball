@@ -1,9 +1,9 @@
 // Lineupselect.tsx:
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Button, Text, ScrollView } from 'react-native';
+import { View, Button, Text, ScrollView, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Picker } from '@react-native-picker/picker';
-import { RootStackParamList, Player, Team, LineupSelectScreenNavigationProp, } from '../types';
+import { RootStackParamList, Player, Team, } from '../types';
 import { getPlayers, getGameState } from '..//api/playerAPI';
 import { updateLineup } from '..//api/playerAPI';
 import { getLineup } from '../api/teamAPI';
@@ -11,12 +11,12 @@ import { Platform, LogBox } from 'react-native';
 import { GameContext } from '../contexts/gameContext';
 import axios from 'axios';
 
-type LineupSelectProps = {
-  navigation: StackNavigationProp<RootStackParamList, 'LineupSelect'>;
+type LineupSelectHomeProps = {
+  navigation: StackNavigationProp<RootStackParamList, 'LineupSelectHome'>;
 };
 
-export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
-  console.log('Rendering LineupSelect');
+export const LineupSelectHome: React.FC<LineupSelectHomeProps> = ({ navigation }) => {
+  console.log('Rendering LineupSelectHome');
   const [players, setPlayers] = useState<Player[]>([]);
   const [teamId, setTeamId] = useState<number | null>(null);
   const [lineup, setLineup] = useState<Record<number, number | null>>({});
@@ -39,18 +39,18 @@ export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
       console.log('Calling fetchPlayers');
       if (gameId !== null) {
         try {
-          // Get the game state to find the away team's id
+          // Get the game state to find the home team's id
           const gameState = await getGameState(gameId);
-          const awayTeamId = gameState.awayTeam.id;
-          setTeamId(awayTeamId); // Set the team id
+          const homeTeamId = gameState.homeTeam.id;
+          setTeamId(homeTeamId); // Set the team id
           
-          if (awayTeamId !== null) {
-            // Fetch only the away team's players
-            const fetchedPlayers = await getLineup(awayTeamId);
+          if (homeTeamId !== null) {
+            // Fetch only the home team's players
+            const fetchedPlayers = await getLineup(homeTeamId);
             console.log("Fetched players: ", fetchedPlayers);
             setPlayers(fetchedPlayers);
           } else {
-            console.error('Away team ID is null');
+            console.error('Home team ID is null');
           }
           
         } catch (error) {
@@ -92,7 +92,7 @@ export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
   
         console.log('Lineup and field positions updated successfully');
         // Navigate to 'LineupSelectHome' screen
-        navigation.navigate('LineupSelectHome');
+        navigation.navigate('PlayBall');
       } catch (error) {
         console.error('Error updating lineup and field positions: ', error);
       }
@@ -100,7 +100,6 @@ export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
       console.error('Team ID is null, cannot update lineup');
     }
   };
-  
 
   return (
     <ScrollView>
@@ -126,5 +125,5 @@ export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
   );
 };
 
-export default LineupSelect;
-// END OF LineupSelect.tsx:
+export default LineupSelectHome;
+// END OF Lineupselect.tsx:
