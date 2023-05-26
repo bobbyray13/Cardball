@@ -35,6 +35,7 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   const [draftingTeam, setDraftingTeam] = useState<TeamType | null>(null);
+  const [nonDraftingTeam, setNonDraftingTeam] = useState<TeamType | null>(null);
 
   const filteredPlayers = availablePlayers.filter(player =>
     player.name.toLowerCase().includes(searchValue.toLowerCase())
@@ -90,6 +91,8 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
         const updatedGameState = await getGameState(gameId);
         setGame(updatedGameState);
         setDraftingTeam(updatedGameState[draftingTeamKey]); // Update the drafting team state
+        const nonDraftingTeamKey = draftTurn === 'Away' ? 'homeTeam' : 'awayTeam'; // Get the non-drafting team key
+        setNonDraftingTeam(updatedGameState[nonDraftingTeamKey]); // Update the non-drafting team state
       } else {
         console.error('Game ID not set in context');
       }
@@ -149,11 +152,26 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
       >
         <View style={styles.modalView}>
           <Text style={styles.modalTitle}>Drafted Players:</Text>
-          {draftingTeam?.players.map((player) => (
-            <Text key={player.id}>
-              {player.name} - {player.position}
-            </Text>
-          ))}
+          {draftingTeam && (
+            <>
+              <Text>{String(draftingTeam.name)}:</Text>
+              {draftingTeam.players.map((player) => (
+                <Text key={String(player.id)}>
+                  {String(player.name)} - {String(player.position)}
+                </Text>
+              ))}
+            </>
+          )}
+          {nonDraftingTeam && (
+            <>
+              <Text>{String(nonDraftingTeam.name)}:</Text>
+              {nonDraftingTeam.players.map((player) => (
+                <Text key={String(player.id)}>
+                  {String(player.name)} - {String(player.position)}
+                </Text>
+              ))}
+            </>
+          )}
           <Button
             title="Close"
             onPress={() => setIsModalVisible(false)}

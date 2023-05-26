@@ -59,7 +59,6 @@ export interface Player {
 export interface Team {
   id: number;  // Unique identifier for the team
   name: string;  // Name of the team
-  benchPlayers: Player[];  // List of players in the team's bench
   score: number;  // Team's current score
   role: TeamRole;  // Role of the team (either onOffense or onDefense)
   players: Player[];
@@ -67,6 +66,7 @@ export interface Team {
   fieldPositions: Record<number, string>; // add this line
   batters: Player[]; // List of players in the team who are Batters
   pitchers: Player[]; // List of players in the team who are Pitchers
+  bench: Player[];  // List of players in the team's bench
 }
 
 export interface LineupData {
@@ -74,20 +74,16 @@ export interface LineupData {
   fieldPositions: Record<number, string>;
 }
   
-export interface Inning {
-  number: number;
-  homeTeamScore: number;
-  awayTeamScore: number;
-  outs: number;
-  half: 'top' | 'bottom';
-}
-  
 export interface Game {
     id?: number;
     homeTeam: Team;
     awayTeam: Team;
-    currentInning: Inning;
-    currentInningDetails: Inning;
+    home_team_score?: number;
+    away_team_score?: number;
+    currentInning: number;
+    currentHalf: 'top' | 'bottom';
+    currentOuts: number;
+    bases:  Base[];
     maxInnings: number;
     isInProgress: boolean;
     isTie: boolean;
@@ -115,7 +111,7 @@ export interface GameProviderProps {
 }
   
   interface Base {
-    baseNumber: number; // 1, 2, 3, or 4 (representing home)
+    baseNumber: number; // 1, 2, or 3
     isOccupied: boolean;
     player?: Player; // the player currently on this base, if any
   }

@@ -107,6 +107,8 @@ team:
     - players # All players on the team, including their stats and current positions.
     - score # number of runs the team has scored cumulatively in the game
     - role: (onOffense or onDefense) # role changes after each half-inning
+    - lineup # array of the order the batters hit in 1-9
+    - fieldPositions # array of which players are currently playing which defensive positions. Can only be one of each.
   actions:
     - add_run_to_score()
     - substitute_player() # user can substitute players before each atBat
@@ -117,7 +119,6 @@ team:
       - else:
         - role = onOffense
 
-
 player:
   description: A player on a team
   playerType:
@@ -125,7 +126,7 @@ player:
     - pitcher
   properties:
     - name
-    - position # defensive position (may only be one of each per team at any given time, except Bench)
+    - position # a player's default position
       - C # Catcher
       - 1B # First Base
       - 2B # Second Base
@@ -136,20 +137,20 @@ player:
       - RF # Right Field
       - DH # Designated Hitter
       - P # Pitcher
-      - BN # Bench (no limit to how many players can be on the bench at once)
+      - BN # Bench
     - status: (inLineupBatter(number), activePitcher, onBenchBatter, onBenchPitcher)
-      # The status determines the player's current activity during the game:
-      # inLineupBatter: The batter is in the lineup for this game (number) represents their place in the order 1-9
-      # activePitcher: The pitcher is currently active
-      # onBenchBatter: The batter is currently on the bench
-      # onBenchPitcher: The pitcher is currently on the bench 
+      - The status determines the player's current status during the game:
+      - inLineupBatter: The batter is in the lineup for this game
+      - activePitcher: The pitcher is currently active
+      - onBenchBatter: The batter is currently on the bench
+      - onBenchPitcher: The pitcher is currently on the bench 
     - role: (upToBat, upToPitch, upToSteal, upToDefend, onBase,)
-      # The role determines the player's current activity during the game:
-      # upToBat: The player is currently batting
-      # upToPitch: The player is currently pitching
-      # upToSteal: The player is attempting to steal a base
-      # upToDefend: The player is fielding a ball
-      # onBase: The player is occupying a base but not currently stealing
+      - The role determines the player's current activity during the game:
+      - upToBat: The player is currently batting in an at bat
+      - upToPitch: The player is currently pitching in an at bat
+      - upToSteal: The player is attempting to steal a base
+      - upToDefend: The player is fielding a ball after a contact
+      - onBase: The player is occupying a base but not currently stealing
     - skills:
       - bat_skill # skill modifier for swing roll when batting
       - pit_skill # skill modifier for pitch roll when pitching
@@ -177,7 +178,7 @@ base:
 atBat:
   description: A player's turn at bat
   steps:
-    - upToBat_steps_up() # the next player in the lineup of upTeam becomes upToBat
+    - upToBat_steps_up() # the next player in the lineup of onOffense becomes upToBat
     - print_game_state() # display score, number of outs, inning and top or bottom, who is upToBat, who is upToPitch, whether 1st, 2nd or 3rd base is occupied and if so, by who
     - if user wants to substitute a player:
       - display_in_game_players() # display a list of players who are currently in the game

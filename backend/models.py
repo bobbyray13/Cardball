@@ -85,7 +85,7 @@ class Team(db.Model, Serializer):
             'pitchers' : [player.serialize() for player in self.pitchers],
             'players' : [player.serialize() for player in self.players],
             'lineup' : self.lineup,
-            'fieldPositions' : self.fieldPositions
+            'fieldPositions' : self.fieldPositions,
         }
 
 class Game(db.Model, Serializer):
@@ -115,14 +115,35 @@ class Game(db.Model, Serializer):
             'id': self.id,
             'homeTeam': self.home_team.serialize() if self.home_team else None,
             'awayTeam': self.away_team.serialize() if self.away_team else None,
-            'current_inning': self.current_inning,
-            'half': self.current_half,
+            'currentInning': self.current_inning,
+            'currentHalf': self.current_half,
             'outs': self.current_outs,
             'homeTeamScore': self.home_team_score,
             'awayTeamScore': self.away_team_score,
             'isInProgress': self.is_in_progress,
             'startTime': self.start_time.isoformat() if self.start_time else None,
             'endTime': self.end_time.isoformat() if self.end_time else None,
+            'bases': [base.serialize() for base in self.bases]  # Add this line
+        }
+
+class Base(db.Model, Serializer):
+    __tablename__ = 'bases'
+
+    id = Column(Integer, primary_key=True)
+    base_number = Column(Integer, nullable=False) # 1, 2, or 3
+    is_occupied = Column(Boolean, default=False)
+    player_id = Column(Integer, ForeignKey('players.id'))
+    player = relationship('Player')
+    game_id = Column(Integer, ForeignKey('games.id'))
+    game = relationship('Game', backref='bases')
+
+    def serialize(self):
+        return {
+            'id' : self.id,
+            'baseNumber' : self.base_number,
+            'isOccupied' : self.is_occupied,
+            'player' : self.player.serialize() if self.player else None,
+            'gameId' : self.game_id
         }
 
 class GameLog(db.Model):

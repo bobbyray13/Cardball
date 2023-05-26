@@ -23,14 +23,6 @@ export const playInningHalf = async (gameId: number) => {
         method: 'POST',
     });
     const game = await response.json();
-    return game;
-};
-
-export const endHalfInning = async (gameId: number) => {
-    const response = await fetch(`http://192.168.4.46:5000/api/games/${gameId}/end_half_inning`, {
-        method: 'POST',
-    });
-    const game = await response.json();
 
     // Once half-inning ends, get the updated game state
     const updatedGameState = await getGameState(gameId);

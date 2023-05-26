@@ -4,12 +4,10 @@ import { View, Button, Text, ScrollView } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Picker } from '@react-native-picker/picker';
 import { RootStackParamList, Player, Team, LineupSelectScreenNavigationProp, } from '../types';
-import { getPlayers, getGameState } from '..//api/playerAPI';
-import { updateLineup } from '..//api/playerAPI';
-import { getLineup } from '../api/teamAPI';
+import { getGameState, updateLineup } from '..//api/playerAPI';
+import { getBatters, getPitchers } from '../api/teamAPI';
 import { Platform, LogBox } from 'react-native';
 import { GameContext } from '../contexts/gameContext';
-import axios from 'axios';
 
 type LineupSelectProps = {
   navigation: StackNavigationProp<RootStackParamList, 'LineupSelect'>;
@@ -17,7 +15,8 @@ type LineupSelectProps = {
 
 export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
   console.log('Rendering LineupSelect');
-  const [players, setPlayers] = useState<Player[]>([]);
+  const [batters, setBatters] = useState<Player[]>([]);
+  const [pitchers, setPitchers] = useState<Player[]>([]);
   const [teamId, setTeamId] = useState<number | null>(null);
   const [lineup, setLineup] = useState<Record<number, number | null>>({});
   const [fieldPositions, setFieldPositions] = useState<Record<number, string>>({});
@@ -45,10 +44,15 @@ export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
           setTeamId(awayTeamId); // Set the team id
           
           if (awayTeamId !== null) {
-            // Fetch only the away team's players
-            const fetchedPlayers = await getLineup(awayTeamId);
-            console.log("Fetched players: ", fetchedPlayers);
-            setPlayers(fetchedPlayers);
+            // Fetch only the away team's batters
+            const fetchedBatters = await getBatters(awayTeamId);
+            console.log("Fetched batters: ", fetchedBatters);
+            setBatters(fetchedBatters);
+            console.log("Getting pitchers for team: ", awayTeamId);
+            console.log(`Hitting URL: http://192.168.4.46:5000/api/teams/${awayTeamId}/get_pitchers`);
+            const fetchedPitchers = await getPitchers(awayTeamId);
+            console.log("Fetched pitchers: ", fetchedPitchers);
+            setPitchers(fetchedPitchers);
           } else {
             console.error('Away team ID is null');
           }
@@ -64,6 +68,8 @@ export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
     fetchPlayers(); // Call fetchPlayers when the component mounts
   }, [gameId]);
 
+  const [selectedPitcherId, setSelectedPitcherId] = useState<number | null>(null);
+
   const handleLineupChange = (playerId: number, lineupSlot: number | null) => {
     setLineup((prevLineup) => ({
       ...prevLineup,
@@ -78,38 +84,49 @@ export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
     }));
   };
 
-  const handleSubmit = async () => {
-    if (teamId !== null) {
-      try {
-        const filteredLineup = Object.entries(lineup)
-          .filter(([playerId, lineupSlot]) => lineupSlot !== null)
-          .map(([playerId]) => Number(playerId));
-  
-        await updateLineup(teamId, {
-          lineup: filteredLineup,
-          fieldPositions: fieldPositions,
-        });
-  
-        console.log('Lineup and field positions updated successfully');
-        // Navigate to 'LineupSelectHome' screen
-        navigation.navigate('LineupSelectHome');
-      } catch (error) {
-        console.error('Error updating lineup and field positions: ', error);
-      }
-    } else {
-      console.error('Team ID is null, cannot update lineup');
+const handleSubmit = async () => {
+  if (teamId !== null && selectedPitcherId !== null) {
+    try {
+      const lineupEntries = Object.entries(lineup)
+        .filter(([playerId, lineupSlot]) => lineupSlot !== null)
+        .map(([playerId, lineupSlot]) => [Number(playerId), Number(lineupSlot)]);
+
+      lineupEntries.sort((a, b) => a[1] - b[1]);
+
+      const filteredLineup = lineupEntries.map(([playerId]) => playerId);
+
+      // Include the selected pitcher in the fieldPositions and set their position to P
+      const updatedFieldPositions = {
+        ...fieldPositions,
+        [selectedPitcherId]: 'P',
+      };
+
+      await updateLineup(teamId, {
+        lineup: filteredLineup,
+        fieldPositions: updatedFieldPositions,
+        activePitcher: selectedPitcherId, // include the selectedPitcherId
+      });
+
+      console.log('Lineup and field positions updated successfully');
+      // Navigate to 'LineupSelectHome' screen
+      navigation.navigate('LineupSelectHome');
+    } catch (error) {
+      console.error('Error updating lineup and field positions: ', error);
     }
-  };
-  
+  } else {
+    console.error('Team ID is null, cannot update lineup');
+  }
+};
+
 
   return (
     <ScrollView>
-      {players.map((player) => (
+      {batters.map((player) => (
         <View key={player.id}>
           <Text>{player.name}</Text>
           <Picker selectedValue={lineup[player.id]} onValueChange={(lineupSlot) => handleLineupChange(player.id, lineupSlot)}>
             <Picker.Item label="Select lineup slot" value="" />
-            {players.map((player, index) => (
+            {[...Array(9)].map((_, index) => (
               <Picker.Item key={player.id} label={String(index + 1)} value={index + 1} />
             ))}
           </Picker>
@@ -121,6 +138,15 @@ export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
           </Picker>
         </View>
       ))}
+      <Picker
+          selectedValue={selectedPitcherId}
+          onValueChange={(pitcherId) => setSelectedPitcherId(pitcherId)}
+      >
+          <Picker.Item label="Select pitcher" value="" />
+          {pitchers.map((pitcher) => (
+              <Picker.Item key={pitcher.id} label={pitcher.name} value={pitcher.id} />
+          ))}
+      </Picker>
       <Button onPress={handleSubmit} title="Save lineup" />
     </ScrollView>
   );

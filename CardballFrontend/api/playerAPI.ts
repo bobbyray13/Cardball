@@ -4,7 +4,7 @@ import { Game } from '../types';
 import axios from 'axios';
 import { LineupData } from '../types';
 
-export const updateLineup = async (teamId: number, lineupData: {lineup: number[], fieldPositions: Record<number, string>}): Promise<void> => {
+export const updateLineup = async (teamId: number, lineupData: {lineup: number[], fieldPositions: Record<number, string>, activePitcher: number | null}): Promise<void> => {
   console.log("Sending lineupData to server: ", lineupData);
   try {
     await axios.put(`http://192.168.4.46:5000/api/teams/${teamId}/lineup`, lineupData);

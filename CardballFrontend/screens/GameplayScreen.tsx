@@ -2,16 +2,14 @@
 import React, { useContext } from 'react';
 import { Button, Text, View, StyleSheet } from 'react-native';
 import { GameContext } from '../contexts/gameContext';
+import AtBat from '../components/AtBat';
 
 export const GameplayScreen: React.FC = () => {
   const gameContext = useContext(GameContext);
 
-  // If game state has not loaded, show a loading message
-  if (!gameContext || !gameContext.game) {
+  if (!gameContext || !gameContext.game || !gameContext.game.currentHalf) {
     return <Text>Loading...</Text>;
   }
-
-  // Get the game state
   const game = gameContext.game;
   const { homeTeam, awayTeam } = game;
 
@@ -27,39 +25,48 @@ export const GameplayScreen: React.FC = () => {
   const defensivePlayerId = Number(Object.keys(defensiveTeam.fieldPositions).find(id => defensiveTeam.fieldPositions[Number(id)] === 'P'));
   const defensivePlayer = defensiveTeam.players.find(player => player.id === Number(defensivePlayerId));
 
-  console.log('Home team role:', homeTeam.role);
-  console.log('Away team role:', awayTeam.role);
-  
-  console.log('Home team field positions:', homeTeam.fieldPositions);
-  console.log('Away team field positions:', awayTeam.fieldPositions);
-
-  console.log('Defensive player ID:', defensivePlayerId);
-  console.log('Defensive player:', defensivePlayer);
-
   // Extract player names, defaulting to 'Unknown' if not found
   const offensivePlayerName = offensivePlayer ? offensivePlayer.name : 'Unknown';
   const defensivePlayerName = defensivePlayer ? defensivePlayer.name : 'Unknown';
 
+  // Mapping base number to base name
+  const baseNames = ['1st Base', '2nd Base', '3rd Base'];
+
+  // Bases text
+  let basesText = '';
+  if (game.bases) {
+    basesText = game.bases.map(base => {
+      const baseName = baseNames[base.baseNumber - 1];
+      const playerName = base.player ? base.player.name : '-';
+      return `${baseName}: ${playerName}`;
+    }).join(' ');
+  }
+
+  let currentHalfText = '';
+  if (game.currentHalf) {
+    currentHalfText = game.currentHalf.charAt(0).toUpperCase() + game.currentHalf.slice(1);
+  }
+
   return (
     <View style={styles.container}>
       <Text style={styles.textStyle}>
-        Top of 1st - 0 Out - 0 Runners on Base
+        {currentHalfText} of {game.currentInning} - Outs: {game.currentOuts || 0}      </Text>
+      <Text style={styles.textStyle}>
+        {basesText}
       </Text>
       <Text style={styles.textStyle}>
-        Home Team - 0 (*)Away Team - 0
+        {homeTeam.name} - {game.home_team_score || 0}            {awayTeam.name} - {game.away_team_score || 0}
       </Text>
       <Text style={styles.textStyle}>
         Batter: {offensivePlayerName} Pitcher: {defensivePlayerName}
       </Text>
       <View style={styles.buttonContainer}>
-        <Button
-          title="Next Pitch"
-          onPress={() => console.log('Next Pitch clicked')}
-        />
+        <AtBat />
       </View>
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {

@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect } from 'react';
 import { Game, GameContextProps, GameProviderProps } from '../types';
 import { Team, Player, PlayerType } from '../types'
 import { getGameState } from '../api/playerAPI';
-import { endHalfInning } from '../api/gameAPI';
+import { playInningHalf } from '../api/gameAPI';
 
 export const GameContext = createContext<GameContextProps | undefined>(undefined);
 
@@ -11,7 +11,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [gameId, setGameId] = useState<number | null>(null);
 
   const endHalfInningAndUpdateState = async (gameId: number) => {
-    const updatedGameState = await endHalfInning(gameId);
+    const updatedGameState = await playInningHalf(gameId);
     setGame(updatedGameState);
   };
 

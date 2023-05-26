@@ -19,6 +19,7 @@ const PlayBall: React.FC = () => {
         const gameState = await getGameState(gameId);
         if (setGame) {
           setGame(gameState);
+          console.log('Updated game state:', gameState);  // Add this line
         }
       }
     };
@@ -30,22 +31,29 @@ const PlayBall: React.FC = () => {
     if (!team.lineup || !team.fieldPositions || !team.role) {
       return <Text>Loading...</Text>;
     }
+  
+    const orderedPlayers: Player[] = [...team.players].sort((a, b) => {
+      const aLineupPos = team.lineup.indexOf(a.id);
+      const bLineupPos = team.lineup.indexOf(b.id);
+  
+      if (aLineupPos === -1 || bLineupPos === -1) {
+        return 0;
+      }
+  
+      return aLineupPos - bLineupPos;
+    });
 
-    const unorderedPlayers: (Player | undefined)[] = team.lineup.map(lineupPosition => 
-      team.players.find((player: Player) => player.id === lineupPosition)
-    );
-
-    const orderedPlayers: Player[] = unorderedPlayers.filter(
-      (player): player is Player => player !== undefined
-    );
+    console.log('Lineup:', team.lineup);
+    console.log('Ordered players:', orderedPlayers);
 
     return (
-      <View>
-        <Text>{homeOrAway === 'home' ? 'Home Team' : 'Away Team'}: {team.name}</Text>
-        <Text>Role: {team.role}</Text>
+      <View style={styles.teamContainer}>
+        <Text style={styles.teamName}>{team.name}</Text>
+        <Text>{homeOrAway.charAt(0).toUpperCase() + homeOrAway.slice(1)} Team</Text>
+        <Text>Role: {team.role.charAt(0).toUpperCase() + team.role.slice(1)}</Text>
         {orderedPlayers.map((player, index) => (
           <Text key={player.id}>
-            {index + 1}. {player.name} ({team.fieldPositions[player.id]})
+            {team.lineup.indexOf(player.id) + 1}. {player.name} ({team.fieldPositions[player.id]})
           </Text>
         ))}
       </View>
@@ -55,17 +63,38 @@ const PlayBall: React.FC = () => {
   const navigation = useNavigation<PlayBallScreenNavigationProp>();
 
   return (
-    <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', padding: 20 }}>
-      {game && (
+    <ScrollView contentContainerStyle={styles.container}>
+      {game ? (
         <>
-          <Text>{JSON.stringify(game, null, 2)}</Text>
-          {renderTeam(game.homeTeam, 'home')}
           {renderTeam(game.awayTeam, 'away')}
-          <Button title="Play Ball!" onPress={() => navigation.navigate('GameplayScreen')} />
-        </>
+          {renderTeam(game.homeTeam, 'home')}
+          <Button
+            title="Play Ball!"
+            onPress={() => {
+              console.log(`Current Inning: ${game.currentInning}, Current Half: ${game.currentHalf}`);
+              navigation.navigate('GameplayScreen');
+            }}
+          /> 
+       </>
+      ) : (
+        <Text>Loading game...</Text>
       )}
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
+  teamContainer: {
+    marginBottom: 24,
+  },
+  teamName: {
+    fontSize: 24,
+    marginBottom: 8,
+  },
+});
 
 export default PlayBall;
