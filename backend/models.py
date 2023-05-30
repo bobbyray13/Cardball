@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.inspection import inspect
 from sqlalchemy.types import PickleType
-from database import db
+from .database import db
 from datetime import datetime
 
 class Serializer(object):
@@ -107,7 +107,9 @@ class Game(db.Model, Serializer):
     start_time = Column(DateTime)
     end_time = Column(DateTime)
 
-    lineup_position = Column(Integer, nullable=True)  # Position in the batting lineup (1-9, null if on bench)
+    lineup_position = Column(Integer, nullable=True)  # A player's position in the batting lineup (1-9, null if on bench)
+    home_team_lineup_position = Column(Integer, default=1) # Current position in the batting lineup for home team
+    away_team_lineup_position = Column(Integer, default=1) # Current position in the batting lineup for away team
     field_position = Column(String(30), nullable=True)  # Position on the field (C, 1B, 2B, 3B, SS, LF, CF, RF, DH, BN, P, BP)
 
     def serialize(self):
@@ -123,7 +125,9 @@ class Game(db.Model, Serializer):
             'isInProgress': self.is_in_progress,
             'startTime': self.start_time.isoformat() if self.start_time else None,
             'endTime': self.end_time.isoformat() if self.end_time else None,
-            'bases': [base.serialize() for base in self.bases]  # Add this line
+            'bases': [base.serialize() for base in self.bases],
+            'homeTeamLineupPosition': self.home_team_lineup_position,
+            'awayTeamLineupPosition': self.away_team_lineup_position,
         }
 
 class Base(db.Model, Serializer):

@@ -1,8 +1,8 @@
 # lineup_edit.py
 from flask import Blueprint, jsonify, request, current_app as app
-from models import Player, Team, Game, db
+from .models import Player, Team, Game, db
 from sqlalchemy.orm.exc import NoResultFound
-from database import db
+from .database import db
 
 lineup_blueprint = Blueprint('lineup', __name__)
 
@@ -73,18 +73,81 @@ def update_lineup(team_id):
 
     team.lineup = lineup
     team.fieldPositions = fieldPositions
+
     team.activePitcher = activePitcher  # Set the activePitcher
+    # Retrieve the activePitcher player object
+    active_pitcher_player = Player.query.filter(Player.id == activePitcher).one()
+    # Set the role of the activePitcher to 'upToPitch'
+    active_pitcher_player.role = 'upToPitch'
+    # Set the status of all other pitchers to 'onBenchPitcher'
+    for player in team.pitchers:
+        if player.id != activePitcher:
+            player.role = 'onBenchPitcher'
+
     db.session.commit()
     app.logger.debug("Lineup, FieldPositions, and activePitcher updated successfully")
 
     return jsonify(team.serialize())
 
+@lineup_blueprint.route('/api/reset_players', methods=['POST'])
+def reset_players():
+    # Get the current game
+    current_game = Game.query.filter_by(is_in_progress=True).first()
+    if current_game is None:
+        return jsonify({'message': 'No game in progress.'}), 404
+    
+    print(f"Current game ID: {current_game.id}, Home team ID: {current_game.home_team_id}, Away team ID: {current_game.away_team_id}")
+
+    # Fetch home and away teams from the database
+    home_team = Team.query.get(current_game.home_team_id)
+    away_team = Team.query.get(current_game.away_team_id)
+
+    # Print roles before update
+    print(f"Roles before update: Home team ({home_team.id}): {home_team.role}, Away team ({away_team.id}): {away_team.role}")
+
+    # Reset roles for teams in the current game
+    home_team.role = 'onDefense'
+    away_team.role = 'onOffense'
+    db.session.commit()
+    
+    # Refresh the home_team and away_team instances
+    db.session.refresh(home_team)
+    db.session.refresh(away_team)
+
+    # Print roles after update
+    home_team = Team.query.get(home_team.id)  # Fetch updated teams
+    away_team = Team.query.get(away_team.id)
+    print(f"Roles after update: Home team ({home_team.id}): {home_team.role}, Away team ({away_team.id}): {away_team.role}")
+
+
+    # Print roles for all teams after the update
+    teams_all = Team.query.all()
+    print("\nTeam roles after update:")
+    for team in teams_all:
+        print(f"Team {team.id}: {team.role}")
+
+    players = Player.query.all()
+    for player in players:
+        player.drafted = False
+        player.team_id = None
+
+    db.session.commit()
+
+    teams = [home_team, away_team]
+    for team in teams:
+        team.lineup = []
+        team.fieldPositions = {}
+
+    db.session.commit()
+
+    return jsonify({'message': 'All players and team lineups reset successfully.'}), 200
+
+
 
 # END OF lineup_edit.py
 
-#substitute_player_blueprint = Blueprint('substitute_player', __name__)
 
-# @substitute_player_blueprint.route('/api/substitute_player', methods=['POST'])
+# @lineup_blueprint.route('/api/substitute_player', methods=['POST'])
 # def substitute_player():
 #     data = request.get_json()
 #     game_id = data['game_id']

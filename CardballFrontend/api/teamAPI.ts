@@ -3,7 +3,7 @@ import axios from 'axios';
 import { Player } from '../types';
 
 export const createTeam = async (id: number, name: string) => {
-    const response = await fetch('http://192.168.4.46:5000/api/teams', {
+    const response = await fetch('http://127.0.0.1:5000/api/teams', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -16,7 +16,7 @@ export const createTeam = async (id: number, name: string) => {
 
 export const getLineup = async (teamId: number): Promise<any[]> => {
   try {
-    const response = await axios.get(`http://192.168.4.46:5000/api/teams/${teamId}/get_lineup`);
+    const response = await axios.get(`http://127.0.0.1:5000/api/teams/${teamId}/get_lineup`);
     console.log("Received lineup from server: ", response.data);
     return response.data;
   } catch (error) {
@@ -26,7 +26,7 @@ export const getLineup = async (teamId: number): Promise<any[]> => {
 };
   export const getBatters = async (teamId: number): Promise<Player[]> => {
     try {
-        const response = await axios.get(`http://192.168.4.46:5000/api/teams/${teamId}/get_batters`);
+        const response = await axios.get(`http://127.0.0.1:5000/api/teams/${teamId}/get_batters`);
         console.log("Received batters from server: ", response.data);
         return response.data;
     } catch (error) {
@@ -37,7 +37,7 @@ export const getLineup = async (teamId: number): Promise<any[]> => {
 
   export const getPitchers = async (teamId: number): Promise<Player[]> => {
     try {
-        return await axios.get(`http://192.168.4.46:5000/api/teams/${teamId}/get_pitchers`)
+        return await axios.get(`http://127.0.0.1:5000/api/teams/${teamId}/get_pitchers`)
             .then(response => {
                 console.log("Received pitchers from server: ", response.data);
                 return response.data;

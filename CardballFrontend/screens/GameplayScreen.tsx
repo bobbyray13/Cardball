@@ -2,7 +2,7 @@
 import React, { useContext } from 'react';
 import { Button, Text, View, StyleSheet } from 'react-native';
 import { GameContext } from '../contexts/gameContext';
-import AtBat from '../components/AtBat';
+import { rollForNextPitch } from '../api/gamePlayAPI'
 
 export const GameplayScreen: React.FC = () => {
   const gameContext = useContext(GameContext);
@@ -11,6 +11,7 @@ export const GameplayScreen: React.FC = () => {
     return <Text>Loading...</Text>;
   }
   const game = gameContext.game;
+  const { gameId } = gameContext;
   const { homeTeam, awayTeam } = game;
 
   // Determine which team is on offense and which is on defense
@@ -47,6 +48,17 @@ export const GameplayScreen: React.FC = () => {
     currentHalfText = game.currentHalf.charAt(0).toUpperCase() + game.currentHalf.slice(1);
   }
 
+  const handleRollForNextPitch = async () => {
+    if (gameId) {
+      try {
+        const updatedGameState = await rollForNextPitch(gameId);
+        gameContext.setGame(updatedGameState);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+  };  
+
   return (
     <View style={styles.container}>
       <Text style={styles.textStyle}>
@@ -60,9 +72,7 @@ export const GameplayScreen: React.FC = () => {
       <Text style={styles.textStyle}>
         Batter: {offensivePlayerName} Pitcher: {defensivePlayerName}
       </Text>
-      <View style={styles.buttonContainer}>
-        <AtBat />
-      </View>
+      <Button title="Roll for Next Pitch" onPress={handleRollForNextPitch} />
     </View>
   );
 };

@@ -216,7 +216,7 @@ atBat:
         - if power roll total is 11 or higher, upToDefend is either LF, CF, or RF, based on highest fld_skill
         - if power roll total is 10 or lower, upToDefend is either 3B, SS, 2B, or 1B, based on highest fld_skill
         - if multiple players have the same highest fld_skill, choose one at random
-      - uptoDefend_performs_throw_roll() # designated defender rolls a 20-sided dice and adds their fld_skill modifier (fielding roll)
+      - uptoDefend_performs_defense_roll() # designated defender rolls a 20-sided dice and adds their fld_skill modifier (fielding roll)
       - if upToDefend's roll is higher than upToBat's power roll:
         - upToBat_is_out()
         - increment_outs() # increment the count of outs

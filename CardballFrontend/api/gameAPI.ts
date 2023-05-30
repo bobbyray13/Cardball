@@ -4,22 +4,32 @@ import { getGameState  } from "./playerAPI";
 export const createGame = async (homeTeamName: string, awayTeamName: string) => {
     console.log(`Creating game with home team: ${homeTeamName}, away team: ${awayTeamName}`);
 
-    const response = await fetch('http://192.168.4.46:5000/api/games', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ home_team_name: homeTeamName, away_team_name: awayTeamName }),
-    });
-    const game = await response.json();
+    try {
+        const response = await fetch('http://192.168.4.46/api/games', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ home_team_name: homeTeamName, away_team_name: awayTeamName }),
+        });
 
-    console.log(`Game created:`);
+        if (!response.ok) {
+            console.error(`HTTP error! status: ${response.status}`);
+            const errorText = await response.text();
+            console.error(`HTTP response text: ${errorText}`);
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-    return game;
+        const game = await response.json();
+        console.log(`Game created: ${JSON.stringify(game)}`);
+        return game;
+    } catch (error) {
+        console.error(`Fetch Error: ${error}`);
+    }
 };
 
 export const playInningHalf = async (gameId: number) => {
-    const response = await fetch(`http://192.168.4.46:5000/api/games/${gameId}/play_inning_half`, {
+    const response = await fetch(`http://127.0.0.1:5000/api/games/${gameId}/play_inning_half`, {
         method: 'POST',
     });
     const game = await response.json();
@@ -31,7 +41,7 @@ export const playInningHalf = async (gameId: number) => {
 };
 
 export const incrementOuts = async (gameId: number) => {
-    const response = await fetch(`http://192.168.4.46:5000/api/games/${gameId}/increment_outs`, {
+    const response = await fetch(`http://127.0.0.1:5000/api/games/${gameId}/increment_outs`, {
         method: 'POST',
     });
     const game = await response.json();

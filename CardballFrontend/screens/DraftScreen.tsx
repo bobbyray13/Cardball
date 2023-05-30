@@ -48,7 +48,7 @@ export const DraftScreen: React.FC<Props> = ({ navigation }) => {
     const initializeDraft = async () => {
         try {
             console.log('Resetting players...');
-            await fetch('http://192.168.4.46:5000/api/reset_players', {
+            await fetch('http://127.0.0.1:5000/api/reset_players', {
                 method: 'POST',
             });
             console.log('Loading players...');

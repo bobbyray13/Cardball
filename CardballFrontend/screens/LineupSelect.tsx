@@ -49,7 +49,7 @@ export const LineupSelect: React.FC<LineupSelectProps> = ({ navigation }) => {
             console.log("Fetched batters: ", fetchedBatters);
             setBatters(fetchedBatters);
             console.log("Getting pitchers for team: ", awayTeamId);
-            console.log(`Hitting URL: http://192.168.4.46:5000/api/teams/${awayTeamId}/get_pitchers`);
+            console.log(`Hitting URL: http://127.0.0.1:5000/api/teams/${awayTeamId}/get_pitchers`);
             const fetchedPitchers = await getPitchers(awayTeamId);
             console.log("Fetched pitchers: ", fetchedPitchers);
             setPitchers(fetchedPitchers);
