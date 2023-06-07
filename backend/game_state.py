@@ -1,9 +1,9 @@
 # game_state.py
-from .models import Game, Team, GameLog, Base
+from models import Game, Team, GameLog, Base
 from flask_sqlalchemy import SQLAlchemy
 from flask import jsonify, Blueprint, request
 from datetime import datetime
-from .database import db
+from database import db
 
 game_state_blueprint = Blueprint('game_state', __name__)
 

@@ -12,6 +12,7 @@ export type RootStackParamList = {
   LineupSelectHome: undefined;
   PlayBall: undefined;
   GameplayScreen: undefined;
+  TempGameplay: undefined;
 };
 
 export type HomeComponentProps = {
@@ -63,7 +64,7 @@ export interface Team {
   role: TeamRole;  // Role of the team (either onOffense or onDefense)
   players: Player[];
   lineup: number[];  // Ordered list of players in batting lineup
-  fieldPositions: Record<number, string>; // add this line
+  fieldPositions: Record<string, string>; // Array of fieldPositions (1B, SS, RF, etc.) and the player id who is playing there
   batters: Player[]; // List of players in the team who are Batters
   pitchers: Player[]; // List of players in the team who are Pitchers
   bench: Player[];  // List of players in the team's bench
@@ -71,7 +72,7 @@ export interface Team {
 
 export interface LineupData {
   lineup: number[];
-  fieldPositions: Record<number, string>;
+  fieldPositions: Record<string, string>; // Array of fieldPositions (1B, SS, RF, etc.) and the player id who is playing there
 }
   
 export interface Game {
@@ -104,6 +105,7 @@ export interface Game {
     gameId: number | null;
     setGameId: (id: number | null) => void;
     endHalfInningAndUpdateState: (gameId: number) => Promise<void>;
+    handleNextPitch: () => Promise<void>;
   }
 
 export interface GameProviderProps {

@@ -10,6 +10,7 @@ import LineupSelect from './screens/LineupSelect';
 import { LineupSelectHome } from './screens/LineupSelectHome';
 import PlayBall from './screens/PlayBall';
 import { GameplayScreen } from './screens/GameplayScreen';
+import TempGameplay from './screens/TempGameplay';
 import { StatusBar } from 'expo-status-bar';
 import { GameProvider } from './contexts/gameContext';
 import { RootStackParamList, HomeComponentProps } from './types';
@@ -50,6 +51,7 @@ export default function App() {
           <Stack.Screen name="LineupSelect" component={LineupSelect} />
           <Stack.Screen name="LineupSelectHome" component={LineupSelectHome} />
           <Stack.Screen name="PlayBall" component={PlayBall} />
+          <Stack.Screen name="TempGameplay" component={TempGameplay} />
           <Stack.Screen name="GameplayScreen" component={GameplayScreen} />
         </Stack.Navigator>
       </NavigationContainer>

@@ -1,4 +1,4 @@
-// Lineupselect.tsx:
+// LineupSelectHome.tsx:
 import React, { useState, useEffect, useContext } from 'react';
 import { View, Button, Text, ScrollView, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -20,7 +20,7 @@ export const LineupSelectHome: React.FC<LineupSelectHomeProps> = ({ navigation }
   const [pitchers, setPitchers] = useState<Player[]>([]);
   const [teamId, setTeamId] = useState<number | null>(null);
   const [lineup, setLineup] = useState<Record<number, number | null>>({});
-  const [fieldPositions, setFieldPositions] = useState<Record<number, string>>({});
+  const [fieldPositions, setFieldPositions] = useState<Record<string, string>>({});
 
   const gameContext = useContext(GameContext);
 
@@ -31,6 +31,7 @@ export const LineupSelectHome: React.FC<LineupSelectHomeProps> = ({ navigation }
   const { gameId } = gameContext;
 
   useEffect(() => {
+    let isMounted = true; // isMounted is true initially
     if (Platform.OS === 'android') {
       LogBox.ignoreLogs(['VirtualizedLists should never be nested']);
     }
@@ -42,16 +43,17 @@ export const LineupSelectHome: React.FC<LineupSelectHomeProps> = ({ navigation }
           // Get the game state to find the home team's id
           const gameState = await getGameState(gameId);
           const homeTeamId = gameState.homeTeam.id;
-          setTeamId(homeTeamId); // Set the team id
-          
+          if (isMounted) {
+            setTeamId(homeTeamId); // Set the team id
+          }
           if (homeTeamId !== null) {
             // Fetch only the home team's batters
             const fetchedBatters = await getBatters(homeTeamId);
-            console.log("Fetched Batters: ", fetchedBatters);
-            setBatters(fetchedBatters);
             const fetchedPitchers = await getPitchers(homeTeamId);
-            console.log("Fetched pitchers: ", fetchedPitchers);
-            setPitchers(fetchedPitchers);
+            if (isMounted) {
+              setBatters(fetchedBatters);
+              setPitchers(fetchedPitchers);
+            }
           } else {
             console.error('Home team ID is null');
           }
@@ -65,6 +67,11 @@ export const LineupSelectHome: React.FC<LineupSelectHomeProps> = ({ navigation }
     };
 
     fetchPlayers(); // Call fetchPlayers when the component mounts
+
+    return () => {
+      isMounted = false; // Change isMounted to false when the component unmounts
+    }
+    
   }, [gameId]);
 
   const [selectedPitcherId, setSelectedPitcherId] = useState<number | null>(null);
@@ -76,11 +83,24 @@ export const LineupSelectHome: React.FC<LineupSelectHomeProps> = ({ navigation }
     }));
   };
 
-  const handleFieldPositionChange = (playerId: number, fieldPosition: string) => {
-    setFieldPositions((prevFieldPositions) => ({
-      ...prevFieldPositions,
-      [playerId]: fieldPosition,
-    }));
+  const handleFieldPositionChange = (fieldPosition: string, playerId: number | null) => {
+    console.log('handleFieldPositionChange called with:', playerId, fieldPosition);
+    setFieldPositions((prevFieldPositions) => {
+      const updatedFieldPositions = {
+        ...prevFieldPositions,
+        [fieldPosition]: String(playerId), // Assign the playerId as the value for the fieldPosition key
+      };
+
+      // Find the player object from the list of players
+      const player = batters.find((batter) => batter.id === playerId);
+
+      // Log the player's name and the field position
+      if (player) {
+        console.log(`Player ${player.name} was set to ${fieldPosition}`);
+      }
+
+      return updatedFieldPositions;
+    });
   };
 
 const handleSubmit = async () => {
@@ -97,7 +117,7 @@ const handleSubmit = async () => {
       // Include the selected pitcher in the fieldPositions and set their position to P
       const updatedFieldPositions = {
         ...fieldPositions,
-        [selectedPitcherId]: 'P',
+        ["P"]: String(selectedPitcherId),
       };
 
       await updateLineup(teamId, {
@@ -117,38 +137,44 @@ const handleSubmit = async () => {
   }
 };
 
-  return (
-    <ScrollView>
-      {batters.map((player) => (
-        <View key={player.id}>
-          <Text>{player.name}</Text>
-          <Picker selectedValue={lineup[player.id]} onValueChange={(lineupSlot) => handleLineupChange(player.id, lineupSlot)}>
-            <Picker.Item label="Select lineup slot" value="" />
-            {[...Array(9)].map((_, index) => (
-              <Picker.Item key={player.id} label={String(index + 1)} value={index + 1} />
+    return (
+      <ScrollView>
+        {batters.map((player) => (
+          <View key={player.id}>
+            <Text>{player.name}</Text>
+            <Picker selectedValue={lineup[player.id]} onValueChange={(lineupSlot) => handleLineupChange(player.id, lineupSlot)}>
+              <Picker.Item label="Select lineup slot" value="" />
+              {[...Array(9)].map((_, index) => (
+                <Picker.Item key={player.id} label={String(index + 1)} value={index + 1} />
+              ))}
+            </Picker>
+            <Picker 
+              selectedValue={Object.keys(fieldPositions).find(key => fieldPositions[key] === String(player.id))}
+              onValueChange={(fieldPosition) => {
+                  console.log('Picker value changed');
+                  handleFieldPositionChange(fieldPosition, player.id);
+              }}
+            >
+              <Picker.Item label="Select field position" value="" />
+              {['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH', 'P', 'BN'].map((position) => (
+                <Picker.Item key={position} label={position} value={position} />
+              ))}
+            </Picker>
+          </View>
+        ))}
+        <Picker
+            selectedValue={selectedPitcherId}
+            onValueChange={(pitcherId) => setSelectedPitcherId(pitcherId)}
+        >
+            <Picker.Item label="Select pitcher" value="" />
+            {pitchers.map((pitcher) => (
+                <Picker.Item key={pitcher.id} label={pitcher.name} value={pitcher.id} />
             ))}
-          </Picker>
-          <Picker selectedValue={fieldPositions[player.id]} onValueChange={(fieldPosition) => handleFieldPositionChange(player.id, fieldPosition)}>
-            <Picker.Item label="Select field position" value="" />
-            {['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH', 'P', 'BN'].map(position => (
-              <Picker.Item key={position} label={position} value={position} />
-            ))}
-          </Picker>
-        </View>
-      ))}
-      <Picker
-          selectedValue={selectedPitcherId}
-          onValueChange={(pitcherId) => setSelectedPitcherId(pitcherId)}
-      >
-          <Picker.Item label="Select pitcher" value="" />
-          {pitchers.map((pitcher) => (
-              <Picker.Item key={pitcher.id} label={pitcher.name} value={pitcher.id} />
-          ))}
-      </Picker>
-      <Button onPress={handleSubmit} title="Save lineup" />
-    </ScrollView>
-  );
+        </Picker>
+        <Button onPress={handleSubmit} title="Save lineup" />
+      </ScrollView>
+    );
 };
 
 export default LineupSelectHome;
-// END OF Lineupselect.tsx:
+// END OF LineupselectHome.tsx:

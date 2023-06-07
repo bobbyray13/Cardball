@@ -5,7 +5,7 @@ export const createGame = async (homeTeamName: string, awayTeamName: string) => 
     console.log(`Creating game with home team: ${homeTeamName}, away team: ${awayTeamName}`);
 
     try {
-        const response = await fetch('http://192.168.4.46/api/games', {
+        const response = await fetch('http://192.168.4.46:5000/api/games', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ export const createGame = async (homeTeamName: string, awayTeamName: string) => 
 };
 
 export const playInningHalf = async (gameId: number) => {
-    const response = await fetch(`http://127.0.0.1:5000/api/games/${gameId}/play_inning_half`, {
+    const response = await fetch(`http://192.168.4.46:5000/api/games/${gameId}/play_inning_half`, {
         method: 'POST',
     });
     const game = await response.json();
@@ -41,7 +41,7 @@ export const playInningHalf = async (gameId: number) => {
 };
 
 export const incrementOuts = async (gameId: number) => {
-    const response = await fetch(`http://127.0.0.1:5000/api/games/${gameId}/increment_outs`, {
+    const response = await fetch(`http://192.168.4.46:5000/api/games/${gameId}/increment_outs`, {
         method: 'POST',
     });
     const game = await response.json();

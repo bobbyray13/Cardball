@@ -1,3 +1,4 @@
+#rolls.py
 import random
 
 def roll_dice(sides, modifier=0):
@@ -17,3 +18,4 @@ def contact_roll(batter):
 
 def throw_roll(defender):
     return roll_dice(20, defender.fld_skill)
+#END OF rolls.py

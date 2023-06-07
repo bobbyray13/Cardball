@@ -1,7 +1,7 @@
 # draft.py
-from .models import Player, Team, Game
+from models import Player, Team, Game
 from flask import jsonify, request, Blueprint
-from .database import db
+from database import db
 from sqlalchemy.orm import joinedload
 import logging
 import csv

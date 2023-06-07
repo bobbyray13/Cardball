@@ -4,10 +4,10 @@ import { Game } from '../types';
 import axios from 'axios';
 import { LineupData } from '../types';
 
-export const updateLineup = async (teamId: number, lineupData: {lineup: number[], fieldPositions: Record<number, string>, activePitcher: number | null}): Promise<void> => {
+export const updateLineup = async (teamId: number, lineupData: {lineup: number[], fieldPositions: Record<string, string>, activePitcher: number | null}): Promise<void> => {
   console.log("Sending lineupData to server: ", lineupData);
   try {
-    await axios.put(`http://127.0.0.1:5000/api/teams/${teamId}/lineup`, lineupData);
+    await axios.put(`http://192.168.4.46:5000/api/teams/${teamId}/lineup`, lineupData);
   } catch (error) {
     console.error('Failed to update lineup playerAPI.ts', error);
     throw error;
@@ -37,13 +37,13 @@ export const getGameState = async (gameId: number): Promise<Game> => {
 };
 
 export const getPlayers = async () => {
-    const response = await fetch('http://127.0.0.1:5000/api/players');
+    const response = await fetch('http://192.168.4.46:5000/api/players');
     const players = await response.json();
     return players;
 };
 
 export const loadPlayers = async () => {
-  const response = await fetch('http://127.0.0.1:5000/api/load_players', {
+  const response = await fetch('http://192.168.4.46:5000/api/load_players', {
       method: 'POST',
   });
 
@@ -64,7 +64,7 @@ export const draftPlayer = async (teamId: number, playerId: number): Promise<any
   }
 
   try {
-    const response = await fetch(`http://127.0.0.1:5000/api/draft`, {
+    const response = await fetch(`http://192.168.4.46:5000/api/draft`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

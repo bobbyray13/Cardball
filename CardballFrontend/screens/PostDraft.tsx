@@ -1,9 +1,9 @@
-// PostDraft.tsx
+//PostDraft.tsx:
 import React, { useContext } from 'react';
-import { View, Text, StyleSheet, ScrollView, Button, } from 'react-native';
-import { GameContext } from '../contexts/gameContext';
+import { Text, ScrollView, Button, View, StyleSheet } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '../types';
+import { RootStackParamList, GameContextProps, Team, Player } from '../types';
+import { GameContext } from '../contexts/gameContext';
 
 type PostDraftScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -11,34 +11,51 @@ type PostDraftScreenNavigationProp = StackNavigationProp<
 >;
 
 interface Props {
-    navigation: PostDraftScreenNavigationProp;
-  }  
+  navigation: PostDraftScreenNavigationProp;
+}
 
-  export const PostDraft: React.FC<Props> = ({ navigation }) => {
-    const gameContext = useContext(GameContext);
+export const PostDraft: React.FC<Props> = ({ navigation }) => {
+  const gameContext = useContext<GameContextProps | undefined>(GameContext);
 
-  if (!gameContext) {
-    throw new Error("GameContext must be used within a GameProvider");
+  const { game } = gameContext || {};
+
+  if (!game) {
+    return <Text>Loading...</Text>;
   }
 
-  const { game } = gameContext;
-
+  const renderPlayers = (team: Team) => {
+    return team.players.map((player: Player, index: number) => {
+      if (!player) {
+        return <Text key={index}>Undefined player</Text>;
+      }
+      return <Text key={index}>{player.name} - {player.position}</Text>;
+    });
+  };
+  
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.teamContainer}>
-        <Text style={styles.teamName}>{game?.homeTeam.name}</Text>
-        <Text>Home Team</Text>
-        {game?.homeTeam.players.map((player, index) => (
-          <Text key={index}>{player.name} - {player.position}</Text>
-        ))}
+        {game.homeTeam ? 
+          <>
+            <Text style={styles.teamName}>{game.homeTeam.name}</Text>
+            <Text>Home Team</Text>
+            {renderPlayers(game.homeTeam)}
+          </>
+          :
+          <Text>Loading Home Team...</Text>
+        }
       </View>
 
       <View style={styles.teamContainer}>
-        <Text style={styles.teamName}>{game?.awayTeam.name}</Text>
-        <Text>Away Team</Text>
-        {game?.awayTeam.players.map((player, index) => (
-          <Text key={index}>{player.name} - {player.position}</Text>
-        ))}
+        {game.awayTeam ? 
+          <>
+            <Text style={styles.teamName}>{game.awayTeam.name}</Text>
+            <Text>Away Team</Text>
+            {renderPlayers(game.awayTeam)}
+          </>
+          :
+          <Text>Loading Away Team...</Text>
+        }
       </View>
 
       <Button
@@ -62,3 +79,4 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
 });
+//END OF PostDraft.tsx

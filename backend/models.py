@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.inspection import inspect
 from sqlalchemy.types import PickleType
-from .database import db
+from database import db
 from datetime import datetime
 
 class Serializer(object):
@@ -60,14 +60,14 @@ class Player(db.Model, Serializer):
 class Team(db.Model, Serializer):
     __tablename__ = 'teams'
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
     score = Column(Integer, default=0)
     role = Column(String)  # 'onDefense' or 'onOffense'
 
     players = relationship('Player', lazy='dynamic')
     lineup = Column(PickleType) # List of integers between 1-9 indicating where in the lineup each player hits
-    fieldPositions = Column(PickleType)  # Dictionary {Player id : position}
+    fieldPositions = Column(PickleType)  # Dictionary {position : Player id} both are strings
 
     # Relationships for different types of players
     batters = relationship('Player', primaryjoin="and_(Player.team_id==Team.id, Player.playerType=='Batter')", viewonly=True)

@@ -1,14 +1,30 @@
+//gameContext.tsx
 import React, { createContext, useState, useEffect } from 'react';
 import { Game, GameContextProps, GameProviderProps } from '../types';
 import { Team, Player, PlayerType } from '../types'
 import { getGameState } from '../api/playerAPI';
 import { playInningHalf } from '../api/gameAPI';
+import { rollForNextPitch } from '../api/gamePlayAPI';
 
 export const GameContext = createContext<GameContextProps | undefined>(undefined);
 
 export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const [game, setGame] = useState<Game | null>(null);
   const [gameId, setGameId] = useState<number | null>(null);
+
+  const handleNextPitch = async () => {
+    if (gameId) {
+      try {
+        const updatedGame = await rollForNextPitch(gameId);
+        // Set updated game state in the context
+        setGame(updatedGame);
+      } catch (error) {
+        console.error('Error rolling for next pitch:', error);
+      }
+    } else {
+      console.error('Game ID is not set');
+    }
+  };
 
   const endHalfInningAndUpdateState = async (gameId: number) => {
     const updatedGameState = await playInningHalf(gameId);
@@ -62,7 +78,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
 };
 
     return (
-        <GameContext.Provider value={{ game, setGame, substitutePlayer, gameId, setGameId, endHalfInningAndUpdateState }}>
+        <GameContext.Provider value={{ game, setGame, substitutePlayer, gameId, setGameId, handleNextPitch, endHalfInningAndUpdateState }}>
         {children}
         </GameContext.Provider>
     );

@@ -1,8 +1,8 @@
 # lineup_edit.py
 from flask import Blueprint, jsonify, request, current_app as app
-from .models import Player, Team, Game, db
+from models import Player, Team, Game, db
 from sqlalchemy.orm.exc import NoResultFound
-from .database import db
+from database import db
 
 lineup_blueprint = Blueprint('lineup', __name__)
 
@@ -46,6 +46,7 @@ def get_pitchers(team_id):
 
 @lineup_blueprint.route('/api/teams/<int:team_id>/lineup', methods=['PUT'])
 def update_lineup(team_id):
+    app.logger.debug(f"Received team_id: {team_id}")
     data = request.get_json()
     team = Team.query.get(team_id)
     app.logger.debug(f"Update lineup called with data: {data}")
@@ -55,14 +56,14 @@ def update_lineup(team_id):
 
     # Validate lineup, fieldPositions, and activePitcher...
     lineup = [int(id) for id in data.get('lineup', [])] # convert all received ids to int
-    fieldPositions = data.get('fieldPositions')
+    fieldPositions = data.get('fieldPositions', {})  # Assume received keys are strings
     activePitcher = int(data.get('activePitcher', None))
 
     if not lineup or not fieldPositions or activePitcher is None:
         return jsonify({'message': 'lineup, fieldPositions, and activePitcher are required.'}), 400
 
     # Check that all player IDs in lineup, fieldPositions, and activePitcher exist
-    player_ids = set(lineup + list(fieldPositions.keys()) + [activePitcher])
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
     for player_id in player_ids:
         try:
             player = Player.query.filter(Player.id == player_id).one()
@@ -74,7 +75,8 @@ def update_lineup(team_id):
     team.lineup = lineup
     team.fieldPositions = fieldPositions
 
-    team.activePitcher = activePitcher  # Set the activePitcher
+    # Set the activePitcher
+    team.activePitcher = activePitcher
     # Retrieve the activePitcher player object
     active_pitcher_player = Player.query.filter(Player.id == activePitcher).one()
     # Set the role of the activePitcher to 'upToPitch'
@@ -83,6 +85,19 @@ def update_lineup(team_id):
     for player in team.pitchers:
         if player.id != activePitcher:
             player.role = 'onBenchPitcher'
+
+    # Assign roles to the players in the lineup
+    up_to_bat_player = Player.query.filter(Player.id == lineup[0]).one()
+    up_to_bat_player.role = 'upToBat'
+    for player_id in lineup[1:]:
+        player = Player.query.filter(Player.id == player_id).one()
+        player.role = 'inLineupBatter'
+
+    # Assign roles to the batters not in the lineup
+    non_lineup_batters = set([player.id for player in team.batters]) - set(lineup)
+    for player_id in non_lineup_batters:
+        player = Player.query.filter(Player.id == player_id).one()
+        player.role = 'onBenchBatter'
 
     db.session.commit()
     app.logger.debug("Lineup, FieldPositions, and activePitcher updated successfully")
