@@ -38,6 +38,12 @@ export type LineupSelectHomeScreenNavigationProp = StackNavigationProp<
   'LineupSelectHome'
 >;
 
+export type Event = {
+  id: string;
+  type: string;
+  description: string;
+}
+
 export enum PlayerType {
   Batter = "Batter",
   Pitcher = "Pitcher"
@@ -89,6 +95,8 @@ export interface Game {
     isInProgress: boolean;
     isTie: boolean;
     draftPlayers: () => Promise<void>;
+    homeTeamLineupPosition: number;
+    awayTeamLineupPosition: number;
   }
   
   interface AtBat {

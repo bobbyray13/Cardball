@@ -9,16 +9,20 @@ from at_bat_outcomes.home_run import apply_home_run
 from at_bat_outcomes.strikeout import apply_strikeout
 from at_bat_outcomes.out import apply_out
 from at_bat_outcomes.walk import apply_walk
+from my_socketio import update_game_state
+from socketio_instance import socketio
 from models import Game
 from database import db
 from at_bat_components.at_bat import AtBat
 
 class Gameplay:
-    def __init__(self, game_id):
+    def __init__(self, game_id, socketio_instance):
         self.game_state = db.session.query(Game).filter_by(id=game_id).one()  # Fetch game with id game_id
         self.game_over = False
+        self.socketio = socketio  # Use the imported socketio instance
 
     def play_at_bat(self):
+        print(f"Starting at bat for game {self.game_state.id}")
         at_bat = AtBat(self.game_state, db)
         at_bat.at_bat()
 
@@ -54,6 +58,11 @@ class Gameplay:
         self.check_game_over()
 
         db.session.commit()
+
+        print(f"Game state updated for game {self.game_state.id}")
+
+        # Emit the updated game state
+        update_game_state(self.socketio, self.game_state.id)
 
     def advance_inning_if_needed(self, db):
         if self.game_state.current_outs >= 3:  # If there are three outs
@@ -109,7 +118,13 @@ class Gameplay:
         return self.game_state
     
     def start(self):
-        self.play_at_bat()
+        try:
+            print(f"Starting game {self.game_state.id}")
+            self.play_at_bat()
+            print(f"Game {self.game_state.id} started")
+        except ValueError as error:
+            print(f"Error while starting game {self.game_state.id}: {error}")
+
 #END OF gameplay.py
 
         # self.advance_inning_if_needed(db)

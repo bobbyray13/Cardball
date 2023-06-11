@@ -5565,3 +5565,1349 @@ INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 02:53:44] "GET /api/game_state/34 H
 INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 02:53:46] "POST /api/games/34/next_pitch HTTP/1.1" 200 -
 INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 02:53:54] "GET /api/game_state/34 HTTP/1.1" 200 -
 INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 02:53:56] "POST /api/games/34/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:09] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:09] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:09] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:10] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:10] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:11] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:11] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:13] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:13] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:15] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:15] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:16] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:16] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:18] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:18] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:20] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:20] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:30] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:30] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:31] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:31] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:33] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:33] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:34] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:34] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:36] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:36] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:37] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:37] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:39] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:39] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:40] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:40] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:41] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:41] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:43] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:43] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:44] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:44] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:45] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:45] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:47] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:47] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:48] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:48] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:50] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:50] "GET /api/teams/44/get_batters HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:17:50] "GET /api/teams/44/get_pitchers HTTP/1.1" 200 -
+DEBUG:app:Received team_id: 44
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:18:21] "PUT /api/teams/44/lineup HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:18:21] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:18:21] "GET /api/teams/18/get_batters HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:18:21] "GET /api/teams/18/get_pitchers HTTP/1.1" 200 -
+DEBUG:app:Received team_id: 18
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:21:31] "PUT /api/teams/18/lineup HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:21:31] "GET /api/game_state/35 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:21:32] "POST /api/games/35/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:21:40] "POST /api/games/35/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:40] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:40] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:41] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:41] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:41] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:43] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:43] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:44] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:44] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:46] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:46] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:48] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:48] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:49] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:50] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:51] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:51] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:52] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:52] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:54] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:54] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:55] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:55] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:57] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:57] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:58] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:58] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:59] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:32:59] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:01] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:01] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:02] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:02] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:03] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:03] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:05] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:05] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:06] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:06] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:07] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:07] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:08] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:08] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:09] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:09] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:11] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:11] "GET /api/teams/45/get_batters HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:11] "GET /api/teams/45/get_pitchers HTTP/1.1" 200 -
+DEBUG:app:Received team_id: 45
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:48] "PUT /api/teams/45/lineup HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:48] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:48] "GET /api/teams/20/get_batters HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:33:48] "GET /api/teams/20/get_pitchers HTTP/1.1" 200 -
+DEBUG:app:Received team_id: 20
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:34:20] "PUT /api/teams/20/lineup HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:34:20] "GET /api/game_state/36 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:34:29] "POST /api/games/36/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 16:34:43] "POST /api/games/36/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.4.46 - - [07/Jun/2023 16:54:30] "POST /api/games/36/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.4.46 - - [07/Jun/2023 16:57:52] "POST /api/games/36/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.4.46 - - [07/Jun/2023 16:58:29] "POST /api/games/36/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.4.46 - - [07/Jun/2023 16:59:01] "POST /api/games/36/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 25, in next_pitch
+    home_team = game_state_dict['home_team']
+                ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+KeyError: 'home_team'
+INFO:werkzeug:192.168.4.46 - - [07/Jun/2023 18:19:32] "[35m[1mPOST /api/games/36/next_pitch HTTP/1.1[0m" 500 -
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 25, in next_pitch
+    home_team = game_state_dict['home_team']
+                ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+KeyError: 'home_team'
+INFO:werkzeug:192.168.4.46 - - [07/Jun/2023 18:19:48] "[35m[1mPOST /api/games/36/next_pitch HTTP/1.1[0m" 500 -
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 25, in next_pitch
+    home_team = game_state_dict['home_team']
+                ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+KeyError: 'home_team'
+INFO:werkzeug:192.168.4.46 - - [07/Jun/2023 18:19:54] "[35m[1mPOST /api/games/36/next_pitch HTTP/1.1[0m" 500 -
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 25, in next_pitch
+    home_team = game_state_dict['home_team']
+                ~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+KeyError: 'home_team'
+INFO:werkzeug:192.168.4.46 - - [07/Jun/2023 18:19:58] "[35m[1mPOST /api/games/36/next_pitch HTTP/1.1[0m" 500 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.4.46 - - [07/Jun/2023 18:31:01] "POST /api/games/36/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:44] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:44] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:44] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:45] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:45] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:46] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:46] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:48] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:48] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:49] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:49] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:51] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:51] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:52] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:52] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:53] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:53] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:55] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:55] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:56] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:56] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:58] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:22:58] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:00] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:00] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:01] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:01] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:03] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:03] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:04] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:04] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:05] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:05] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:06] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:06] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:07] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:07] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:09] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:09] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:10] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:10] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:11] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:11] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:13] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:13] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:15] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:15] "GET /api/teams/12/get_batters HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:15] "GET /api/teams/12/get_pitchers HTTP/1.1" 200 -
+DEBUG:app:Received team_id: 12
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:45] "PUT /api/teams/12/lineup HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:46] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:46] "GET /api/teams/25/get_batters HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:23:46] "GET /api/teams/25/get_pitchers HTTP/1.1" 200 -
+DEBUG:app:Received team_id: 25
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:24:20] "PUT /api/teams/25/lineup HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:24:20] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:24:23] "POST /api/games/37/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:26:20] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:26:22] "POST /api/games/37/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:26:29] "GET /api/game_state/37 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:26:31] "POST /api/games/37/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:26:57] "POST /api/games/37/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:27:02] "POST /api/games/37/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:27:06] "POST /api/games/37/next_pitch HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [07/Jun/2023 20:28:35] "POST /api/games/37/next_pitch HTTP/1.1" 200 -
+WARNING:werkzeug:WebSocket transport not available. Install simple-websocket for improved performance.
+INFO:werkzeug:[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.4.46:5000
+INFO:werkzeug:[33mPress CTRL+C to quit[0m
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 16, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 117, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 26, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+INFO:werkzeug:192.168.4.46 - - [10/Jun/2023 18:43:42] "[35m[1mPOST /api/games/36/next_pitch HTTP/1.1[0m" 500 -
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 16, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 117, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 26, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+INFO:werkzeug:192.168.4.46 - - [10/Jun/2023 18:43:48] "[35m[1mPOST /api/games/36/next_pitch HTTP/1.1[0m" 500 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:47] "POST /api/games HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:47] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:48] "POST /api/reset_players HTTP/1.1" 200 -
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:48] "POST /api/load_players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:48] "GET /api/players HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:52] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:52] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:53] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:53] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:55] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:52:55] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:00] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:00] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:02] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:02] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:03] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:03] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:04] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:08] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:10] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:10] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:12] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:12] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:14] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:14] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:15] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:16] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:17] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:17] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:18] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:18] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:20] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:20] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:21] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:21] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:22] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:22] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:26] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:26] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:28] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:28] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:29] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:29] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:30] "POST /api/draft HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:31] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:33] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:33] "GET /api/teams/47/get_batters HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:53:33] "GET /api/teams/47/get_pitchers HTTP/1.1" 200 -
+DEBUG:app:Received team_id: 47
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:54:01] "PUT /api/teams/47/lineup HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:54:04] "GET /api/game_state/38 HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:54:04] "GET /api/teams/46/get_batters HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:54:04] "GET /api/teams/46/get_pitchers HTTP/1.1" 200 -
+DEBUG:app:Received team_id: 46
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '3B': '14', '2B': '8', 'SS': '11', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:54:38] "PUT /api/teams/46/lineup HTTP/1.1" 200 -
+ERROR:engineio.server:The WebSocket transport is not available, you must install a WebSocket server that is compatible with your async mode to enable it. See the documentation for details. (further occurrences of this error will be logged with level INFO)
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:54:39] "GET /socket.io/?EIO=4&transport=polling&t=OYeAQrp HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:54:39] "POST /socket.io/?EIO=4&transport=polling&t=OYeAQuA&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:54:39] "GET /socket.io/?EIO=4&transport=polling&t=OYeAQuA.0&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:55:04] "GET /socket.io/?EIO=4&transport=polling&t=OYeAQuu&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:55:04] "POST /socket.io/?EIO=4&transport=polling&t=OYeAW_S&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:55:29] "GET /socket.io/?EIO=4&transport=polling&t=OYeAW_T&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:55:29] "POST /socket.io/?EIO=4&transport=polling&t=OYeAd7T&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:55:54] "GET /socket.io/?EIO=4&transport=polling&t=OYeAd7U&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:55:54] "POST /socket.io/?EIO=4&transport=polling&t=OYeAjFR&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:56:19] "GET /socket.io/?EIO=4&transport=polling&t=OYeAjFS&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:56:19] "POST /socket.io/?EIO=4&transport=polling&t=OYeApMs&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+ERROR:app:Exception on /api/games/38/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 16, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 117, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 60, in play_at_bat
+    update_game_state(self.game_state.id)
+TypeError: update_game_state() missing 1 required positional argument: 'game_id'
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:56:31] "[35m[1mPOST /api/games/38/next_pitch HTTP/1.1[0m" 500 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:56:44] "GET /socket.io/?EIO=4&transport=polling&t=OYeApMt&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:56:44] "POST /socket.io/?EIO=4&transport=polling&t=OYeAvV-&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+ERROR:app:Exception on /api/games/38/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 16, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 117, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 60, in play_at_bat
+    update_game_state(self.game_state.id)
+TypeError: update_game_state() missing 1 required positional argument: 'game_id'
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:57:05] "[35m[1mPOST /api/games/38/next_pitch HTTP/1.1[0m" 500 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:57:09] "GET /socket.io/?EIO=4&transport=polling&t=OYeAvW0&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:57:09] "POST /socket.io/?EIO=4&transport=polling&t=OYeA_ee&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+ERROR:app:Exception on /api/games/38/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 16, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 117, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 60, in play_at_bat
+    update_game_state(self.game_state.id)
+TypeError: update_game_state() missing 1 required positional argument: 'game_id'
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:57:13] "[35m[1mPOST /api/games/38/next_pitch HTTP/1.1[0m" 500 -
+ERROR:app:Exception on /api/games/38/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 16, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 117, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 60, in play_at_bat
+    update_game_state(self.game_state.id)
+TypeError: update_game_state() missing 1 required positional argument: 'game_id'
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:57:20] "[35m[1mPOST /api/games/38/next_pitch HTTP/1.1[0m" 500 -
+ERROR:app:Exception on /api/games/38/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 16, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 117, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 60, in play_at_bat
+    update_game_state(self.game_state.id)
+TypeError: update_game_state() missing 1 required positional argument: 'game_id'
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:57:28] "[35m[1mPOST /api/games/38/next_pitch HTTP/1.1[0m" 500 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:57:34] "GET /socket.io/?EIO=4&transport=polling&t=OYeA_ef&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:57:35] "POST /socket.io/?EIO=4&transport=polling&t=OYeB5uF&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:58:00] "GET /socket.io/?EIO=4&transport=polling&t=OYeB5uH&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+INFO:werkzeug:192.168.6.110 - - [10/Jun/2023 18:58:00] "POST /socket.io/?EIO=4&transport=polling&t=OYeBC13&sid=IPyg5_UrBvClKA49AAAA HTTP/1.1" 200 -
+ERROR:app:Exception on /api/games/38/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 16, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 117, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 60, in play_at_bat
+    update_game_state(self.game_state.id)
+TypeError: update_game_state() missing 1 required positional argument: 'game_id'
+ERROR:app:Exception on /api/games/38/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 16, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 117, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 60, in play_at_bat
+    update_game_state(self.game_state.id)
+TypeError: update_game_state() missing 1 required positional argument: 'game_id'
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game = Gameplay(game_id)  # Do not pass socketio as an argument
+           ^^^^^^^^^^^^^^^^^
+TypeError: Gameplay.__init__() missing 1 required positional argument: 'socketio_instance'
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game = Gameplay(game_id)  # Do not pass socketio as an argument
+           ^^^^^^^^^^^^^^^^^
+TypeError: Gameplay.__init__() missing 1 required positional argument: 'socketio_instance'
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game = Gameplay(game_id)  # Do not pass socketio as an argument
+           ^^^^^^^^^^^^^^^^^
+TypeError: Gameplay.__init__() missing 1 required positional argument: 'socketio_instance'
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+ERROR:app:Exception on /api/games/36/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 18, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 118, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 103, in start
+    self.pitching_performs_pitch_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 45, in pitching_performs_pitch_roll
+    raise ValueError("No pitcher found on the defensive team")
+ValueError: No pitcher found on the defensive team
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 48
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '2B': '7', '1B': '4', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully

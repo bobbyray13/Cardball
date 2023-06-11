@@ -16,12 +16,6 @@ def get_lineup(team_id):
     lineup = [{"lineupPosition": i+1, "player": Player.query.get(int(player_id)).serialize()} 
               for i, player_id in enumerate(team.lineup)]
     
-    # TO DISPLAY LINEUP:
-    # {
-    # lineup.map(playerInfo => (
-    #     <Text key={playerInfo.player.id}>{playerInfo.lineupPosition}. {playerInfo.player.name}</Text>
-    # ))
-    # }
     return jsonify(lineup)
 
 @lineup_blueprint.route('/api/teams/<int:team_id>/get_batters', methods=['GET'])
@@ -156,8 +150,6 @@ def reset_players():
     db.session.commit()
 
     return jsonify({'message': 'All players and team lineups reset successfully.'}), 200
-
-
 
 # END OF lineup_edit.py
 

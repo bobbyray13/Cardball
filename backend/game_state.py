@@ -51,11 +51,6 @@ def create_game():
     if game is None:
         return jsonify({'message': 'Could not create game. Check team names.'}), 400
 
-    # global current_game
-    # current_game = game
-    # print(f"\nCurrent game created with ID: {current_game.id}")
-    # print(f"Home team: {current_game.home_team.id}, Away team: {current_game.away_team.id}")
-
     game_log_start = GameLog(game_id=game.id, log_message="Game started", timestamp=datetime.now())
     db.session.add(game_log_start)
 

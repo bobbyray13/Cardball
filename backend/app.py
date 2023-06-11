@@ -5,8 +5,9 @@ from datetime import datetime
 from flask_cors import CORS
 import csv
 import logging
+from socketio_instance import socketio
 
-def create_app():
+def create_app(socketio):
     from game_state import create_new_game, reset_all_teams, game_state_blueprint
     from user_input_routes import user_input_blueprint
     from lineup_edit import lineup_blueprint
@@ -15,6 +16,7 @@ def create_app():
     from database import db
 
     app = Flask(__name__)
+    socketio.init_app(app)
     CORS(app, resources={r"*": {"origins": "*"}})
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////Users/Bobby/Documents/Programming/reactprojects/Cardball/backend/cardball.db'
     db.init_app(app)

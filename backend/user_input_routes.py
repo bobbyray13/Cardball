@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from at_bat_components.at_bat import AtBat
 from models import Game
 from database import db
+from socketio_instance import socketio
 
 user_input_blueprint = Blueprint('user_input_bp', __name__)
 
@@ -12,7 +13,7 @@ def next_pitch(game_id: int):
     print(f"Received request to roll for next pitch for game_id: {game_id}")  # Debug print
     from gameplay import Gameplay
 
-    game = Gameplay(game_id)
+    game = Gameplay(game_id, socketio)
     game.start()
 
     # Reload the game_state object after making changes to it

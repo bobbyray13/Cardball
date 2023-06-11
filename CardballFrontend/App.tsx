@@ -9,7 +9,7 @@ import { PostDraft } from './screens/PostDraft';
 import LineupSelect from './screens/LineupSelect';
 import { LineupSelectHome } from './screens/LineupSelectHome';
 import PlayBall from './screens/PlayBall';
-import { GameplayScreen } from './screens/GameplayScreen';
+import GameplayScreen from './screens/GameplayScreen';
 import TempGameplay from './screens/TempGameplay';
 import { StatusBar } from 'expo-status-bar';
 import { GameProvider } from './contexts/gameContext';

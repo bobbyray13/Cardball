@@ -1,0 +1,202 @@
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 25
+DEBUG:app:Update lineup called with data: {'lineup': [25, 22, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '22', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 22, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 47
+DEBUG:app:Update lineup called with data: {'lineup': [26, 21, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '21', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 21, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 50
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 49
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 18
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 20
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 18
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 37
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '21', 'DH': '25', 'RF': '19', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 51
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully

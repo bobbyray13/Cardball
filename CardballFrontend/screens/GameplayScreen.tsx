@@ -1,127 +1,72 @@
 //GameplayScreen.tsx
-import React, { useContext } from 'react';
-import { Button, Text, View, StyleSheet } from 'react-native';
+import React, { useContext, useEffect, useState } from 'react';
 import { GameContext } from '../contexts/gameContext';
-import { rollForNextPitch } from '../api/gamePlayAPI'
+import { Game, Player, PlayerType, Event } from '../types';
+import { Text, View, Button, StyleSheet } from 'react-native';
+import GameBoard from '../GameBoard';
+import GameEvents from '../GameEvents';
+import PlayerAction from '../PlayerAction';
+import { initSocket, disconnectSocket } from '../socket'; // Import functions from socket.ts
+import { io, Socket } from 'socket.io-client'
 
-export const GameplayScreen: React.FC = () => {
+// Websocket connection URL
+const wsUrl = 'http://192.168.4.46:5000';
+
+const GameplayScreen: React.FC = () => {
   const gameContext = useContext(GameContext);
+  const { game = null, setGame, substitutePlayer, handleNextPitch } = gameContext || {};
 
-  console.log('gameContext:', gameContext);  // Add this line
-  console.log('gameContext.game:', gameContext?.game);  // Add this line
-  console.log('gameContext.game.currentHalf:', gameContext?.game?.currentHalf);  // Add this line
-  console.log('gameContext.game.homeTeam:', gameContext?.game?.homeTeam);  // Add this line
-  console.log('gameContext.game.awayTeam:', gameContext?.game?.awayTeam);  // Add this line
+  // Events state
+  const [events, setEvents] = useState<Event[]>([]);
 
-  // This if statement ensures that the necessary context is available.
-  if (!gameContext || !gameContext.game || !gameContext.game.currentHalf || !gameContext.game.homeTeam || !gameContext.game.awayTeam) {
-    return <Text>Loading game context...</Text>;
-  }
-  
-  // const game = gameContext.game;
-  const { gameId } = gameContext;
-    // const { homeTeam, awayTeam } = game;
-
-  // // Determine which team is on offense and which is on defense
-  // const offensiveTeam = homeTeam.role === 'onOffense' ? homeTeam : awayTeam;
-  // const defensiveTeam = homeTeam.role === 'onDefense' ? homeTeam : awayTeam;
-
-  // // Ensure offensiveTeam and defensiveTeam have necessary properties defined
-  // if (!offensiveTeam.lineup || !defensiveTeam.fieldPositions || !offensiveTeam.players || !defensiveTeam.players) {
-  //   return <Text>Loading Lineups...</Text>;
-  // }
-
-  // // Get the player in the lineup position 1 for the team on offense
-  // const offensivePlayerId = offensiveTeam.lineup[0];
-  // const offensivePlayer = offensiveTeam.players.find(player => player.id === offensivePlayerId);
-
-  // // Get the player in the 'P' field position for the team on defense
-  // const defensivePlayerId = defensiveTeam.fieldPositions['P'];
-  // const defensivePlayer = defensiveTeam.players.find(player => player.id === Number(defensivePlayerId));
-
-  // // Extract player names, defaulting to 'Unknown' if not found
-  // const offensivePlayerName = offensivePlayer ? offensivePlayer.name : 'Unknown';
-  // const defensivePlayerName = defensivePlayer ? defensivePlayer.name : 'Unknown';
-
-  // // Add logs to access required info
-  // console.log(`Offensive lineup: ${JSON.stringify(offensiveTeam.lineup.map(id => offensiveTeam.players.find(player => player.id === id)?.name || 'Unknown'))}`);
-  // console.log(`Defensive field positions: ${JSON.stringify(defensiveTeam.fieldPositions)}`);
-  // console.log(`Defensive active pitcher: ${defensivePlayerName}`);
-
-  // console.log(`Offensive player: ${JSON.stringify(offensivePlayer)}`);
-  // console.log(`Defensive team field positions: ${JSON.stringify(defensiveTeam.fieldPositions)}`);
-
-  // // Mapping base number to base name
-  // const baseNames = ['1st Base', '2nd Base', '3rd Base'];
-
-  // // Bases text
-  // let basesText = '';
-  // if (game.bases) {
-  //   basesText = game.bases.map(base => {
-  //     const baseName = baseNames[base.baseNumber - 1];
-  //     const playerName = base.player ? base.player.name : '-';
-  //     return `${baseName}: ${playerName}`;
-  //   }).join(' ');
-  // }
-
-  // let currentHalfText = '';
-  // if (game.currentHalf) {
-  //   currentHalfText = game.currentHalf.charAt(0).toUpperCase() + game.currentHalf.slice(1);
-  // }
-
-  // // Ensure offensiveTeam and defensiveTeam have necessary properties defined
-  // if (!offensiveTeam.lineup || !defensiveTeam.fieldPositions) {
-  //   return <Text>Loading Lineups...</Text>;
-  // }
-
-  const handleRollForNextPitch = async () => {
-    if (gameId) {
-      try {
-        console.log(`Rolling for next pitch in game ${gameId}...`);
-        const updatedGameState = await rollForNextPitch(gameId);
-        console.log(`Updated game state: ${JSON.stringify(updatedGameState)}`);
-        gameContext.setGame(updatedGameState);
-      } catch (error) {
-        console.error(error);
+  // Initiate Socket.IO connection
+  useEffect(() => {
+    console.log("Initialising Socket.IO connection.");
+    const gameUpdateHandler = (data: Game) => {
+      console.log("Received GAME_UPDATE event:", data);
+      if (setGame) {
+        setGame(data);
+      } else {
+        console.error('setGame is not defined');
       }
+    };
+
+    initSocket(gameUpdateHandler);
+
+    // Disconnect from socket when component is unmounted
+    return () => {
+      disconnectSocket();
+    };
+  }, []);
+
+  const rollForNextPitch = async () => {
+    console.log("Rolling for next pitch");
+    if (handleNextPitch) {
+      await handleNextPitch();
+      console.log('Game state after next pitch:', game);
+    } else {
+      console.error('handleNextPitch function is not defined in the context');
     }
-  };  
+  };
 
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.textStyle}>
-        {currentHalfText} of {game.currentInning} - Outs: {game.currentOuts || 0}      </Text>
-      <Text style={styles.textStyle}>
-        {basesText}
-      </Text>
-      <Text style={styles.textStyle}>
-        {homeTeam ? `${homeTeam.name} - ${game.home_team_score || 0}` : 'Loading home team...'} 
-        {awayTeam ? `${awayTeam.name} - ${game.away_team_score || 0}` : 'Loading away team...'}
-      </Text>
-      <Text style={styles.textStyle}>
-        Batter: {offensivePlayerName} Pitcher: {defensivePlayerName}
-      </Text> */}
-      <Button title="Roll for Next Pitch" onPress={handleRollForNextPitch} />
+      <Text>Gameplay Screen</Text>
+      <GameBoard game={game} />
+      <GameEvents events={events} /> 
+      {/* TODO: Implement player substitution UI here */}
+      <Button title="Roll for Next Pitch" onPress={rollForNextPitch} />
     </View>
   );
 };
 
+export default GameplayScreen;
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
-    padding: 20,
+    alignItems: 'center',
   },
-  // buttonContainer: {
-  //   position: 'absolute',
-  //   bottom: 0,
-  //   width: '100%',
-  //   padding: 20,
-  // },
-  // textStyle: {
-  //   fontSize: 16,
-  //   marginBottom: 20,
-  // },
 });
 //END OF GameplayScreen.tsx

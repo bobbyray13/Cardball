@@ -15,9 +15,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children }) => {
   const handleNextPitch = async () => {
     if (gameId) {
       try {
-        const updatedGame = await rollForNextPitch(gameId);
-        // Set updated game state in the context
-        setGame(updatedGame);
+        await rollForNextPitch(gameId);
+        // No need to fetch the updated game state here,
+        // the GAME_UPDATE event will take care of it.
       } catch (error) {
         console.error('Error rolling for next pitch:', error);
       }
