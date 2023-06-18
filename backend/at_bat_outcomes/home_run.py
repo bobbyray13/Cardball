@@ -26,6 +26,6 @@ def apply_home_run(game_state):
         game_state.away_team_score += 1
 
     # Change player's role to None, as they have completed their run
-    up_to_bat_player.role = None
+    up_to_bat_player.role = "inLineupBatter"
     db.session.commit()
 #END OF homerun.py

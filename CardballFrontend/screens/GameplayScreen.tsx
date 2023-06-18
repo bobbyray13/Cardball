@@ -16,14 +16,16 @@ const GameplayScreen: React.FC = () => {
   const gameContext = useContext(GameContext);
   const { game = null, setGame, substitutePlayer, handleNextPitch } = gameContext || {};
 
-  // Events state
-  const [events, setEvents] = useState<Event[]>([]);
+    // Events state
+    const [events, setEvents] = useState<Event[]>([]);
 
   // Initiate Socket.IO connection
   useEffect(() => {
     console.log("Initialising Socket.IO connection.");
+
     const gameUpdateHandler = (data: Game) => {
-      console.log("Received GAME_UPDATE event:", data);
+      console.log("Received GAME_UPDATE event: GameplayScreen.tsx");
+      console.log("Setting game state:");
       if (setGame) {
         setGame(data);
       } else {
@@ -31,7 +33,11 @@ const GameplayScreen: React.FC = () => {
       }
     };
 
-    initSocket(gameUpdateHandler);
+    const gameEventHandler = (data: Event) => {
+      setEvents(oldEvents => [...oldEvents, data]);
+    }
+
+    initSocket(gameUpdateHandler, gameEventHandler);
 
     // Disconnect from socket when component is unmounted
     return () => {
@@ -43,7 +49,6 @@ const GameplayScreen: React.FC = () => {
     console.log("Rolling for next pitch");
     if (handleNextPitch) {
       await handleNextPitch();
-      console.log('Game state after next pitch:', game);
     } else {
       console.error('handleNextPitch function is not defined in the context');
     }
@@ -53,7 +58,7 @@ const GameplayScreen: React.FC = () => {
     <View style={styles.container}>
       <Text>Gameplay Screen</Text>
       <GameBoard game={game} />
-      <GameEvents events={events} /> 
+      <GameEvents events={events} />
       {/* TODO: Implement player substitution UI here */}
       <Button title="Roll for Next Pitch" onPress={rollForNextPitch} />
     </View>

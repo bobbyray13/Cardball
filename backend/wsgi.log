@@ -200,3 +200,1465 @@ DEBUG:app:Received team_id: 51
 DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
 DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
 DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [27, 22, 19, 16, 14, 12, 7, 5, 1], 'fieldPositions': {'C': '1', '1B': '5', '2B': '7', 'SS': '12', '3B': '14', 'LF': '16', 'CF': '27', 'RF': '22', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 5, 7, 12, 14, 16, 19, 22, 27, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 20, 17, 15, 10, 8, 6, 2], 'fieldPositions': {'C': '2', '1B': '6', '2B': '8', 'SS': '10', '3B': '15', 'LF': '21', 'CF': '20', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {2, 6, 8, 10, 15, 17, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 20, 17, 15, 10, 8, 6, 2], 'fieldPositions': {'C': '2', '1B': '6', '2B': '8', 'SS': '10', '3B': '15', 'LF': '21', 'CF': '20', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {2, 6, 8, 10, 15, 17, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [27, 22, 19, 16, 14, 12, 7, 5, 1], 'fieldPositions': {'C': '1', '1B': '5', '2B': '7', 'SS': '12', '3B': '14', 'LF': '16', 'CF': '19', 'RF': '22', 'DH': '27', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 5, 7, 12, 14, 16, 19, 22, 27, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 20, 17, 15, 10, 8, 6, 2], 'fieldPositions': {'C': '2', '1B': '6', '2B': '8', '3B': '15', 'SS': '10', 'LF': '17', 'CF': '20', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {2, 6, 8, 10, 15, 17, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 7
+DEBUG:app:Update lineup called with data: {'lineup': [25, 22, 20, 17, 12, 11, 7, 5, 1], 'fieldPositions': {'C': '1', '1B': '5', '2B': '7', '3B': '11', 'SS': '12', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 5, 7, 11, 12, 17, 20, 22, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [27, 21, 19, 16, 13, 10, 8, 4, 2], 'fieldPositions': {'C': '2', '1B': '4', '2B': '8', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '27', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 4, 8, 10, 13, 16, 19, 21, 27, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/46/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 125, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 54, in play_at_bat
+    self.reset_up_to_bat()  # Reset role after each at bat
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Gameplay' object has no attribute 'reset_up_to_bat'
+ERROR:app:Exception on /api/games/46/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 125, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 54, in play_at_bat
+    self.reset_up_to_bat()  # Reset role after each at bat
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Gameplay' object has no attribute 'reset_up_to_bat'
+ERROR:app:Exception on /api/games/46/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 125, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 54, in play_at_bat
+    self.reset_up_to_bat()  # Reset role after each at bat
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Gameplay' object has no attribute 'reset_up_to_bat'
+ERROR:app:Exception on /api/games/46/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 125, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 54, in play_at_bat
+    self.reset_up_to_bat()  # Reset role after each at bat
+    ^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'Gameplay' object has no attribute 'reset_up_to_bat'
+ERROR:app:Exception on /api/games/46/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 125, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 50, in play_at_bat
+    apply_walk(self.game_state)
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_outcomes\walk.py", line 22, in apply_walk
+    raise Exception("No player is currently up to bat.")
+Exception: No player is currently up to bat.
+ERROR:app:Exception on /api/games/46/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 125, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 50, in play_at_bat
+    apply_walk(self.game_state)
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_outcomes\walk.py", line 22, in apply_walk
+    raise Exception("No player is currently up to bat.")
+Exception: No player is currently up to bat.
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/46/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 125, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 44, in play_at_bat
+    apply_triple(self.game_state)
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_outcomes\triple.py", line 21, in apply_triple
+    raise Exception("No player is currently up to bat.")
+Exception: No player is currently up to bat.
+ERROR:app:Exception on /api/games/46/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 125, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 50, in play_at_bat
+    apply_walk(self.game_state)
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_outcomes\walk.py", line 22, in apply_walk
+    raise Exception("No player is currently up to bat.")
+Exception: No player is currently up to bat.
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 53
+DEBUG:app:Update lineup called with data: {'lineup': [27, 22, 19, 16, 14, 12, 7, 5, 1], 'fieldPositions': {'C': '1', '1B': '5', '2B': '7', 'SS': '12', '3B': '14', 'LF': '16', 'CF': '19', 'RF': '22', 'DH': '27', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 5, 7, 12, 14, 16, 19, 22, 27, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 52
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 20, 17, 13, 10, 8, 4, 2], 'fieldPositions': {'C': '2', '1B': '4', '2B': '8', 'SS': '10', '3B': '13', 'LF': '17', 'CF': '20', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {2, 4, 8, 10, 13, 17, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+ERROR:flask_migrate:Error: Directory migrations already exists and is not empty
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 8
+DEBUG:app:Update lineup called with data: {'lineup': [27, 22, 19, 16, 14, 12, 7, 5, 1], 'fieldPositions': {'C': '1', '1B': '5', '2B': '7', 'SS': '12', '3B': '14', 'LF': '16', 'CF': '19', 'RF': '22', 'DH': '27', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 5, 7, 12, 14, 16, 19, 22, 27, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 7
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 20, 17, 13, 10, 8, 4, 2], 'fieldPositions': {'C': '2', '1B': '4', '2B': '8', 'SS': '10', '3B': '13', 'LF': '17', 'CF': '20', 'RF': '21', 'DH': '25', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 4, 8, 10, 13, 17, 20, 21, 25, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 24
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 23
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+INFO:root:WSGI starting
+INFO:root:WSGI starting
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 55
+DEBUG:app:Update lineup called with data: {'lineup': [17, 10, 20, 25, 21, 8, 15, 6, 2], 'fieldPositions': {'C': '2', '1B': '6', '2B': '8', 'SS': '10', '3B': '15', 'LF': '17', 'CF': '20', 'DH': '25', 'RF': '21', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {2, 6, 8, 10, 15, 17, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 54
+DEBUG:app:Update lineup called with data: {'lineup': [22, 13, 19, 16, 26, 11, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '11', '3B': '13', 'LF': '16', 'CF': '19', 'DH': '26', 'RF': '22', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 4, 7, 11, 13, 16, 19, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+ERROR:app:Exception on /api/games/51/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 126, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 99, in start
+    self.up_to_bat_performs_swing_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 51, in up_to_bat_performs_swing_roll
+    self.swing_roll = roll_dice(6, self.up_to_bat.bat_skill)
+                                   ^^^^^^^^^^^^^^
+AttributeError: 'AtBat' object has no attribute 'up_to_bat'
+DEBUG:app:Received team_id: 54
+DEBUG:app:Update lineup called with data: {'lineup': [22, 13, 19, 16, 26, 11, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '11', '3B': '13', 'LF': '16', 'CF': '19', 'DH': '26', 'RF': '22', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 4, 7, 11, 13, 16, 19, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 55
+DEBUG:app:Update lineup called with data: {'lineup': [17, 10, 20, 25, 21, 8, 15, 6, 2], 'fieldPositions': {'C': '2', '1B': '6', '2B': '8', 'SS': '10', '3B': '15', 'LF': '17', 'CF': '20', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {2, 6, 8, 10, 15, 17, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 54
+DEBUG:app:Update lineup called with data: {'lineup': [26, 22, 19, 16, 13, 11, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '11', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 4, 7, 11, 13, 16, 19, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+ERROR:app:Exception on /api/games/52/first_at_bat [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 37, in first_at_bat
+    game.at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 87, in at_bat
+    self.up_to_bat_steps_up()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 20, in up_to_bat_steps_up
+    offensive_team = self.game.home_team if self.game.home_team.role == "onOffense" else self.game.away_team
+                                            ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'home_team'
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/52/first_at_bat [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 52, in first_at_bat
+    at_bat.at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 87, in at_bat
+    self.up_to_bat_steps_up()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 20, in up_to_bat_steps_up
+    offensive_team = self.game.home_team if self.game.home_team.role == "onOffense" else self.game.away_team
+                                            ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'home_team'
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 57
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 20, 17, 15, 10, 8, 6, 2], 'fieldPositions': {'C': '2', '1B': '6', '2B': '8', 'SS': '10', '3B': '15', 'LF': '17', 'CF': '20', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {2, 6, 8, 10, 15, 17, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 56
+DEBUG:app:Update lineup called with data: {'lineup': [27, 22, 19, 16, 13, 11, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '11', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '22', 'DH': '27', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 4, 7, 11, 13, 16, 19, 22, 27, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+ERROR:app:Exception on /api/games/53/first_at_bat [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 52, in first_at_bat
+    at_bat.at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 87, in at_bat
+    self.up_to_bat_steps_up()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 20, in up_to_bat_steps_up
+    offensive_team = self.game.home_team if self.game.home_team.role == "onOffense" else self.game.away_team
+                                            ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'int' object has no attribute 'home_team'
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/53/first_at_bat [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1487, in full_dispatch_request
+    return self.finalize_request(rv)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1506, in finalize_request
+    response = self.make_response(rv)
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1801, in make_response
+    raise TypeError(
+TypeError: The view function for 'user_input_bp.first_at_bat' did not return a valid response. The function either returned None or ended without a return statement.
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 59
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 20, 17, 15, 10, 8, 6, 3], 'fieldPositions': {'C': '3', '1B': '6', '2B': '8', 'SS': '10', '3B': '15', 'LF': '17', 'CF': '20', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {3, 6, 8, 10, 15, 17, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 58
+DEBUG:app:Update lineup called with data: {'lineup': [22, 19, 16, 13, 11, 7, 4, 1, 26], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '11', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '22', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 4, 7, 11, 13, 16, 19, 22, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+ERROR:app:Exception on /api/games/54/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 126, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 99, in start
+    self.up_to_bat_performs_swing_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 51, in up_to_bat_performs_swing_roll
+    self.swing_roll = roll_dice(6, self.up_to_bat.bat_skill)
+                                   ^^^^^^^^^^^^^^
+AttributeError: 'AtBat' object has no attribute 'up_to_bat'
+ERROR:app:Exception on /api/games/54/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 126, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 99, in start
+    self.up_to_bat_performs_swing_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 51, in up_to_bat_performs_swing_roll
+    self.swing_roll = roll_dice(6, self.up_to_bat.bat_skill)
+                                   ^^^^^^^^^^^^^^
+AttributeError: 'AtBat' object has no attribute 'up_to_bat'
+ERROR:app:Exception on /api/games/54/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 126, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 99, in start
+    self.up_to_bat_performs_swing_roll()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\at_bat_components\at_bat.py", line 51, in up_to_bat_performs_swing_roll
+    self.swing_roll = roll_dice(6, self.up_to_bat.bat_skill)
+                                   ^^^^^^^^^^^^^^
+AttributeError: 'AtBat' object has no attribute 'up_to_bat'
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 61
+DEBUG:app:Update lineup called with data: {'lineup': [25, 21, 20, 16, 15, 10, 8, 6, 2], 'fieldPositions': {'C': '2', '1B': '6', '2B': '8', 'SS': '10', '3B': '15', 'LF': '16', 'CF': '20', 'RF': '21', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {2, 6, 8, 10, 15, 16, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 60
+DEBUG:app:Update lineup called with data: {'lineup': [27, 22, 19, 17, 13, 11, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '11', '3B': '13', 'LF': '17', 'CF': '19', 'RF': '22', 'DH': '27', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 4, 7, 11, 13, 17, 19, 22, 27, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+INFO:root:WSGI starting
+INFO:root:WSGI starting
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [19, 22, 1, 16, 7, 5, 27, 14, 12], 'fieldPositions': {'C': '1', 'LF': '16', 'CF': '19', 'RF': '22', '2B': '7', '1B': '5', 'DH': '27', 'SS': '12', '3B': '14', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 5, 7, 12, 14, 16, 19, 22, 27, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [17, 10, 20, 25, 21, 8, 6, 15, 2], 'fieldPositions': {'C': '2', '1B': '6', '3B': '15', 'SS': '10', 'LF': '17', 'CF': '20', 'DH': '25', 'RF': '21', '2B': '8', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {2, 6, 8, 10, 15, 17, 20, 21, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+ERROR:app:Exception on /api/games/56/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 134, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 28, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+TypeError: AtBat.start() missing 1 required positional argument: 'socket'
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/56/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 135, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 27, in play_at_bat
+    outcome = at_bat.start(self.socket)
+                           ^^^^^^^^^^^
+AttributeError: 'Gameplay' object has no attribute 'socket'
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/56/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 136, in start
+    self.play_at_bat()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 30, in play_at_bat
+    outcome = at_bat.start()  # The start function returns the outcome of an at bat
+              ^^^^^^^^^^^^^^
+TypeError: AtBat.start() missing 1 required positional argument: 'socket'
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/56/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 136, in start
+    self.play_at_bat(self.socket)
+TypeError: Gameplay.play_at_bat() takes 1 positional argument but 2 were given
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/56/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 135, in start
+    self.play_at_bat(self.socket)
+TypeError: Gameplay.play_at_bat() takes 1 positional argument but 2 were given
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/56/next_pitch [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\user_input_routes.py", line 17, in next_pitch
+    game.start()
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 135, in start
+    self.play_at_bat(self.socket)
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\gameplay.py", line 60, in play_at_bat
+    self.check_game_over()
+TypeError: Gameplay.check_game_over() missing 1 required positional argument: 'socket'
+INFO:root:WSGI starting
+INFO:root:WSGI starting
+INFO:root:WSGI starting
+INFO:root:WSGI starting
+INFO:root:WSGI starting
+ERROR:app:Exception on /api/games/pre-built [POST]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\game_state.py", line 107, in create_game_with_pre_built_teams
+    home_team = get_pre_built_team(home_team_name)  # This would be a new function that fetches a pre-built team with its pre-selected players
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\game_state.py", line 131, in get_pre_built_team
+    team.batters = Player.query.filter(Player.id.in_(team_data['batters'])).all()
+                                                     ~~~~~~~~~^^^^^^^^^^^
+KeyError: 'batters'
+INFO:root:WSGI starting
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [27, 22, 19, 16, 14, 12, 7, 5, 1], 'fieldPositions': {'C': '1', '1B': '5', '2B': '7', 'SS': '12', '3B': '14', 'LF': '16', 'CF': '19', 'RF': '22', 'DH': '27', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {1, 5, 7, 12, 14, 16, 19, 22, 27, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 1
+DEBUG:app:Update lineup called with data: {'lineup': [25, 23, 20, 17, 15, 10, 8, 6, 3], 'fieldPositions': {'C': '3', '1B': '6', '2B': '8', 'SS': '10', '3B': '15', 'LF': '17', 'CF': '20', 'RF': '23', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {3, 6, 8, 10, 15, 17, 20, 23, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 60, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 60, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+INFO:root:WSGI starting
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 2
+DEBUG:app:Update lineup called with data: {'lineup': [1, 5, 7, 12, 14, 16, 19, 22, 27], 'fieldPositions': {'1': 'C', '5': '1B', '7': '2B', '12': 'SS', '14': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '27': 'DH', 'RF': '27', 'P': '29'}, 'activePitcher': 29}
+ERROR:app:Exception on /api/teams/2/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+INFO:root:Reading row: {'name': 'B. Posey', 'position': 'C', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Raleigh', 'position': 'C', 'bat_skill': '-1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'D. Wilson', 'position': 'C', 'bat_skill': '-2', 'pow_skill': '-2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Goldschmidt', 'position': '1B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Clark', 'position': '1B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Martinez', 'position': '1B', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kent', 'position': '2B', 'bat_skill': '3', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Cano', 'position': '2B', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. McNeil', 'position': '2B', 'bat_skill': '-1', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'A. Rodriguez', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'C. Seager', 'position': 'SS', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Crawford', 'position': 'SS', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'N. Arenado', 'position': '3B', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'P. Sandoval', 'position': '3B', 'bat_skill': '2', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '-1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Seager', 'position': '3B', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Bonds', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'I. Suzuki', 'position': 'LF', 'bat_skill': '3', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'B. Nimmo', 'position': 'LF', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. Mays', 'position': 'CF', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '3', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Griffey Jr.', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '3', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Rodriguez', 'position': 'CF', 'bat_skill': '2', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '2', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'M. Ott', 'position': 'RF', 'bat_skill': '2', 'pow_skill': '0', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '2', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Buhner', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'J. Kelenic', 'position': 'RF', 'bat_skill': '0', 'pow_skill': '1', 'pit_skill': '0', 'fld_skill': '1', 'run_skill': '1', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'E. Martinez', 'position': 'DH', 'bat_skill': '3', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'K. Schwarber', 'position': 'DH', 'bat_skill': '0', 'pow_skill': '3', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'W. McCovey', 'position': 'DH', 'bat_skill': '1', 'pow_skill': '2', 'pit_skill': '0', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Batter', 'year': '2020'}
+INFO:root:Reading row: {'name': 'R. Johnson', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '3', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'T. Lincecum', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '2', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+INFO:root:Reading row: {'name': 'L. Gilbert', 'position': 'P', 'bat_skill': '0', 'pow_skill': '0', 'pit_skill': '1', 'fld_skill': '0', 'run_skill': '0', 'playerType': 'Pitcher', 'year': '2020'}
+DEBUG:app:Received team_id: 12
+DEBUG:app:Update lineup called with data: {'lineup': [1, 4, 7, 10, 13, 16, 19, 22, 25], 'fieldPositions': {'1': 'C', '4': '1B', '7': '2B', '10': 'SS', '13': '3B', '16': 'LF', '19': 'CF', '22': 'RF', '25': 'DH', 'P': '28'}, 'activePitcher': 28}
+ERROR:app:Exception on /api/teams/12/lineup [PUT]
+Traceback (most recent call last):
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 2190, in wsgi_app
+    response = self.full_dispatch_request()
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1486, in full_dispatch_request
+    rv = self.handle_user_exception(e)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask_cors\extension.py", line 165, in wrapped_function
+    return cors_after_request(app.make_response(f(*args, **kwargs)))
+                                                ^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1484, in full_dispatch_request
+    rv = self.dispatch_request()
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\env\Lib\site-packages\flask\app.py", line 1469, in dispatch_request
+    return self.ensure_sync(self.view_functions[rule.endpoint])(**view_args)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in update_lineup
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Bobby\Documents\Programming\reactprojects\Cardball\backend\lineup_edit.py", line 61, in <listcomp>
+    player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
+                               ^^^^^^^
+ValueError: invalid literal for int() with base 10: 'C'
+DEBUG:app:Received team_id: 12
+DEBUG:app:Update lineup called with data: {'lineup': [25, 22, 19, 16, 13, 10, 7, 4, 1], 'fieldPositions': {'C': '1', '1B': '4', '2B': '7', 'SS': '10', '3B': '13', 'LF': '16', 'CF': '19', 'RF': '22', 'DH': '25', 'P': '28'}, 'activePitcher': 28}
+DEBUG:app:Player ids: {1, 4, 7, 10, 13, 16, 19, 22, 25, 28}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully
+DEBUG:app:Received team_id: 16
+DEBUG:app:Update lineup called with data: {'lineup': [26, 23, 20, 17, 14, 11, 8, 5, 2], 'fieldPositions': {'C': '2', '1B': '5', '2B': '8', 'SS': '11', '3B': '14', 'LF': '17', 'CF': '20', 'RF': '23', 'DH': '26', 'P': '29'}, 'activePitcher': 29}
+DEBUG:app:Player ids: {2, 5, 8, 11, 14, 17, 20, 23, 26, 29}
+DEBUG:app:Lineup, FieldPositions, and activePitcher updated successfully

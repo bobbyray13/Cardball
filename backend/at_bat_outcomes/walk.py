@@ -15,14 +15,24 @@ def apply_walk(game_state):
             up_to_bat_player = player
             break
 
+    # Get first base
+    first_base = None
+    for base in game_state.bases:
+        if base.base_number == 1:
+            first_base = base
+            break
+
+    # Advance runners if first base is occupied
+    if first_base and first_base.is_occupied:
+        game_updater.advance_runners()
+    else:
+        print("No runner on the first base. No advancing runners.")
+
     # Change player's role to 'onBase'
     if up_to_bat_player is not None:
         up_to_bat_player.role = "onBase"
     else:
         raise Exception("No player is currently up to bat.")
-
-    # Advance any runners on bases
-    game_updater.advance_runners()
 
     # Put up_to_bat_player on first base
     first_base = None

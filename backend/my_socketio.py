@@ -23,6 +23,7 @@ def update_game_state(socketio, game_id):
         print(f"Game state for game {game_id} communicated")
 
         # Now emit the game state to all connected clients
+        print(f"Emitting game state")
         socketio.emit('GAME_UPDATE', game_state)
         print(f"Emitted GAME_UPDATE event for game {game_id}")
     else:

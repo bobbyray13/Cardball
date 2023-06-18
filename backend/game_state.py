@@ -1,9 +1,10 @@
 # game_state.py
-from models import Game, Team, GameLog, Base
+from models import Game, Team, GameLog, Base, Player
 from flask_sqlalchemy import SQLAlchemy
 from flask import jsonify, Blueprint, request
 from datetime import datetime
 from database import db
+import json
 
 game_state_blueprint = Blueprint('game_state', __name__)
 
@@ -92,6 +93,51 @@ def create_new_game(home_team: Team, away_team: Team) -> Game:
     create_game_log(new_game, "Game started")
 
     return new_game
+
+@game_state_blueprint.route('/api/games/pre-built', methods=['POST'])
+def create_game_with_pre_built_teams():
+    data = request.get_json()
+    away_team_name = data['away_team_name'].lower()
+    home_team_name = data['home_team_name'].lower()
+
+    reset_all_teams()
+    Game.query.update({Game.is_in_progress: False})
+    db.session.commit() # commit database changes
+
+    home_team = get_pre_built_team(home_team_name)  # This would be a new function that fetches a pre-built team with its pre-selected players
+    away_team = get_pre_built_team(away_team_name)  # Similarly, fetch the away pre-built team
+
+    if not home_team or not away_team:
+        return jsonify({'message': 'Could not fetch teams. Check team names.'}), 400
+
+    # Use the existing create_new_game function
+    game = create_new_game(home_team, away_team)
+    if game is None:
+        return jsonify({'message': 'Could not create game. Check team names.'}), 400
+
+    return jsonify(game.serialize())
+
+def get_pre_built_team(team_name):
+    try:
+        # Open the corresponding JSON file
+        with open(f'pre_built_teams/{team_name}.json', 'r') as file:
+            team_data = json.load(file)
+        
+        # Fetch the corresponding Team object from the database
+        team = Team.query.get(team_data['id'])
+        
+        # Assign the players to the team
+        team.players = Player.query.filter(Player.id.in_(team_data['players'])).all()
+        team.batters = Player.query.filter(Player.id.in_(team_data['batters'])).all()
+        team.pitchers = Player.query.filter(Player.id.in_(team_data['pitchers'])).all()
+
+        db.session.commit() # commit database changes
+
+        return team
+
+    except FileNotFoundError:
+        print(f"No pre-built team found for the name {team_name}.")
+        return None
 
 def reset_all_teams():
     # Print roles for all teams before the update

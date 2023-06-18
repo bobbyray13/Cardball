@@ -3,10 +3,6 @@ from sqlalchemy.orm import Session
 from database import db
 
 def apply_strikeout(game_state: Game, n: int = 1):
-    """
-    Apply a strike out to the game state. The number of outs (n) can only be 1
-    """
-    # Validate that n is within acceptable range
     if n not in [1]:
         raise ValueError(f"Invalid number of outs: {n}. Can only be 1.")
 
@@ -19,7 +15,7 @@ def apply_strikeout(game_state: Game, n: int = 1):
     # Reset upToBat player's role to null
     for player in offensive_team.players:
         if player.role == 'upToBat':
-            player.role = None
+            player.role = 'inLineupBatter'
             break
 
     # Save changes to the database

@@ -20,7 +20,7 @@ def apply_out(game_state: Game, n: int):
     # Reset upToBat player's role to null
     for player in offensive_team.players:
         if player.role == 'upToBat':
-            player.role = None
+            player.role = 'inLineupBatter'
             break
 
     # Save changes to the database

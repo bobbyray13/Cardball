@@ -57,6 +57,7 @@ def update_lineup(team_id):
         return jsonify({'message': 'lineup, fieldPositions, and activePitcher are required.'}), 400
 
     # Check that all player IDs in lineup, fieldPositions, and activePitcher exist
+    print(fieldPositions)
     player_ids = set(lineup + [int(id) for id in fieldPositions.values()] + [activePitcher])
     for player_id in player_ids:
         try:
@@ -139,7 +140,8 @@ def reset_players():
     for player in players:
         player.drafted = False
         player.team_id = None
-
+        player.role = None
+        
     db.session.commit()
 
     teams = [home_team, away_team]

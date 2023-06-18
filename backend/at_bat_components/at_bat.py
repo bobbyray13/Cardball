@@ -22,12 +22,19 @@ class AtBat:
         if offensive_team == self.game.home_team:
             player_id = offensive_team.lineup[self.game.home_team_lineup_position % len(offensive_team.lineup)]
             self.up_to_bat = db.session.query(Player).get(player_id)
-            self.game.home_team_lineup_position += 1
         else:
             player_id = offensive_team.lineup[self.game.away_team_lineup_position % len(offensive_team.lineup)]
             self.up_to_bat = db.session.query(Player).get(player_id)
-            self.game.away_team_lineup_position += 1
+
         db.session.commit()
+
+    def advance_lineup_position(self):
+        offensive_team = self.game.home_team if self.game.home_team.role == "onOffense" else self.game.away_team
+        
+        if offensive_team == self.game.home_team:
+            self.game.home_team_lineup_position += 1 % 9
+        else:
+            self.game.away_team_lineup_position += 1 % 9
 
     def print_game_state(self):
         print(self.game.serialize())
@@ -44,7 +51,7 @@ class AtBat:
         if self.up_to_pitch is None:
             raise ValueError("No pitcher found on the defensive team")
         self.pitch_roll = roll_dice(6, self.up_to_pitch.pit_skill)
-        print(f'Pitch roll: {self.pitch_roll}')
+        print(f'{self.up_to_pitch.name} Pitch roll: {self.pitch_roll}')
 
     def up_to_bat_performs_swing_roll(self):
         self.swing_roll = roll_dice(6, self.up_to_bat.bat_skill)
@@ -57,7 +64,7 @@ class AtBat:
     def determine_up_to_defend_based_on_roll(self):
         # Reset upToDefend role for all players
         for player in db.session.query(Player).filter(Player.role == 'upToDefend').all():
-            player.role = None
+            player.role = 'inLineupBatter'
 
         # Determine the player who is up to defend
         self.up_to_defend = self.defend.determine_up_to_defend_based_on_roll(self.direction_roll, self.power_roll)
@@ -74,14 +81,8 @@ class AtBat:
 
     def reset_up_to_defend(self):
         if self.up_to_defend:
-            self.up_to_defend.role = None
+            self.up_to_defend.role = 'inLineupBatter'
             db.session.commit()
-
-    def count_as_strikeout(self):
-        print(f"{self.up_to_bat.name} strikes out!")
-
-    def count_as_walk(self):
-        print(f"{self.up_to_bat.name} walks!")
 
     def count_as_foul(self):
         self.fouls += 1  # Increment fouls
@@ -95,11 +96,12 @@ class AtBat:
         db.session.commit()
         print("At Bat initialized")
 
-    def start(self, wait_for_user_input: bool = False):
+    def start(self, socket, wait_for_user_input: bool = False):
         if wait_for_user_input:
             # Do nothing, wait for user input to perform pitch roll
             pass
         else:
+            self.at_bat()
             self.pitching_performs_pitch_roll()
             self.up_to_bat_performs_swing_roll()
 
@@ -110,26 +112,26 @@ class AtBat:
                 self.determine_up_to_defend_based_on_roll()
                 self.up_to_defend_performs_throw_roll()
                 if self.up_to_defend and self.fielding_roll > self.power_roll:
-                    print(f"{self.up_to_bat.name} is out!")
+                    socket.emit('game_event', {'description': f"{self.up_to_bat.name} is out! {self.up_to_defend.name} makes the defensive play."})
                     outcome = 'Out'
                 else:
                     if self.power_roll < 10:
                         outcome = 'Single'
-                        print(f"{self.up_to_bat.name} makes a single!")
+                        socket.emit('game_event', {'description': f"{self.up_to_bat.name} hits a single"})
                     elif 10 <= self.power_roll < 15:
                         outcome = 'Double'
-                        print(f"{self.up_to_bat.name} makes a double!")
+                        socket.emit('game_event', {'description': f"{self.up_to_bat.name} hits a double"})
                     elif 15 <= self.power_roll < 20:
                         outcome = 'Triple'
-                        print(f"{self.up_to_bat.name} makes a triple!")
+                        socket.emit('game_event', {'description': f"{self.up_to_bat.name} hits a triple"})
                     else:
                         outcome = 'Home Run'
-                        print(f"{self.up_to_bat.name} makes a home run!")
+                        socket.emit('game_event', {'description': f"{self.up_to_bat.name} hits a home run!"})
             elif self.swing_roll < self.pitch_roll:  # No contact
-                self.count_as_strikeout()
+                socket.emit('game_event', {'description': f"{self.up_to_bat.name} strikes out"})
                 outcome = 'Strikeout'
             else:  # Tie
-                self.count_as_walk()
+                socket.emit('game_event', {'description': f"{self.up_to_bat.name} walks"})
                 outcome = 'Walk'
                 # if self.fouls == 3:
                 #     self.count_as_walk()

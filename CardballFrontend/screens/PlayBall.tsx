@@ -7,7 +7,7 @@ import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList, GameContextProps } from '../types';
 import { getGameState } from '../api/playerAPI';
-import { rollForNextPitch } from '../api/gamePlayAPI';
+import { initializeFirstAtBat, rollForNextPitch } from '../api/gamePlayAPI';
 import { useFocusEffect } from '@react-navigation/native';
 
 type PlayBallScreenNavigationProp = StackNavigationProp<RootStackParamList, 'GameplayScreen'>;
@@ -83,9 +83,9 @@ const PlayBall: React.FC = () => {
 
   const startGame = async () => {
     if (gameId !== null && game !== null) {
-      await rollForNextPitch(gameId);  // Call the API function with the gameId as argument
+      await initializeFirstAtBat(gameId);  // Call the API function with the gameId as argument
       console.log(`Current Inning: ${game.currentInning}, Current Half: ${game.currentHalf}`);
-      navigation.navigate('TempGameplay');
+      navigation.navigate('GameplayScreen');
     } else {
       console.error('Cannot start game without a valid gameId or game');
     }

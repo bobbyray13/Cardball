@@ -1,4 +1,5 @@
-// GameEvents.tsx
+//GameEvents.tsx:
+
 import React from 'react';
 import { ScrollView, Text } from 'react-native';
 import { Event } from './types';
@@ -11,11 +12,12 @@ const GameEvents: React.FC<GameEventsProps> = ({ events }) => {
   return (
     <ScrollView>
       {events.map((event, index) => (
-        <Text key={index}>{event.description}</Text> // assuming Event has a description property
+        <Text key={index}>{event.description}</Text>
       ))}
     </ScrollView>
   );
 };
 
 export default GameEvents;
-// END OF GameEvents.tsx
+
+//END OF GameEvents.tsx

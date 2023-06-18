@@ -62,7 +62,7 @@ class Team(db.Model, Serializer):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
-    score = Column(Integer, default=0)
+    score = Column(Integer, default=0) #NOT USED ANYMORE, score kept in Gameplay. Need to migrate db"
     role = Column(String)  # 'onDefense' or 'onOffense'
 
     players = relationship('Player', lazy='dynamic')
@@ -111,6 +111,13 @@ class Game(db.Model, Serializer):
     home_team_lineup_position = Column(Integer, default=1) # Current position in the batting lineup for home team
     away_team_lineup_position = Column(Integer, default=1) # Current position in the batting lineup for away team
     field_position = Column(String(30), nullable=True)  # Position on the field (C, 1B, 2B, 3B, SS, LF, CF, RF, DH, BN, P, BP)
+
+    #Relatioships between Game and Team
+    home_team_id = db.Column(db.Integer, db.ForeignKey('teams.id'))
+    home_team = db.relationship('Team', foreign_keys=[home_team_id])
+
+    away_team_id = db.Column(db.Integer, db.ForeignKey('teams.id'))
+    away_team = db.relationship('Team', foreign_keys=[away_team_id])
 
     def serialize(self):
         return {

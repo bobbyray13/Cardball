@@ -128,7 +128,7 @@ const handleSubmit = async () => {
 
       console.log('Lineup and field positions updated successfully');
       // Navigate to 'PlayBall' screen
-      navigation.navigate('GameplayScreen');
+      navigation.navigate('PlayBall');
     } catch (error) {
       console.error('Error updating lineup and field positions: ', error);
     }

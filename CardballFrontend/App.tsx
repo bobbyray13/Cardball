@@ -14,6 +14,7 @@ import TempGameplay from './screens/TempGameplay';
 import { StatusBar } from 'expo-status-bar';
 import { GameProvider } from './contexts/gameContext';
 import { RootStackParamList, HomeComponentProps } from './types';
+import { PreBuiltTeams } from './screens/PreBuiltTeams';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -21,9 +22,15 @@ const HomeComponent = ({ navigation }: HomeComponentProps) => (
   <View style={styles.container}>
     <Text>Welcome to Baseball Cardball!</Text>
     <Button
-      title="Go to Team Select Screen"
+      title="Draft Teams"
       onPress={() => {
         navigation.navigate('TeamSelect');
+      }}
+    />
+    <Button
+      title="Start with Pre-Built Teams"
+      onPress={() => {
+      navigation.navigate('PreBuiltTeams');
       }}
     />
     <StatusBar style="auto" />
@@ -53,6 +60,7 @@ export default function App() {
           <Stack.Screen name="PlayBall" component={PlayBall} />
           <Stack.Screen name="TempGameplay" component={TempGameplay} />
           <Stack.Screen name="GameplayScreen" component={GameplayScreen} />
+          <Stack.Screen name="PreBuiltTeams" component={PreBuiltTeams} />
         </Stack.Navigator>
       </NavigationContainer>
     </GameProvider>

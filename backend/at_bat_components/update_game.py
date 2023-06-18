@@ -17,7 +17,7 @@ class GameUpdate:
                 if next_base_number > 3:  # Player scores
                     print('DEBUG: Player is about to score')
                     self.add_run_to_team_score()
-                    base.player.role = None  # Reset player's role
+                    base.player.role = 'inLineupBatter'  # Reset player's role
                     base.is_occupied = False
                     base.player_id = None
                     db.session.commit()
@@ -41,7 +41,10 @@ class GameUpdate:
             self.game.home_team_score += 1
         else:
             self.game.away_team_score += 1
-        print(f"Run added! {offensive_team.name} score is now {offensive_team.score}")
+        if offensive_team == self.game.home_team:
+            print(f"Run added! {offensive_team.name} score is now {self.game.home_team_score}")
+        else:
+            print(f"Run added! {offensive_team.name} score is now {self.game.away_team_score}")
         db.session.commit()
 
     def increment_outs(self):

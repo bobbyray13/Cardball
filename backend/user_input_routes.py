@@ -27,4 +27,30 @@ def next_pitch(game_id: int):
     return jsonify({
         'gameState': game_state_dict,
     }), 200
+
+@user_input_blueprint.route('/api/games/<int:game_id>/first_at_bat', methods=['POST'])
+def first_at_bat(game_id: int):
+    print(f"Received request to set up initial at bat for game_id: {game_id}")  # Debug print
+    from at_bat_components.at_bat import AtBat
+
+    # Fetch the game from the database
+    game = Game.query.get(game_id)
+
+    # Check if the game exists
+    if game is None:
+        return "Game not found", 404
+
+    # Set the home_team role as 'onDefense' and away_team role as 'onOffense':
+    game.home_team.role = 'onDefense'
+    game.away_team.role = 'onOffense'
+
+    # Commit the changes to the database
+    db.session.commit()
+
+    # Initiate the AtBat
+    at_bat = AtBat(game, socketio)
+    at_bat.at_bat()
+
+    return "AtBat initiated successfully", 200  # Return a success response
+
 #END OF user_input_routes.py

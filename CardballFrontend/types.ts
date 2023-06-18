@@ -13,6 +13,7 @@ export type RootStackParamList = {
   PlayBall: undefined;
   GameplayScreen: undefined;
   TempGameplay: undefined;
+  PreBuiltTeams: undefined;
 };
 
 export type HomeComponentProps = {
@@ -38,6 +39,11 @@ export type LineupSelectHomeScreenNavigationProp = StackNavigationProp<
   'LineupSelectHome'
 >;
 
+export type PreBuiltTeamsScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'PreBuiltTeams'
+>;
+
 export type Event = {
   id: string;
   type: string;
@@ -60,7 +66,8 @@ export interface Player {
   playerType: PlayerType;
   id: number;
   year: number;
-  role: PlayerRole;
+  role: PlayerRole; // 'upToBat', 'upToPitch', 'upToSteal', 'upToDefend', 'onBase'
+  lineup: number;
 }
   
 export interface Team {
@@ -85,11 +92,11 @@ export interface Game {
     id?: number;
     homeTeam: Team;
     awayTeam: Team;
-    home_team_score?: number;
-    away_team_score?: number;
+    homeTeamScore?: number;
+    awayTeamScore?: number;
     currentInning: number;
     currentHalf: 'top' | 'bottom';
-    currentOuts: number;
+    outs: number;
     bases:  Base[];
     maxInnings: number;
     isInProgress: boolean;
