@@ -154,6 +154,27 @@ async function seedStats(): Promise<void> {
       positionsPlayed: [{ position: 'P', games: 32, rating: 0 }],
     },
   );
+
+  // A second, merely good starter. His 3.60 ERA makes him an uncommon card, so
+  // a team can field a legal lineup under a match that allows no rare cards.
+  await seedPerson(
+    { bbrefId: 'testspare1', nameFirst: 'Test', nameLast: 'Spare', bats: 'R', throws: 'R', debutYear: 2000, finalYear: 2006, isStarter: true },
+    span(2000, 2006),
+    {
+      teamLabel: 'Testville Nine',
+      games: 30,
+      ab: 60,
+      h: 8,
+      avg: 0.133,
+      pa: 65,
+      pitchGames: 30,
+      pitchIpOuts: 600,
+      pitchEra: 3.6,
+      pitchBf: 840,
+      primaryPosition: 'P',
+      positionsPlayed: [{ position: 'P', games: 30, rating: 0 }],
+    },
+  );
 }
 
 async function buildRoster(token: string): Promise<{ teamId: number; cardIds: number[] }> {
@@ -632,8 +653,7 @@ describe('games', () => {
     expect((await call('POST', `/api/games/${gameId}/chat`, { token: nosyToken, body: { body: 'hi' } })).statusCode).toBe(403);
   });
 
-  it('only accepts real Discord links, and makes a remote game concede-only', async () => {
-    const created = await call('POST', '/api/games', {
+  it('only accepts real Discord links, and makes a remote game concede-only', async () => {    const created = await call('POST', '/api/games', {
       token: hostToken,
       body: { mode: 'remote', regulationInnings: 3, teamId: hostTeamId },
     });
@@ -682,5 +702,114 @@ describe('games', () => {
     const conceded = await call('POST', `/api/games/${gameId}/actions`, { token: hostToken, body: { action: { type: 'concede', side: 'away' } } });
     expect(conceded.statusCode).toBe(200);
     expect(body<{ game: { state: { winner: string; endedBy: string } } }>(conceded).game.state).toMatchObject({ winner: 'home', endedBy: 'concede' });
+  });
+});
+
+describe('match rules', () => {
+  /** A team holding just these cards. */
+  async function teamOf(token: string, name: string, userCardIds: number[]): Promise<number> {
+    const team = body<{ team: { id: number } }>(await call('POST', '/api/teams', { token, body: { name } }));
+    const res = await call('PUT', `/api/teams/${team.team.id}/roster`, { token, body: { userCardIds } });
+    expect(res.statusCode, res.body).toBe(200);
+    return team.team.id;
+  }
+
+  /** The host's nine everyday hitters, plus one merely-good pitcher. */
+  async function smallBallCardIds(token: string): Promise<number[]> {
+    const people = body<{ people: { id: number }[] }>(await call('GET', '/api/people/search?q=Test%20Spare', { token })).people;
+    expect(people).toHaveLength(1);
+    const spare = body<{ card: { id: number } }>(await call('POST', '/api/collection', { token, body: { personId: people[0]!.id, cardYear: CARD_YEAR } })).card;
+
+    const cards = body<{ cards: { id: number; card: { name: string; canPitch: boolean } }[] }>(await call('GET', '/api/collection', { token })).cards;
+    const hitters = cards.filter((c) => !c.card.canPitch && c.card.name.startsWith('Test Hitter')).slice(0, 9);
+    expect(hitters).toHaveLength(9);
+    return [...hitters.map((c) => c.id), spare.id];
+  }
+
+  /** A team of nine uncommon hitters and one uncommon pitcher: no rare cards. */
+  async function smallBallTeam(token: string, name: string): Promise<number> {
+    const teamId = await teamOf(token, name, await smallBallCardIds(token));
+    const auto = await call('POST', `/api/teams/${teamId}/auto-lineup`, { token });
+    expect(auto.statusCode, auto.body).toBe(200);
+    return teamId;
+  }
+
+  it('refuses a roster with a card from outside the era, and names the card', async () => {
+    const res = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'hotseat', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId, match: { yearFrom: 1990, yearTo: 1999, rarityCaps: null } },
+    });
+    expect(res.statusCode).toBe(400);
+    const error = body<{ error: string }>(res).error;
+    expect(error).toMatch(/1990–1999 only/);
+    expect(error).toMatch(new RegExp(`a ${CARD_YEAR} card`));
+  });
+
+  it('refuses a roster carrying more rare cards than the match allows', async () => {
+    const res = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'hotseat', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId, match: { yearFrom: 2000, yearTo: 2010, rarityCaps: { rare: 0, chase: 0 } } },
+    });
+    expect(res.statusCode).toBe(400);
+    // The one ace on every roster is a rare card.
+    expect(body<{ error: string }>(res).error).toMatch(/allows no rare cards/);
+  });
+
+  it('refuses an era that runs backwards or spans too long', async () => {
+    const backwards = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'hotseat', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId, match: { yearFrom: 1990, yearTo: 1980, rarityCaps: null } },
+    });
+    expect(backwards.statusCode).toBe(400);
+    expect(body<{ error: string }>(backwards).error).toMatch(/end after it starts/i);
+
+    const wide = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'hotseat', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId, match: { yearFrom: 1900, yearTo: 2050, rarityCaps: null } },
+    });
+    expect(wide.statusCode).toBe(400);
+    expect(body<{ error: string }>(wide).error).toMatch(/120 years or fewer/i);
+  });
+
+  it('snapshots the match into the game and shows it in the lobby list', async () => {
+    const match = { yearFrom: 2001, yearTo: 2010, rarityCaps: { rare: 5, chase: 2 } };
+    const created = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'hotseat', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId, match },
+    });
+    expect(created.statusCode, created.body).toBe(200);
+    const game = body<{ game: { id: number; state: { config: { match: unknown } } } }>(created).game;
+    expect(game.state.config.match).toEqual(match);
+
+    const listed = body<{ games: { id: number; match: unknown }[] }>(await call('GET', '/api/games', { token: hostToken })).games;
+    expect(listed.find((g) => g.id === game.id)?.match).toEqual(match);
+
+    // A game created without match rules plays with the widest possible ones.
+    const open = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'hotseat', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId },
+    });
+    const openGame = body<{ game: { state: { config: { match: { yearFrom: number; yearTo: number; rarityCaps: unknown } } } } }>(open).game;
+    expect(openGame.state.config.match).toMatchObject({ yearFrom: 1872, yearTo: 2100, rarityCaps: null });
+  });
+
+  it('checks the joining manager against the host’s match', async () => {
+    // A team of nothing but uncommon cards passes a no-rare-cards match.
+    const hostTeam = await smallBallTeam(hostToken, 'Small Ball');
+    const created = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'remote', regulationInnings: 3, teamId: hostTeam, match: { yearFrom: 2000, yearTo: 2010, rarityCaps: { rare: 0, chase: 0 } } },
+    });
+    expect(created.statusCode, created.body).toBe(200);
+    const gameId = body<{ game: { id: number } }>(created).game.id;
+
+    // The guest's regular roster carries a rare ace, so the seat is refused.
+    const joined = await call('POST', `/api/games/${gameId}/join`, { token: guestToken, body: { teamId: guestTeamId } });
+    expect(joined.statusCode).toBe(400);
+    expect(body<{ error: string }>(joined).error).toMatch(/allows no rare cards/);
+
+    // The guest can still take the seat with a team that fits.
+    const guestTeam = await smallBallTeam(guestToken, 'Small Ball Too');
+    expect((await call('POST', `/api/games/${gameId}/join`, { token: guestToken, body: { teamId: guestTeam } })).statusCode).toBe(200);
   });
 });

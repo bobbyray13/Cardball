@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { activeHouseRules, gameActionSchema } from '@cardball/shared';
+import { activeHouseRules, gameActionSchema, matchRulesSchema } from '@cardball/shared';
 import { requireUser } from '../auth.js';
 import type { Ctx } from '../context.js';
 import {
@@ -23,6 +23,8 @@ const createSchema = z.object({
     .refine((n) => activeHouseRules().regulationInningsOptions.includes(n), 'Pick a regulation length from the house rules'),
   teamId: z.number().int().positive(),
   opponentTeamId: z.number().int().positive().optional(),
+  /** what cards this match allows; missing means any card, no caps */
+  match: matchRulesSchema.optional(),
 });
 
 const discordSchema = z.object({

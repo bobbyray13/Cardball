@@ -223,6 +223,8 @@ export const games = pgTable(
     homeTeamId: integer('home_team_id').references(() => teams.id, { onDelete: 'set null' }),
     awayTeamId: integer('away_team_id').references(() => teams.id, { onDelete: 'set null' }),
     status: text('status').notNull().default('lobby'), // lobby | live | finished
+    /** what cards this match allows: era range + rarity caps, null = anything */
+    matchRules: jsonb('match_rules'),
     winnerSide: text('winner_side'), // home | away
     /** optimistic-concurrency counter, bumped on every applied action */
     version: integer('version').notNull().default(0),

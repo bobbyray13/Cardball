@@ -1,15 +1,16 @@
 import { and, asc, desc, eq, or } from 'drizzle-orm';
 import { GameError, applyAction, botAction, createGame, cryptoRng, sidesFor, waitingOn } from '@cardball/engine';
 import type { GameEvent, GameMode, GameState, Side } from '@cardball/engine';
-import { activeHouseRules } from '@cardball/shared';
-import type { ChatMessage, GameAction, GameStatus, GameView } from '@cardball/shared';
+import { activeHouseRules, MATCH_LIMITS, matchProblem, openMatch } from '@cardball/shared';
+import type { ChatMessage, GameAction, GameStatus, GameView, MatchRules } from '@cardball/shared';
 import { chatMessages, gameEvents, games, users } from '@cardball/db';
 import type { GameRow } from '@cardball/db';
 import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
 import { env } from './env.js';
 import { HttpError, badRequest, forbidden, notFound } from './http.js';
-import { loadTeam, photoMap, teamSetupFor } from './roster.js';
+import { loadTeam, photoMap, rosterMatchCards, teamSetupFor } from './roster.js';
+import type { LoadedTeam } from './roster.js';
 
 /** What we keep in games.state: the engine state plus room bookkeeping. */
 export interface StoredGame {
@@ -57,6 +58,7 @@ export function toView(row: GameRow): GameRoomView {
     mode: row.mode as GameMode,
     status: statusOf(s),
     regulationInnings: row.regulationInnings,
+    match: matchOf(row),
     version: row.version,
     hostUserId: s.hostUserId,
     guestUserId: s.guestUserId,
@@ -66,6 +68,11 @@ export function toView(row: GameRow): GameRoomView {
     state: s.engine,
     updatedAt: row.updatedAt.toISOString(),
   };
+}
+
+/** The match a game row is played under, defaulted for rows made before match rules. */
+export function matchOf(row: GameRow): MatchRules {
+  return row.matchRules ? (row.matchRules as MatchRules) : openMatch();
 }
 
 async function loadRow(ctx: Ctx, gameId: number): Promise<GameRow> {
@@ -133,10 +140,35 @@ export interface CreateGameInput {
   regulationInnings: number;
   teamId: number;
   opponentTeamId?: number | undefined;
+  /** what cards this match allows; missing means any card, no caps */
+  match?: MatchRules | undefined;
+}
+
+/**
+ * The match rules as they will be stored: the host's choice, defaulted and
+ * checked so a bad range is refused before a game row exists.
+ */
+export function resolveMatch(input: MatchRules | undefined): MatchRules {
+  if (!input) return openMatch();
+  if (input.yearTo < input.yearFrom) throw badRequest('The era has to end after it starts');
+  if (input.yearTo - input.yearFrom > MATCH_LIMITS.maxSpan) throw badRequest(`Keep the era to ${MATCH_LIMITS.maxSpan} years or fewer`);
+  return {
+    yearFrom: input.yearFrom,
+    yearTo: input.yearTo,
+    rarityCaps: input.rarityCaps ? { rare: input.rarityCaps.rare, chase: input.rarityCaps.chase } : null,
+  };
+}
+
+/** Refuse a roster that breaks the match, naming the card that does it. */
+function checkRoster(loaded: LoadedTeam, match: MatchRules): void {
+  const problem = matchProblem(loaded.team.name, rosterMatchCards(loaded.roster), match);
+  if (problem) throw badRequest(problem);
 }
 
 export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameInput): Promise<GameRoomView> {
+  const match = resolveMatch(input.match);
   const host = await loadTeam(ctx, input.teamId, user.id);
+  checkRoster(host, match);
   const base: StoredGame = { engine: null, hostUserId: user.id, hostTeamId: host.team.id, guestUserId: null, photos: photoMap(host.roster, 'h'), ready: [] };
 
   let next = base;
@@ -144,8 +176,9 @@ export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameI
   if (input.mode !== 'remote') {
     if (!input.opponentTeamId) throw badRequest('Pick an opponent team');
     const opp = await loadTeam(ctx, input.opponentTeamId, user.id);
+    checkRoster(opp, match);
     const isBot = input.mode === 'bot';
-    const created = buildEngine(`${Date.now()}`, input, [
+    const created = buildEngine(`${Date.now()}`, input, match, [
       () => teamSetupFor(host, 'h', { userId: user.id, isBot: false }),
       () => teamSetupFor(opp, 'g', { userId: isBot ? null : user.id, isBot }),
     ]);
@@ -158,6 +191,7 @@ export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameI
     .values({
       mode: input.mode,
       regulationInnings: input.regulationInnings,
+      matchRules: match,
       homeUserId: user.id,
       homeTeamId: host.team.id,
       awayTeamId: input.opponentTeamId ?? null,
@@ -176,6 +210,7 @@ export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameI
 function buildEngine(
   id: string,
   input: Pick<CreateGameInput, 'mode' | 'regulationInnings'>,
+  match: MatchRules,
   setups: [() => ReturnType<typeof teamSetupFor>, () => ReturnType<typeof teamSetupFor>],
 ) {
   try {
@@ -186,6 +221,7 @@ function buildEngine(
         regulationInnings: input.regulationInnings,
         // Snapshot the commissioner's rules into this game.
         rules: activeHouseRules(),
+        match,
         teams: [setups[0](), setups[1]()],
       },
       cryptoRng(),
@@ -204,7 +240,10 @@ export async function joinGame(ctx: Ctx, user: AuthUser, gameId: number, teamId:
 
     const host = await loadTeam(ctx, s.hostTeamId);
     const guest = await loadTeam(ctx, teamId, user.id);
-    const created = buildEngine(String(row.id), { mode: 'remote', regulationInnings: row.regulationInnings }, [
+    // The guest has to bring a roster that fits the host's match.
+    const match = matchOf(row);
+    checkRoster(guest, match);
+    const created = buildEngine(String(row.id), { mode: 'remote', regulationInnings: row.regulationInnings }, match, [
       () => teamSetupFor(host, 'h', { userId: s.hostUserId, isBot: false }),
       () => teamSetupFor(guest, 'g', { userId: user.id, isBot: false }),
     ]);
@@ -298,6 +337,7 @@ export async function listGames(ctx: Ctx, user: AuthUser) {
         mode: v.mode,
         status: v.status,
         regulationInnings: v.regulationInnings,
+        match: matchOf(r),
         updatedAt: v.updatedAt,
         hostName: names.get(v.hostUserId) ?? '?',
         guestName: v.guestUserId ? (names.get(v.guestUserId) ?? '?') : null,

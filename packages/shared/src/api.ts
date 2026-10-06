@@ -6,6 +6,7 @@
  * engine are generic over the engine's state type, which keeps this module free
  * of any engine import.
  */
+import type { MatchRules } from './match.js';
 import type { PackThemeId } from './packs.js';
 import type { Position } from './positions.js';
 import type { SeasonStats } from './stats.js';
@@ -129,6 +130,8 @@ export interface GameView<S = unknown> {
   mode: GameMode;
   status: GameStatus;
   regulationInnings: number;
+  /** what cards this match allows, so the room can print the terms */
+  match: MatchRules;
   /** optimistic-concurrency counter, bumped on every applied action */
   version: number;
   hostUserId: number;
@@ -148,6 +151,8 @@ export interface GameListItem {
   mode: GameMode;
   status: GameStatus;
   regulationInnings: number;
+  /** what cards this match allows, so a joiner knows before they sit down */
+  match: MatchRules;
   updatedAt: string;
   hostName: string;
   guestName: string | null;

@@ -1,4 +1,4 @@
-import type { ContactType, GameMode, HitKind, HouseRules, Position, SeasonStats, ContactTypeInfo } from '@cardball/shared';
+import type { ContactType, GameMode, HitKind, HouseRules, MatchRules, Position, SeasonStats, ContactTypeInfo } from '@cardball/shared';
 
 // ---------------------------------------------------------------------------
 // Basics
@@ -142,6 +142,12 @@ export interface GameConfig {
    * progress never changes mid-inning when the commissioner edits them.
    */
   rules: HouseRules;
+  /**
+   * What cards this match allows, snapshotted with the house rules. The engine
+   * does not read it — the server checks both rosters against it before the
+   * first pitch — but it rides in the state so the room can print the terms.
+   */
+  match?: MatchRules;
 }
 
 export interface GameState {
@@ -271,6 +277,8 @@ export interface GameSetup {
   regulationInnings: number;
   /** house rules for this game; missing fields fall back to the shipped defaults */
   rules?: Partial<HouseRules>;
+  /** what cards this match allows; carried into the state for the room to print */
+  match?: MatchRules;
   /** two teams in join order — the engine rolls dice to see who is home */
   teams: [TeamSetup, TeamSetup];
 }

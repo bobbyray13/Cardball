@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { DRAFT_LIMITS, PACK_THEMES, packTheme, packThemesForYears } from '@cardball/shared';
 import type { DraftListItem, PackThemeId } from '@cardball/shared';
 import { api } from '../api.js';
+import { ERAS, THIS_YEAR, eraById } from '../eras.js';
 import { PackArt } from '../components/PackArt.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 
@@ -11,18 +12,6 @@ const PHASE_LABEL: Record<DraftListItem['phase'], string> = {
   active: 'Drafting',
   finished: 'Done',
 };
-
-const THIS_YEAR = new Date().getFullYear();
-
-/** Era shortcuts, so a host does not have to type two years to get a vibe. */
-const ERAS = [
-  { id: 'any', label: 'Any era', from: 1901, to: THIS_YEAR },
-  { id: 'deadball', label: 'Deadball', from: 1901, to: 1919 },
-  { id: 'golden', label: 'Golden age', from: 1920, to: 1946 },
-  { id: 'integration', label: 'Integration', from: 1947, to: 1960 },
-  { id: 'expansion', label: 'Expansion', from: 1961, to: 1992 },
-  { id: 'modern', label: 'Modern', from: 1993, to: THIS_YEAR },
-] as const;
 
 export function DraftsPage() {
   const navigate = useNavigate();
@@ -44,7 +33,7 @@ export function DraftsPage() {
 
   const pickEra = (id: string) => {
     setEra(id);
-    const preset = ERAS.find((e) => e.id === id);
+    const preset = eraById(id);
     if (preset) {
       setYearFrom(preset.from);
       setYearTo(preset.to);

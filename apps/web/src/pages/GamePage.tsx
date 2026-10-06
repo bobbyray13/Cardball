@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { ChatMessage, GameAction, TeamSummary } from '@cardball/shared';
+import { MATCH_LIMITS, matchEraLabel, matchIsOpen } from '@cardball/shared';
 import { sidesFor, waitingOn } from '@cardball/engine';
 import type { GameEvent, GameState, Side } from '@cardball/engine';
 import { api } from '../api.js';
@@ -234,6 +235,18 @@ function GameHeader({
         <span className="rounded-full bg-white/10 px-2 py-0.5 text-chalk/60">
           {game.mode} · {game.regulationInnings} inn
         </span>
+        {matchIsOpen(game.match) ? null : (
+          <span
+            className="rounded-full border border-gold/40 px-2 py-0.5 text-gold"
+            title={`Cards: ${matchEraLabel(game.match)}${
+              game.match.rarityCaps ? `, at most ${game.match.rarityCaps.rare} rare and ${game.match.rarityCaps.chase} chase each` : ''
+            }`}
+          >
+            {game.match.yearFrom <= MATCH_LIMITS.minYear && game.match.yearTo >= MATCH_LIMITS.maxYear
+              ? `${game.match.rarityCaps?.rare} rare / ${game.match.rarityCaps?.chase} chase each`
+              : matchEraLabel(game.match)}
+          </span>
+        )}
         <span className={`flex items-center gap-1.5 ${connected ? 'text-gold' : 'text-chalk/40'}`}>
           <span className={`h-1.5 w-1.5 rounded-full ${connected ? 'bg-gold' : 'bg-chalk/40'}`} />
           {connected ? 'live' : 'reconnecting'}

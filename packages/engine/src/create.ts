@@ -170,7 +170,7 @@ export function createGame(setup: GameSetup, rng: Rng): { state: GameState; even
   const state: GameState = {
     id: setup.id,
     version: 0,
-    config: { mode: setup.mode, regulationInnings: setup.regulationInnings, rules },
+    config: { mode: setup.mode, regulationInnings: setup.regulationInnings, rules, ...(setup.match ? { match: setup.match } : {}) },
     phase: 'lobby',
     home: teamHome,
     away: teamAway,

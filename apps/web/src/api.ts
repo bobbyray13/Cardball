@@ -16,6 +16,7 @@ import type {
   GameView,
   HouseRules,
   InviteSummary,
+  MatchRules,
   PackThemeId,
   PersonDetail,
   PersonSummary,
@@ -132,8 +133,14 @@ export const api = {
 
   // ---- games ----
   games: () => request<{ games: GameListItem[] }>('GET', '/api/games'),
-  createGame: (input: { mode: 'remote' | 'hotseat' | 'bot'; regulationInnings: number; teamId: number; opponentTeamId?: number }) =>
-    request<{ game: GameRoom }>('POST', '/api/games', input),
+  createGame: (input: {
+    mode: 'remote' | 'hotseat' | 'bot';
+    regulationInnings: number;
+    teamId: number;
+    opponentTeamId?: number;
+    /** what cards the match allows; omit for any card, no caps */
+    match?: MatchRules;
+  }) => request<{ game: GameRoom }>('POST', '/api/games', input),
   game: (id: number) => request<GameDetail>('GET', `/api/games/${id}`),
   joinGame: (id: number, teamId: number) => request<{ game: GameRoom }>('POST', `/api/games/${id}/join`, { teamId }),
   action: (id: number, action: GameAction) => request<{ game: GameRoom; events: GameDetail['events'] }>('POST', `/api/games/${id}/actions`, { action }),

@@ -1,8 +1,8 @@
 import { and, eq } from 'drizzle-orm';
 import { validateTeamSetup } from '@cardball/engine';
 import type { PlayerSetup, TeamSetup } from '@cardball/engine';
-import type { HouseRules, SavedLineup } from '@cardball/shared';
-import { activeHouseRules } from '@cardball/shared';
+import type { HouseRules, MatchCard, SavedLineup } from '@cardball/shared';
+import { activeHouseRules, rateCard } from '@cardball/shared';
 import { teamCards, teams } from '@cardball/db';
 import type { TeamRow } from '@cardball/db';
 import { autoLineup } from './autoLineup.js';
@@ -38,6 +38,15 @@ export async function loadTeam(ctx: Ctx, teamId: number, ownerId?: number): Prom
 
 export function rosterCards(roster: RosterEntry[]): RosterCard[] {
   return roster.map((r) => ({ id: String(r.teamCardId), card: r.entry.card }));
+}
+
+/**
+ * The roster reduced to what a match rule checks. The tier is rated fresh from
+ * the card's stats, not read off the stored pill, so an old card with no rarity
+ * recorded is judged the same way the collection judges it.
+ */
+export function rosterMatchCards(roster: RosterEntry[]): MatchCard[] {
+  return roster.map((r) => ({ name: r.entry.card.name, cardYear: r.entry.card.cardYear, rarity: rateCard(r.entry.card).rarity }));
 }
 
 export function toPlayerSetup(r: RosterEntry, idPrefix: string): PlayerSetup {

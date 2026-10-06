@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import type { GameListItem } from '@cardball/shared';
+import { MATCH_LIMITS, matchEraLabel } from '@cardball/shared';
+import type { GameListItem, MatchRules } from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { ERAS, eraById } from '../eras.js';
 import { useSession } from '../session.js';
 
 const STATUS_LABEL: Record<GameListItem['status'], string> = {
@@ -12,6 +14,13 @@ const STATUS_LABEL: Record<GameListItem['status'], string> = {
   live: 'In progress',
   finished: 'Final',
 };
+
+/** A one-line summary of what a match allows, for the room list. */
+function matchSummary(match: MatchRules): string {
+  const era = matchEraLabel(match);
+  if (!match.rarityCaps) return era;
+  return `${era} · ${match.rarityCaps.rare} rare/${match.rarityCaps.chase} chase`;
+}
 
 export function DashboardPage() {
   const { user } = useSession();
@@ -25,6 +34,25 @@ export function DashboardPage() {
   const [teamId, setTeamId] = useState<number | ''>('');
   const [opponentTeamId, setOpponentTeamId] = useState<number | ''>('');
   const [joinTeamId, setJoinTeamId] = useState<number | ''>('');
+  // Match rules: which years of cards are allowed, and how many specials.
+  const [era, setEra] = useState('any');
+  const [yearFrom, setYearFrom] = useState<number>(MATCH_LIMITS.minYear);
+  const [yearTo, setYearTo] = useState<number>(MATCH_LIMITS.maxYear);
+  const [maxRare, setMaxRare] = useState(0);
+  const [maxChase, setMaxChase] = useState(0);
+
+  // "Any era" means the whole range, and sends no match at all when no cap is
+  // set, so an ordinary game carries no restriction.
+  const restricted = era !== 'any' || maxRare > 0 || maxChase > 0;
+
+  const pickEra = (id: string) => {
+    setEra(id);
+    const preset = eraById(id);
+    if (preset) {
+      setYearFrom(preset.from);
+      setYearTo(preset.to);
+    }
+  };
 
   const create = useAction(async () => {
     const created = await api.createGame({
@@ -32,6 +60,18 @@ export function DashboardPage() {
       regulationInnings: innings,
       teamId: Number(teamId),
       ...(mode === 'remote' ? {} : { opponentTeamId: Number(opponentTeamId || teamId) }),
+      ...(restricted
+        ? {
+            match: {
+              yearFrom: era === 'any' ? MATCH_LIMITS.minYear : yearFrom,
+              yearTo: era === 'any' ? MATCH_LIMITS.maxYear : yearTo,
+              rarityCaps:
+                maxRare > 0 || maxChase > 0
+                  ? { rare: maxRare > 0 ? maxRare : MATCH_LIMITS.maxRare, chase: maxChase > 0 ? maxChase : MATCH_LIMITS.maxChase }
+                  : null,
+            },
+          }
+        : {}),
     });
     navigate(`/games/${created.game.id}`);
   });
@@ -115,6 +155,9 @@ export function DashboardPage() {
                         {game.regulationInnings} inn · {game.mode}
                       </span>
                     )}
+                    <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] tracking-wide text-chalk/60 uppercase">
+                      {matchSummary(game.match)}
+                    </span>
                     {game.isMine ? <span className="text-xs text-chalk/45">yours</span> : null}
                   </Link>
                 </li>
@@ -173,6 +216,56 @@ export function DashboardPage() {
                     ))}
                   </select>
                 </Field>
+
+                <Field label="Cards allowed" hint="Both rosters are checked against this before the first pitch.">
+                  <select name="matchEra" className={inputClass} value={era} onChange={(e) => pickEra(e.target.value)}>
+                    <option value="any">Any era · {MATCH_LIMITS.minYear}–{MATCH_LIMITS.maxYear}</option>
+                    {ERAS.filter((e) => e.id !== 'any').map((e) => (
+                      <option key={e.id} value={e.id}>
+                        {e.label} · {e.from}–{e.to}
+                      </option>
+                    ))}
+                    <option value="custom">Custom range</option>
+                  </select>
+                </Field>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Card years from">
+                    <input
+                      name="yearFrom"
+                      type="number"
+                      className={inputClass}
+                      min={MATCH_LIMITS.minYear}
+                      max={MATCH_LIMITS.maxYear}
+                      value={yearFrom}
+                      onChange={(e) => {
+                        setYearFrom(Number(e.target.value));
+                        setEra('custom');
+                      }}
+                    />
+                  </Field>
+                  <Field label="through">
+                    <input
+                      name="yearTo"
+                      type="number"
+                      className={inputClass}
+                      min={MATCH_LIMITS.minYear}
+                      max={MATCH_LIMITS.maxYear}
+                      value={yearTo}
+                      onChange={(e) => {
+                        setYearTo(Number(e.target.value));
+                        setEra('custom');
+                      }}
+                    />
+                  </Field>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Most rare each (0 = no cap)">
+                    <input name="maxRare" type="number" className={inputClass} min={0} max={MATCH_LIMITS.maxRare} value={maxRare} onChange={(e) => setMaxRare(Number(e.target.value))} />
+                  </Field>
+                  <Field label="Most chase each (0 = no cap)">
+                    <input name="maxChase" type="number" className={inputClass} min={0} max={MATCH_LIMITS.maxChase} value={maxChase} onChange={(e) => setMaxChase(Number(e.target.value))} />
+                  </Field>
+                </div>
 
                 <Field label="Your team">
                   <select name="teamId" className={inputClass} value={teamId} onChange={(e) => setTeamId(Number(e.target.value))} required>
@@ -248,7 +341,7 @@ export function DashboardPage() {
                           disabled={!joinTeamId || join.busy}
                           onClick={() => void join.execute(g.id)}
                         >
-                          Join {g.hostName}'s {g.regulationInnings}-inning game
+                          Join {g.hostName}'s {g.regulationInnings}-inning game · {matchSummary(g.match)}
                         </Button>
                       ))
                   )}
