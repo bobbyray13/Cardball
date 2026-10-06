@@ -1,10 +1,13 @@
 import { useState } from 'react';
-import { RBI_BONUS_BANDS, RULES_CONFIG, RUNNER_ADVANTAGE, SB_BANDS, HIT_BANDS, PIT_BANDS } from '@cardball/shared';
 import { api } from '../api.js';
+import { HouseRulesEditor } from '../components/HouseRulesEditor.js';
 import { Button, EmptyState, ErrorNote, Panel, Spinner, useAction, useLoad } from '../components/ui.js';
+import { useSession } from '../session.js';
 
 export function AdminPage() {
   const invites = useLoad(() => api.invites(), []);
+  const rules = useLoad(() => api.houseRules(), []);
+  const { refreshRules } = useSession();
   const [days, setDays] = useState(30);
   const [fresh, setFresh] = useState<string | null>(null);
 
@@ -23,7 +26,7 @@ export function AdminPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-display text-3xl font-bold text-chalk">Commissioner</h1>
-        <p className="mt-1 text-sm text-chalk/60">Hand out invites and review the house rules in force.</p>
+        <p className="mt-1 text-sm text-chalk/60">Hand out invites and set the house rules the whole league plays by.</p>
       </div>
 
       <Panel
@@ -80,72 +83,18 @@ export function AdminPage() {
         )}
       </Panel>
 
-      <Panel title="House rules" subtitle="These live in packages/shared/src/config.ts — the tunables that were not printed on the ball card.">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <RuleTable
-            title="HIT — from AVG"
-            rows={HIT_BANDS.map((b, i, all) => [
-              i === all.length - 1 ? `< .220` : `≥ ${b.min.toFixed(3).replace(/^0/, '')}`,
-              fmtMod(b.mod),
-            ])}
-          />
-          <RuleTable
-            title="PIT — from ERA"
-            rows={PIT_BANDS.map((b, i, all) => [i === all.length - 1 ? `> 4.50` : `≤ ${b.max.toFixed(2)}`, fmtMod(b.mod)])}
-          />
-          <RuleTable
-            title="SB — from steals"
-            rows={SB_BANDS.map((b, i, all) => [i === all.length - 1 ? '< 5' : `≥ ${b.min}`, fmtMod(b.mod)])}
-          />
-          <RuleTable
-            title="Innings caps"
-            rows={[
-              ['Starter', `${RULES_CONFIG.ipCaps.starter} IP`],
-              ['Reliever', `${RULES_CONFIG.ipCaps.reliever} IP`],
-              ['Closer', `${RULES_CONFIG.ipCaps.closer} IP`],
-              ['Reliever-only innings', RULES_CONFIG.relieverOnlyInnings.join(', ')],
-            ]}
-          />
-          <RuleTable
-            title="Dice and limits"
-            rows={[
-              ['Walk after', `${RULES_CONFIG.walkBalls} tied rolls`],
-              ['Double play target', `> ${RULES_CONFIG.dpTarget}`],
-              ['Stat window', `${RULES_CONFIG.statWindowSeasons} seasons`],
-              ['Position eligibility', `${RULES_CONFIG.positionEligibilityGames} games`],
-              ['Send re-rolls 1s', RULES_CONFIG.sendRerollOnes ? 'yes' : 'no'],
-            ]}
-          />
-          <RuleTable
-            title="Defaults we chose"
-            rows={[
-              ['RBI bonus', RBI_BONUS_BANDS.map((b) => `≥${b.min} → ${fmtMod(b.mod)}`).join(', ')],
-              ['Red rolls', RUNNER_ADVANTAGE.red.join(', ')],
-              ['Blue rolls', RUNNER_ADVANTAGE.blue.join(', ')],
-            ]}
-          />
-        </div>
-      </Panel>
-    </div>
-  );
-}
-
-const fmtMod = (mod: number) => (mod > 0 ? `+${mod}` : String(mod));
-
-function RuleTable({ title, rows }: { title: string; rows: [string, string][] }) {
-  return (
-    <div className="rounded-xl border border-white/10 bg-black/20 p-3">
-      <h3 className="mb-2 font-display text-sm font-semibold text-chalk">{title}</h3>
-      <table className="w-full font-mono text-xs">
-        <tbody>
-          {rows.map(([label, value], i) => (
-            <tr key={i} className="border-t border-white/5 first:border-0">
-              <td className="py-1 text-chalk/60">{label}</td>
-              <td className="py-1 text-right text-chalk">{value}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <ErrorNote error={rules.error} />
+      {rules.loading && !rules.data ? (
+        <Spinner label="Reading the rulebook…" />
+      ) : rules.data ? (
+        <HouseRulesEditor
+          initial={rules.data.rules}
+          onSaved={(saved) => {
+            rules.setData({ rules: saved });
+            void refreshRules();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

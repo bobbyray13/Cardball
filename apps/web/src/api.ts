@@ -15,6 +15,7 @@ import type {
   GameAction,
   GameListItem,
   GameView,
+  HouseRules,
   InviteSummary,
   PersonDetail,
   PersonSummary,
@@ -137,4 +138,8 @@ export const api = {
   startDraft: (id: number) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/start`),
   pickDraftCard: (id: number, cardId: string) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/pick`, { cardId }),
   deleteDraft: (id: number) => request<{ ok: true }>('DELETE', `/api/drafts/${id}`),
+
+  // ---- league settings ----
+  houseRules: () => request<{ rules: HouseRules }>('GET', '/api/settings/rules'),
+  saveHouseRules: (rules: HouseRules) => request<{ rules: HouseRules }>('PUT', '/api/settings/rules', rules),
 };

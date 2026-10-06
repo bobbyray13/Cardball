@@ -13,7 +13,19 @@
 // HIT — batting average bands → pitch-roll modifier for the batter
 // ---------------------------------------------------------------------------
 
-export const HIT_BANDS: readonly { min: number; mod: number }[] = [
+/** A band that applies when the stat is at least `min` (best band wins). */
+export interface MinBand {
+  min: number;
+  mod: number;
+}
+
+/** A band that applies when the stat is at most `max` (best band wins). */
+export interface MaxBand {
+  max: number;
+  mod: number;
+}
+
+export const HIT_BANDS: readonly MinBand[] = [
   { min: 0.325, mod: 3 },
   { min: 0.3, mod: 2 },
   { min: 0.28, mod: 1 },
@@ -24,9 +36,9 @@ export const HIT_BANDS: readonly { min: number; mod: number }[] = [
 ];
 
 /** AVG ≥ .325 → +3 … < .220 → −3 */
-export function hitMod(avg: number | null): number {
+export function hitMod(avg: number | null, bands: readonly MinBand[] = HIT_BANDS): number {
   if (avg === null) return -3;
-  for (const band of HIT_BANDS) {
+  for (const band of bands) {
     if (avg >= band.min) return band.mod;
   }
   return -3;
@@ -36,7 +48,7 @@ export function hitMod(avg: number | null): number {
 // PIT — ERA bands → pitch-roll modifier for the pitcher (lower is better)
 // ---------------------------------------------------------------------------
 
-export const PIT_BANDS: readonly { max: number; mod: number }[] = [
+export const PIT_BANDS: readonly MaxBand[] = [
   { max: 2.0, mod: 3 },
   { max: 2.5, mod: 2 },
   { max: 3.0, mod: 1 },
@@ -46,9 +58,9 @@ export const PIT_BANDS: readonly { max: number; mod: number }[] = [
 ];
 
 /** ERA ≤ 2.00 → +3 … > 4.50 → −3 */
-export function pitMod(era: number | null): number {
+export function pitMod(era: number | null, bands: readonly MaxBand[] = PIT_BANDS): number {
   if (era === null) return -3;
-  for (const band of PIT_BANDS) {
+  for (const band of bands) {
     if (era <= band.max) return band.mod;
   }
   return -3;
@@ -58,7 +70,7 @@ export function pitMod(era: number | null): number {
 // SB — stolen base bands → runner roll modifier (steals, sends, DP factor)
 // ---------------------------------------------------------------------------
 
-export const SB_BANDS: readonly { min: number; mod: number }[] = [
+export const SB_BANDS: readonly MinBand[] = [
   { min: 65, mod: 3 },
   { min: 50, mod: 2 },
   { min: 30, mod: 1 },
@@ -69,8 +81,8 @@ export const SB_BANDS: readonly { min: number; mod: number }[] = [
 ];
 
 /** SB ≥ 65 → +3 … < 5 → −3 */
-export function sbMod(sb: number): number {
-  for (const band of SB_BANDS) {
+export function sbMod(sb: number, bands: readonly MinBand[] = SB_BANDS): number {
+  for (const band of bands) {
     if (sb >= band.min) return band.mod;
   }
   return -3;
@@ -148,11 +160,11 @@ export interface SeasonPowerStats {
  * Resolve what kind of hit an unfielded contact roll produces.
  * A natural 20 is an automatic home run; rolls below 10 are singles.
  */
-export function resolveHitKind(contactRoll: number, season: SeasonPowerStats): HitKind {
+export function resolveHitKind(contactRoll: number, season: SeasonPowerStats, tiers: readonly PowerTier[] = POWER_TIERS): HitKind {
   if (contactRoll === 20) return 'home-run';
   if (contactRoll < 10) return 'single';
 
-  const tier = POWER_TIERS.find((t) => contactRoll >= t.min && contactRoll <= t.max);
+  const tier = tiers.find((t) => contactRoll >= t.min && contactRoll <= t.max);
   if (!tier) return 'single'; // defensive: should not happen for 10..19
 
   const { thresholds } = tier;

@@ -1,9 +1,8 @@
-import { RULES_CONFIG } from '@cardball/shared';
 import { pushEvent, roll } from './events.js';
 import { GameError } from './errors.js';
 import { endHalfInning } from './flow.js';
 import { recordOut } from './pitch.js';
-import { fielderAt, fieldingRating, fmtMod, getDefense, getOffense, runnerSbMod, seasonForPlayer } from './queries.js';
+import { fielderAt, fieldingRating, fmtMod, getDefense, getOffense, rulesOf, runnerSbMod, seasonForPlayer } from './queries.js';
 import type { Rng } from './rng.js';
 import type { GameEvent, GameState } from './types.js';
 
@@ -32,9 +31,9 @@ export function applySteal(state: GameState, runnerId: string, rng: Rng): GameEv
   const target = (runner.base! + 1) as 2 | 3;
   const catcher = fielderAt(state, defense.side, 'C');
 
-  const { mod: rMod, note: rNote } = runnerSbMod(seasonForPlayer(state, runner));
+  const { mod: rMod, note: rNote } = runnerSbMod(seasonForPlayer(state, runner), rulesOf(state));
   const cBase = catcher ? fieldingRating(catcher, 'C') : 0;
-  const cBonus = target === 3 ? RULES_CONFIG.stealThirdCatcherBonus : 0;
+  const cBonus = target === 3 ? rulesOf(state).stealThirdCatcherBonus : 0;
   const rRoll = rng.d6();
   const cRoll = rng.d6();
   const rTotal = rRoll + rMod;

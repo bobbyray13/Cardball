@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { RULES_CONFIG, gameActionSchema } from '@cardball/shared';
+import { activeHouseRules, gameActionSchema } from '@cardball/shared';
 import { requireUser } from '../auth.js';
 import type { Ctx } from '../context.js';
 import {
@@ -17,7 +17,10 @@ import { idParam, parse } from '../http.js';
 
 const createSchema = z.object({
   mode: z.enum(['remote', 'hotseat', 'bot']),
-  regulationInnings: z.number().int().refine((n) => (RULES_CONFIG.regulationInningsOptions as readonly number[]).includes(n), 'Pick 3, 6, or 9 innings'),
+  regulationInnings: z
+    .number()
+    .int()
+    .refine((n) => activeHouseRules().regulationInningsOptions.includes(n), 'Pick a regulation length from the house rules'),
   teamId: z.number().int().positive(),
   opponentTeamId: z.number().int().positive().optional(),
 });

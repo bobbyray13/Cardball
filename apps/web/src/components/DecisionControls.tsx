@@ -64,7 +64,7 @@ export function DecisionControls({
           </Button>
           {onBase.map((runner) => (
             <Button key={runner.id} disabled={busy} onClick={() => onAction({ type: 'attempt-steal', runnerId: runner.id })}>
-              Send {lastName(runner.name)} (SB {fmtMod(runnerSbMod(seasonForPlayer(state, runner)).mod)})
+              Send {lastName(runner.name)} (SB {fmtMod(runnerSbMod(seasonForPlayer(state, runner), state.config.rules).mod)})
             </Button>
           ))}
         </div>
@@ -179,7 +179,7 @@ function ForcedDecision({ state, onAction, busy }: { state: GameState; onAction:
                 >
                   <span>{player.name}</span>
                   <span className="font-mono text-xs text-chalk/50">
-                    {player.positions.join(' ') || 'bench'} · SB {fmtMod(runnerSbMod(seasonForPlayer(state, player)).mod)}
+                    {player.positions.join(' ') || 'bench'} · SB {fmtMod(runnerSbMod(seasonForPlayer(state, player), state.config.rules).mod)}
                   </span>
                 </Button>
               </li>

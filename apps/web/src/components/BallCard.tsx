@@ -1,5 +1,5 @@
 import type { CardSnapshot, DraftRarity } from '@cardball/shared';
-import { hitMod, pitMod, sbMod } from '@cardball/shared';
+import { activeHouseRules, hitMod, pitMod, sbMod } from '@cardball/shared';
 import { formatIp } from '@cardball/engine';
 
 /**
@@ -193,6 +193,9 @@ function ProceduralArt({ name, colors }: { name: string; colors: { primary: stri
 
 function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: string; secondary: string } }) {
   const rows = card.seasons;
+  // The back prints the modifiers the dice will actually use, so it reads the
+  // commissioner's current house rules rather than a hardcoded band.
+  const rules = activeHouseRules();
 
   return (
     <div className="flex h-full flex-col">
@@ -226,14 +229,14 @@ function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: str
                   <td className="py-[0.5cqw] text-left">{String(s.year).slice(2)}</td>
                   <td className="text-right">{fmtAvg(s.avg)}</td>
                   <td className="text-right font-bold" style={{ color: 'var(--color-crimson)' }}>
-                    {s.ab >= 100 ? fmtMod(hitMod(s.avg)) : '·'}
+                    {s.ab >= rules.fullGameAb ? fmtMod(hitMod(s.avg, rules.hitBands)) : '·'}
                   </td>
                   <td className="text-right">{s.homeRuns}</td>
                   <td className="text-right">{s.rbi}</td>
                   <td className="text-right">
                     {s.sb}
                     <span className="pl-[0.8cqw] font-bold" style={{ color: 'var(--color-navy)' }}>
-                      {fmtMod(sbMod(s.sb))}
+                      {fmtMod(sbMod(s.sb, rules.sbBands))}
                     </span>
                   </td>
                   <td className="text-right">
@@ -241,7 +244,7 @@ function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: str
                       <>
                         {s.pitching.era === null ? '—' : s.pitching.era.toFixed(2)}
                         <span className="pl-[0.8cqw] font-bold" style={{ color: 'var(--color-navy)' }}>
-                          {fmtMod(pitMod(s.pitching.era))}
+                          {fmtMod(pitMod(s.pitching.era, rules.pitBands))}
                         </span>
                       </>
                     ) : (

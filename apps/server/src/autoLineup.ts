@@ -1,5 +1,5 @@
-import { hitMod } from '@cardball/shared';
-import type { Position } from '@cardball/shared';
+import { activeHouseRules, hitMod } from '@cardball/shared';
+import type { HouseRules, Position } from '@cardball/shared';
 import type { SavedLineup } from '@cardball/db';
 import type { CardSnapshot } from './cards.js';
 
@@ -11,8 +11,10 @@ export interface RosterCard {
   card: CardSnapshot;
 }
 
-const bestAvg = (c: CardSnapshot) => Math.max(...c.seasons.map((s) => (s.ab >= 100 ? (s.avg ?? 0) : 0)), 0);
-const bestEra = (c: CardSnapshot) => Math.min(...c.seasons.map((s) => (s.pitching && s.pitching.ipOuts >= 30 ? (s.pitching.era ?? 99) : 99)), 99);
+const bestAvg = (c: CardSnapshot, rules: HouseRules) =>
+  Math.max(...c.seasons.map((s) => (s.ab >= rules.fullGameAb ? (s.avg ?? 0) : 0)), 0);
+const bestEra = (c: CardSnapshot) =>
+  Math.min(...c.seasons.map((s) => (s.pitching && s.pitching.ipOuts >= 30 ? (s.pitching.era ?? 99) : 99)), 99);
 
 /**
  * Fill a sensible default lineup.
@@ -28,7 +30,7 @@ const bestEra = (c: CardSnapshot) => Math.min(...c.seasons.map((s) => (s.pitchin
  * DH is the best remaining bat; the order is by batting modifier. Returns an
  * error when the roster cannot field a legal team.
  */
-export function autoLineup(roster: RosterCard[]): { lineup: SavedLineup } | { error: string } {
+export function autoLineup(roster: RosterCard[], rules: HouseRules = activeHouseRules()): { lineup: SavedLineup } | { error: string } {
   const hitters = roster.filter((r) => r.card.playable && r.card.canBat);
   const used = new Set<string>();
   const fieldPositions: Partial<Record<Position, string>> = {};
@@ -45,34 +47,35 @@ export function autoLineup(roster: RosterCard[]): { lineup: SavedLineup } | { er
     const candidates = candidatesFor(pos);
     if (candidates.length === 0) return { error: `Nobody on the roster can play ${pos}` };
     const open = order.filter((p) => p !== pos && !fieldPositions[p]);
-    const pick = candidates.sort((a, b) => score(b, pos, open) - score(a, pos, open))[0]!;
+    const pick = candidates.sort((a, b) => score(b, pos, open, rules) - score(a, pos, open, rules))[0]!;
     fieldPositions[pos] = pick.id;
     used.add(pick.id);
   }
 
   const remaining = hitters.filter((r) => !used.has(r.id));
-  const dh = remaining.filter((r) => r.card.pitcherClass === null).sort((a, b) => bestAvg(b.card) - bestAvg(a.card))[0]
-    ?? remaining.sort((a, b) => bestAvg(b.card) - bestAvg(a.card))[0];
+  const dh =
+    remaining.filter((r) => r.card.pitcherClass === null).sort((a, b) => bestAvg(b.card, rules) - bestAvg(a.card, rules))[0] ??
+    remaining.sort((a, b) => bestAvg(b.card, rules) - bestAvg(a.card, rules))[0];
   if (!dh) return { error: 'Need a 9th hitter for the DH spot' };
   used.add(dh.id);
 
   const starter = roster
     .filter((r) => r.card.pitcherClass === 'SP' && !used.has(r.id))
     .sort((a, b) => bestEra(a.card) - bestEra(b.card))[0];
-  if (!starter) return { error: 'Need a starting pitcher (a 100+ IP season in his career)' };
+  if (!starter) return { error: `Need a starting pitcher (a ${rules.starterIpThreshold}+ IP season in his career)` };
 
   const lineup = [...used].sort((a, b) => {
     const ca = roster.find((r) => r.id === a)!.card;
     const cb = roster.find((r) => r.id === b)!.card;
-    return hitMod(bestAvg(cb)) - hitMod(bestAvg(ca)) || bestAvg(cb) - bestAvg(ca);
+    return hitMod(bestAvg(cb, rules), rules.hitBands) - hitMod(bestAvg(ca, rules), rules.hitBands) || bestAvg(cb, rules) - bestAvg(ca, rules);
   });
 
   return { lineup: { lineup, fieldPositions, startingPitcherId: starter.id } };
 }
 
-function score(r: RosterCard, pos: Position, openPositions: Position[]): number {
+function score(r: RosterCard, pos: Position, openPositions: Position[], rules: HouseRules): number {
   // Fielding first, then the bat, then a bonus for cards that cannot cover the
   // positions still to be filled (they are the ones with nowhere else to go).
   const coversOthers = openPositions.some((other) => r.card.positions.includes(other)) ? 1 : 0;
-  return (r.card.fielding[pos] ?? 0) * 2 + hitMod(bestAvg(r.card)) - coversOthers;
+  return (r.card.fielding[pos] ?? 0) * 2 + hitMod(bestAvg(r.card, rules), rules.hitBands) - coversOthers;
 }

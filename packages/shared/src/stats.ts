@@ -53,19 +53,19 @@ export function seasonAppeared(s: SeasonStats): boolean {
 }
 
 /** A batter season is healthy when it reached the required AB. */
-export function batterSeasonHealthy(s: SeasonStats): boolean {
-  return s.ab >= 100;
+export function batterSeasonHealthy(s: SeasonStats, minAb = 100): boolean {
+  return s.ab >= minAb;
 }
 
 /** A pitcher season is healthy when it reached the required innings. */
-export function pitcherSeasonHealthy(s: SeasonStats): boolean {
-  return (s.pitching?.ipOuts ?? 0) >= 120;
+export function pitcherSeasonHealthy(s: SeasonStats, minIpOuts = 120): boolean {
+  return (s.pitching?.ipOuts ?? 0) >= minIpOuts;
 }
 
 /**
  * Landing on this season during roll-for-year injures the player:
  * neither a healthy batting year nor a healthy pitching year.
  */
-export function seasonIsInjuredYear(s: SeasonStats): boolean {
-  return !batterSeasonHealthy(s) && !pitcherSeasonHealthy(s);
+export function seasonIsInjuredYear(s: SeasonStats, fullGameAb = 100, pitcherInjuryIpOuts = 120): boolean {
+  return !batterSeasonHealthy(s, fullGameAb) && !pitcherSeasonHealthy(s, pitcherInjuryIpOuts);
 }

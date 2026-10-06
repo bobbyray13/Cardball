@@ -8,6 +8,7 @@ import { SESSION_COOKIE, userFromToken } from './auth.js';
 import type { Ctx } from './context.js';
 import { env } from './env.js';
 import { HttpError } from './http.js';
+import { adminRoutes } from './routes/admin.js';
 import { authRoutes } from './routes/auth.js';
 import { cardRoutes } from './routes/cards.js';
 import { draftRoutes } from './routes/drafts.js';
@@ -41,6 +42,7 @@ export async function buildApp(ctx: Ctx, opts: { logger?: boolean } = {}) {
   teamRoutes(app, ctx);
   gameRoutes(app, ctx);
   draftRoutes(app, ctx);
+  adminRoutes(app, ctx);
 
   // Production: serve the built web app, falling back to index.html for client routes.
   if (env.webDist && existsSync(join(env.webDist, 'index.html'))) {

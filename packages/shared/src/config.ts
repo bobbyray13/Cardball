@@ -8,6 +8,7 @@
  */
 
 import type { Position } from './positions.js';
+import type { MinBand } from './ballCard.js';
 
 export const RULES_CONFIG = {
   /** How many seasons with any MLB appearance make up a card's stat window. */
@@ -82,13 +83,13 @@ export const RUNNER_ADVANTAGE = {
  * batter's pitch roll. Best matching band applies.
  * DEFAULT (not on the spreadsheet).
  */
-export const RBI_BONUS_BANDS: readonly { min: number; mod: number }[] = [
+export const RBI_BONUS_BANDS: readonly MinBand[] = [
   { min: 120, mod: 2 },
   { min: 100, mod: 1 },
 ];
 
-export function rbiBonus(rbi: number): number {
-  for (const band of RBI_BONUS_BANDS) {
+export function rbiBonus(rbi: number, bands: readonly MinBand[] = RBI_BONUS_BANDS): number {
+  for (const band of bands) {
     if (rbi >= band.min) return band.mod;
   }
   return 0;
@@ -99,9 +100,9 @@ export function rbiBonus(rbi: number): number {
  * A card copyrighted in year Y shows the seasons Y-6 … Y-1 (standard modern
  * card back), skipping seasons in which the player did not appear at all.
  */
-export function statWindowYears(cardYear: number): number[] {
+export function statWindowYears(cardYear: number, seasons: number = RULES_CONFIG.statWindowSeasons): number[] {
   const years: number[] = [];
-  for (let i = 1; i <= RULES_CONFIG.statWindowSeasons; i++) {
+  for (let i = 1; i <= seasons; i++) {
     years.push(cardYear - i);
   }
   return years; // [Y-1, Y-2, ..., Y-6], most recent first

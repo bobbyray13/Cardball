@@ -1,7 +1,8 @@
 import { and, eq } from 'drizzle-orm';
 import { validateTeamSetup } from '@cardball/engine';
 import type { PlayerSetup, TeamSetup } from '@cardball/engine';
-import type { SavedLineup } from '@cardball/shared';
+import type { HouseRules, SavedLineup } from '@cardball/shared';
+import { activeHouseRules } from '@cardball/shared';
 import { teamCards, teams } from '@cardball/db';
 import type { TeamRow } from '@cardball/db';
 import { autoLineup } from './autoLineup.js';
@@ -72,11 +73,11 @@ function prefixLineup(lineup: SavedLineup, prefix: string): Pick<TeamSetup, 'lin
 }
 
 /** Validate a saved lineup against the roster; returns the problem or null. */
-export function lineupProblem(loaded: LoadedTeam, lineup: SavedLineup | null): string | null {
+export function lineupProblem(loaded: LoadedTeam, lineup: SavedLineup | null, rules: HouseRules = activeHouseRules()): string | null {
   if (!lineup) return 'No lineup set';
   const players = loaded.roster.filter((r) => r.entry.card.playable).map((r) => toPlayerSetup(r, ''));
   try {
-    validateTeamSetup(players, prefixLineup(lineup, ''), loaded.team.name);
+    validateTeamSetup(players, prefixLineup(lineup, ''), loaded.team.name, rules);
     return null;
   } catch (err) {
     return err instanceof Error ? err.message : String(err);
@@ -88,9 +89,10 @@ export function lineupProblem(loaded: LoadedTeam, lineup: SavedLineup | null): s
  * otherwise an automatic one. Throws a readable error if neither works.
  */
 export function teamSetupFor(loaded: LoadedTeam, idPrefix: string, opts: { userId: number | null; isBot: boolean }): TeamSetup {
+  const rules = activeHouseRules();
   let lineup = loaded.team.lineup;
-  if (lineupProblem(loaded, lineup)) {
-    const auto = autoLineup(rosterCards(loaded.roster));
+  if (lineupProblem(loaded, lineup, rules)) {
+    const auto = autoLineup(rosterCards(loaded.roster), rules);
     if ('error' in auto) throw new Error(`${loaded.team.name}: ${auto.error}`);
     lineup = auto.lineup;
   }

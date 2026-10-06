@@ -299,6 +299,21 @@ export const draftParticipants = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// League settings — the commissioner's house rules
+// ---------------------------------------------------------------------------
+
+/**
+ * A single row (id 1) holds the league's house rules. Games snapshot a copy
+ * when they are created, so a change here never alters a game in progress.
+ */
+export const settings = pgTable('settings', {
+  id: integer('id').primaryKey().default(1),
+  houseRules: jsonb('house_rules').notNull(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  updatedByUserId: integer('updated_by_user_id').references(() => users.id, { onDelete: 'set null' }),
+});
+
+// ---------------------------------------------------------------------------
 // Row mappers
 // ---------------------------------------------------------------------------
 
@@ -312,6 +327,7 @@ export type ChatMessageRow = typeof chatMessages.$inferSelect;
 export type TeamRow = typeof teams.$inferSelect;
 export type DraftRow = typeof drafts.$inferSelect;
 export type DraftParticipantRow = typeof draftParticipants.$inferSelect;
+export type SettingsRow = typeof settings.$inferSelect;
 
 /** DB row → engine-facing SeasonStats. */
 export function seasonRowToStats(row: SeasonRow): SeasonStats {

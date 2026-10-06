@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, between, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type { DraftCard, DraftConfig, DraftListItem, DraftParticipant, DraftRarity, DraftView } from '@cardball/shared';
-import { DRAFT_LIMITS, RULES_CONFIG, rateCard } from '@cardball/shared';
+import { DRAFT_LIMITS, activeHouseRules, rateCard } from '@cardball/shared';
 import { draftParticipants, drafts, people, seasons, users } from '@cardball/db';
 import type { DraftRow, PersonRow, SeasonRow } from '@cardball/db';
 import { fileCardIntoCollection } from './cardFiling.js';
@@ -59,7 +59,8 @@ function withLock<T>(draftId: number, fn: () => Promise<T>): Promise<T> {
  * Over-fetches, because some candidates turn out to have no usable card.
  */
 async function dealPack(ctx: Ctx, config: DraftConfig, count: number): Promise<DraftCard[]> {
-  const from = config.cardYear - RULES_CONFIG.statWindowSeasons;
+  const rules = activeHouseRules();
+  const from = config.cardYear - rules.statWindowSeasons;
   const to = config.cardYear - 1;
 
   const candidates = await ctx.db

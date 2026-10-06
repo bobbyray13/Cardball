@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, or } from 'drizzle-orm';
 import { GameError, applyAction, botAction, createGame, cryptoRng, sidesFor, waitingOn } from '@cardball/engine';
 import type { GameEvent, GameMode, GameState, Side } from '@cardball/engine';
+import { activeHouseRules } from '@cardball/shared';
 import type { ChatMessage, GameAction, GameStatus, GameView } from '@cardball/shared';
 import { chatMessages, gameEvents, games, users } from '@cardball/db';
 import type { GameRow } from '@cardball/db';
@@ -179,7 +180,14 @@ function buildEngine(
 ) {
   try {
     return createGame(
-      { id, mode: input.mode, regulationInnings: input.regulationInnings, teams: [setups[0](), setups[1]()] },
+      {
+        id,
+        mode: input.mode,
+        regulationInnings: input.regulationInnings,
+        // Snapshot the commissioner's rules into this game.
+        rules: activeHouseRules(),
+        teams: [setups[0](), setups[1]()],
+      },
       cryptoRng(),
     );
   } catch (err) {

@@ -3,9 +3,13 @@ import { buildApp } from './app.js';
 import type { Ctx } from './context.js';
 import { env } from './env.js';
 import { attachRealtime } from './realtime.js';
+import { refreshHouseRules } from './settingsService.js';
 
 const { db, sql } = createDb(env.databaseUrl);
 const ctx: Ctx = { db, io: null };
+
+// Publish the commissioner's rules before anyone can deal a card or a pack.
+await refreshHouseRules(ctx);
 
 const app = await buildApp(ctx);
 ctx.io = attachRealtime(app.server, ctx);

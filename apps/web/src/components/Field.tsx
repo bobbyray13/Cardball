@@ -1,5 +1,6 @@
 import type { EnginePlayer, GameState, Side } from '@cardball/engine';
 import type { SeasonStats } from '@cardball/shared';
+import type { HouseRules } from '@cardball/shared';
 import {
   batterDue,
   batterPitchMod,
@@ -19,8 +20,8 @@ import { teamColors } from './BallCard.js';
  * roll-for-year has happened (the lobby). The engine throws when there is no
  * year roll yet, so the mat asks the safe question instead.
  */
-function seasonNow(player: EnginePlayer, yearRoll: number | null): SeasonStats | null {
-  const seasons = cardSeasons(player);
+function seasonNow(player: EnginePlayer, yearRoll: number | null, rules: HouseRules): SeasonStats | null {
+  const seasons = cardSeasons(player, rules);
   if (seasons.length === 0) return null;
   const last = seasons[seasons.length - 1] ?? null;
   if (yearRoll === null) return last;
@@ -112,7 +113,10 @@ export function Field({ state, photos }: { state: GameState; photos: Record<stri
               ring
               title={`${runner.name} on ${runner.base === 1 ? 'first' : runner.base === 2 ? 'second' : 'third'}`}
               photoId={photos[runner.id]}
-              lines={[shortName(runner.name), `SB ${fmtMod(runnerSbMod(seasonNow(runner, offense.yearRoll) ?? NEUTRAL_SEASON).mod)}`]}
+              lines={[
+                shortName(runner.name),
+                `SB ${fmtMod(runnerSbMod(seasonNow(runner, offense.yearRoll, state.config.rules) ?? NEUTRAL_SEASON, state.config.rules).mod)}`,
+              ]}
             />
           );
         })}
@@ -179,10 +183,10 @@ function MatchupStrip({
   const offense = getOffense(state);
   const defense = getDefense(state);
   const batter = state.currentPa ? offense.players.find((p) => p.id === state.currentPa!.batterId) ?? batterDue(state) : batterDue(state);
-  const batterSeason = batter ? seasonNow(batter, offense.yearRoll) : null;
-  const batterMod = batterSeason ? batterPitchMod(batterSeason) : null;
-  const pitcherSeason = pitcher ? seasonNow(pitcher, defense.yearRoll) : null;
-  const pitcherMod = pitcherSeason ? pitcherPitchMod(pitcherSeason) : null;
+  const batterSeason = batter ? seasonNow(batter, offense.yearRoll, state.config.rules) : null;
+  const batterMod = batterSeason ? batterPitchMod(batterSeason, state.config.rules) : null;
+  const pitcherSeason = pitcher ? seasonNow(pitcher, defense.yearRoll, state.config.rules) : null;
+  const pitcherMod = pitcherSeason ? pitcherPitchMod(pitcherSeason, state.config.rules) : null;
 
   return (
     <div className="grid gap-3 sm:grid-cols-2">

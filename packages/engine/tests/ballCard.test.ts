@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { hitMod, pitMod, resolveHitKind, sbMod } from '@cardball/shared';
+import { defaultHouseRules, hitMod, pitMod, resolveHitKind, sbMod } from '@cardball/shared';
 import { activeSeason } from '../src/queries.js';
 import { batter, CARD_YEAR, season } from './fixtures.js';
 import type { EnginePlayer } from '../src/types.js';
+
+const RULES = defaultHouseRules();
 
 describe('Ball Card modifier bands', () => {
   it('maps batting average to HIT', () => {
@@ -87,21 +89,29 @@ describe('roll for year', () => {
 
   it('counts back from the most recent season', () => {
     const p = asPlayer([2004, 2005, 2006, 2007, 2008, 2009]);
-    expect(activeSeason(p, 1).year).toBe(2009);
-    expect(activeSeason(p, 6).year).toBe(2004);
+    expect(activeSeason(p, 1, RULES).year).toBe(2009);
+    expect(activeSeason(p, 6, RULES).year).toBe(2004);
   });
 
   it('wraps around when the card lists fewer than 6 seasons', () => {
     // Rules example: roll a 5 with 3 seasons listed → the 2nd season counting back.
     const p = asPlayer([2007, 2008, 2009]);
-    expect(activeSeason(p, 5).year).toBe(2008);
-    expect(activeSeason(p, 4).year).toBe(2009);
+    expect(activeSeason(p, 5, RULES).year).toBe(2008);
+    expect(activeSeason(p, 4, RULES).year).toBe(2009);
   });
 
   it('ignores seasons outside the card window', () => {
     const p = asPlayer([2001, 2008, CARD_YEAR, 2009]);
-    expect(activeSeason(p, 1).year).toBe(2009);
-    expect(activeSeason(p, 2).year).toBe(2008);
-    expect(activeSeason(p, 3).year).toBe(2009);
+    expect(activeSeason(p, 1, RULES).year).toBe(2009);
+    expect(activeSeason(p, 2, RULES).year).toBe(2008);
+    expect(activeSeason(p, 3, RULES).year).toBe(2009);
+  });
+
+  it('honours a shorter stat window when the commissioner sets one', () => {
+    const p = asPlayer([2004, 2005, 2006, 2007, 2008, 2009]);
+    const shortWindow = { ...RULES, statWindowSeasons: 2 };
+    expect(activeSeason(p, 1, shortWindow).year).toBe(2009);
+    expect(activeSeason(p, 2, shortWindow).year).toBe(2008);
+    expect(activeSeason(p, 3, shortWindow).year).toBe(2009);
   });
 });

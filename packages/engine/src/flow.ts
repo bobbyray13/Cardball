@@ -9,6 +9,7 @@ import {
   isCloserInning,
   isSeasonInjured,
   pitcherLegalOnMound,
+  rulesOf,
 } from './queries.js';
 
 /**
@@ -45,9 +46,10 @@ export function startHalfInning(state: GameState, events: GameEvent[], rng: Rng)
     for (const team of [state.away, state.home]) {
       for (const player of team.players) {
         if (player.status !== 'active' || player.injured) continue;
-        if (isSeasonInjured(player, team.yearRoll)) {
+        const rules = rulesOf(state);
+        if (isSeasonInjured(player, team.yearRoll, rules)) {
           player.injured = true;
-          const year = activeSeason(player, team.yearRoll).year;
+          const year = activeSeason(player, team.yearRoll, rules).year;
           events.push(
             pushEvent(state, {
               kind: 'injury',

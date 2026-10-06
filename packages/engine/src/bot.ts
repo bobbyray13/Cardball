@@ -1,7 +1,7 @@
-import { RULES_CONFIG, hitMod, pitMod, sbMod } from '@cardball/shared';
+import { hitMod, pitMod, sbMod } from '@cardball/shared';
 import type { GameAction } from '@cardball/shared';
 import { benchHitters } from './flow.js';
-import { availablePitchers, fieldingRating, getDefense, getOffense, getTeam, seasonForPlayer } from './queries.js';
+import { availablePitchers, fieldingRating, getDefense, getOffense, getTeam, rulesOf, seasonForPlayer } from './queries.js';
 import type { EnginePlayer, GameState, Side, TeamState } from './types.js';
 
 /** Average d6 with 1s re-rolled. */
@@ -16,6 +16,7 @@ const D20_EXPECTED = 10.5;
  */
 export function botAction(state: GameState, side: Side): GameAction | null {
   if (state.phase !== 'live') return null;
+  const rules = rulesOf(state);
   const team = getTeam(state, side);
   const pending = state.pendingDecision;
 
@@ -26,13 +27,13 @@ export function botAction(state: GameState, side: Side): GameAction | null {
         const f = pending.detail?.dpFactors ?? { diff: 0, fielding: 0, batterSb: 0 };
         // Batter speed works against the defense.
         const expected = f.diff + f.fielding - f.batterSb + D20_EXPECTED;
-        return { type: 'dp-attempt', attempt: expected > RULES_CONFIG.dpTarget };
+        return { type: 'dp-attempt', attempt: expected > rules.dpTarget };
       }
       case 'send-runner': {
         const runner = team.players.find((p) => p.id === pending.playerId);
         const thrower = getDefense(state).players.find((p) => p.id === pending.detail?.throwerId);
         if (!runner) return { type: 'send-runner', send: false };
-        const rMod = sbMod(seasonForPlayer(state, runner).sb) + (pending.detail?.runnerAdvantage ?? 0);
+        const rMod = sbMod(seasonForPlayer(state, runner).sb, rules.sbBands) + (pending.detail?.runnerAdvantage ?? 0);
         const tMod = thrower ? fieldingRating(thrower, thrower.fieldPosition ?? 'CF') : 0;
         return { type: 'send-runner', send: SEND_EXPECTED_ROLL + rMod >= D6_EXPECTED + tMod };
       }
@@ -45,7 +46,7 @@ export function botAction(state: GameState, side: Side): GameAction | null {
       }
       case 'pitcher-change': {
         const options = availablePitchers(state, side);
-        const best = maxBy(options, (p) => pitMod(seasonForPlayer(state, p).pitching?.era ?? null));
+        const best = maxBy(options, (p) => pitMod(seasonForPlayer(state, p).pitching?.era ?? null, rules.pitBands));
         return best ? { type: 'pitcher-change', inPlayerId: best.id } : null;
       }
     }
@@ -56,11 +57,12 @@ export function botAction(state: GameState, side: Side): GameAction | null {
 }
 
 function bestBench(state: GameState, team: TeamState, out: EnginePlayer | null, by: 'speed' | 'bat'): EnginePlayer | null {
+  const rules = rulesOf(state);
   const bench = benchHitters(team);
   const pos = out?.fieldPosition ?? null;
   return maxBy(bench, (p) => {
     const season = seasonForPlayer(state, p);
-    const value = by === 'speed' ? sbMod(season.sb) : hitMod(season.avg);
+    const value = by === 'speed' ? sbMod(season.sb, rules.sbBands) : hitMod(season.avg, rules.hitBands);
     // Strongly prefer someone who can actually play the vacated position.
     const fits = !pos || pos === 'DH' || p.positions.includes(pos) ? 10 : 0;
     return value + fits;

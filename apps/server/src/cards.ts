@@ -1,6 +1,6 @@
 import { and, between, inArray } from 'drizzle-orm';
-import { RULES_CONFIG, isPosition } from '@cardball/shared';
-import type { CardSnapshot, Position, SeasonStats } from '@cardball/shared';
+import { activeHouseRules, isPosition } from '@cardball/shared';
+import type { CardSnapshot, HouseRules, Position, SeasonStats } from '@cardball/shared';
 import type { PersonRow, SeasonRow } from '@cardball/db';
 import { seasonRowToStats, seasons } from '@cardball/db';
 import type { Ctx } from './context.js';
@@ -13,21 +13,26 @@ export function validCardYears(person: Pick<PersonRow, 'debutYear' | 'finalYear'
   return { min: person.debutYear + 1, max: person.finalYear + 1 };
 }
 
-export function windowRange(cardYear: number): { from: number; to: number } {
-  return { from: cardYear - RULES_CONFIG.statWindowSeasons, to: cardYear - 1 };
+export function windowRange(cardYear: number, rules: HouseRules = activeHouseRules()): { from: number; to: number } {
+  return { from: cardYear - rules.statWindowSeasons, to: cardYear - 1 };
 }
 
 /** Pitching on the card back, in outs, needed before a card can take the mound at all. */
 const MIN_WINDOW_PITCHING_OUTS = 30;
 
-export function buildCard(person: PersonRow, allSeasons: SeasonRow[], cardYear: number): CardSnapshot {
-  const { from, to } = windowRange(cardYear);
+export function buildCard(
+  person: PersonRow,
+  allSeasons: SeasonRow[],
+  cardYear: number,
+  rules: HouseRules = activeHouseRules(),
+): CardSnapshot {
+  const { from, to } = windowRange(cardYear, rules);
   const window = allSeasons
     .filter((s) => s.personId === person.id && s.year >= from && s.year <= to && s.games > 0)
     .sort((a, b) => a.year - b.year)
     .map(seasonRowToStats);
 
-  const canBat = window.some((s) => s.ab >= RULES_CONFIG.fullGameAb);
+  const canBat = window.some((s) => s.ab >= rules.fullGameAb);
   const windowPitchOuts = window.reduce((sum, s) => sum + (s.pitching?.ipOuts ?? 0), 0);
   const canPitch = windowPitchOuts >= MIN_WINDOW_PITCHING_OUTS;
   const pitcherClass = canPitch ? (person.isStarter ? 'SP' : 'RP') : null;
@@ -47,7 +52,7 @@ export function buildCard(person: PersonRow, allSeasons: SeasonRow[], cardYear: 
   const fielding: Partial<Record<Position, number>> = {};
   if (canBat) {
     for (const [pos, agg] of [...games.entries()].sort((a, b) => b[1].games - a[1].games)) {
-      if (agg.games < RULES_CONFIG.positionEligibilityGames) continue;
+      if (agg.games < rules.positionEligibilityGames) continue;
       positions.push(pos);
       fielding[pos] = Math.max(-3, Math.min(3, Math.round(agg.weighted / agg.games)));
     }
@@ -59,7 +64,7 @@ export function buildCard(person: PersonRow, allSeasons: SeasonRow[], cardYear: 
 
   let ineligibleReason: string | null = null;
   if (window.length === 0) ineligibleReason = `No MLB seasons from ${from} to ${to} on this card`;
-  else if (!canBat && !canPitch) ineligibleReason = 'Needs a 100 AB season or real pitching on the card back';
+  else if (!canBat && !canPitch) ineligibleReason = `Needs a ${rules.fullGameAb} AB season or real pitching on the card back`;
 
   return {
     personId: person.id,
@@ -81,11 +86,15 @@ export function buildCard(person: PersonRow, allSeasons: SeasonRow[], cardYear: 
 }
 
 /** Load every season that could appear on any of these cards, in one query. */
-export async function loadWindowSeasons(ctx: Ctx, cards: { personId: number; cardYear: number }[]): Promise<SeasonRow[]> {
+export async function loadWindowSeasons(
+  ctx: Ctx,
+  cards: { personId: number; cardYear: number }[],
+  rules: HouseRules = activeHouseRules(),
+): Promise<SeasonRow[]> {
   if (cards.length === 0) return [];
   const personIds = [...new Set(cards.map((c) => c.personId))];
-  const minYear = Math.min(...cards.map((c) => windowRange(c.cardYear).from));
-  const maxYear = Math.max(...cards.map((c) => windowRange(c.cardYear).to));
+  const minYear = Math.min(...cards.map((c) => windowRange(c.cardYear, rules).from));
+  const maxYear = Math.max(...cards.map((c) => windowRange(c.cardYear, rules).to));
   return ctx.db
     .select()
     .from(seasons)

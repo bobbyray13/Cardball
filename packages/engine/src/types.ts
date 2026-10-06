@@ -1,4 +1,4 @@
-import type { ContactType, GameMode, HitKind, Position, SeasonStats, ContactTypeInfo } from '@cardball/shared';
+import type { ContactType, GameMode, HitKind, HouseRules, Position, SeasonStats, ContactTypeInfo } from '@cardball/shared';
 
 // ---------------------------------------------------------------------------
 // Basics
@@ -137,6 +137,11 @@ export interface PlayContext {
 export interface GameConfig {
   mode: GameMode;
   regulationInnings: number;
+  /**
+   * The house rules this game was created under, snapshotted so a game in
+   * progress never changes mid-inning when the commissioner edits them.
+   */
+  rules: HouseRules;
 }
 
 export interface GameState {
@@ -264,6 +269,8 @@ export interface GameSetup {
   id: string;
   mode: GameMode;
   regulationInnings: number;
+  /** house rules for this game; missing fields fall back to the shipped defaults */
+  rules?: Partial<HouseRules>;
   /** two teams in join order — the engine rolls dice to see who is home */
   teams: [TeamSetup, TeamSetup];
 }

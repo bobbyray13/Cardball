@@ -1,4 +1,4 @@
-import { RULES_CONFIG, SPRAY_CHART, contactInfo, resolveHitKind, sbMod } from '@cardball/shared';
+import { contactInfo, resolveHitKind, sbMod } from '@cardball/shared';
 import type { Position } from '@cardball/shared';
 import { pushEvent, roll } from './events.js';
 import { GameError } from './errors.js';
@@ -15,7 +15,9 @@ import {
   getOffense,
   leadRunner,
   pitcherPitchMod,
+  rulesOf,
   seasonForPlayer,
+  sprayDirection,
 } from './queries.js';
 import { applyWalkForces, finishPlateAppearance, maybeWalkOff, scoreRun } from './flow.js';
 
@@ -52,7 +54,7 @@ export function recordOut(state: GameState, events: GameEvent[], text: string, p
 
 /** Which defender fields a ball hit to `direction` with power `contactRoll`. */
 export function pickDefender(state: GameState, direction: number, contactRoll: number, rng: Rng): EnginePlayer | null {
-  const chart = SPRAY_CHART[direction];
+  const chart = sprayDirection(state, direction);
   if (!chart) throw new GameError(`Invalid direction roll: ${direction}`);
   const positions = contactRoll <= 10 ? chart.infield : chart.outfield;
   const defense = getDefense(state);
@@ -73,7 +75,7 @@ export function pickDefender(state: GameState, direction: number, contactRoll: n
 
 /** The thrower on a ball through the outfield: the OF in the hit direction. */
 function throwerForDirection(state: GameState, direction: number): EnginePlayer | null {
-  const outfield = SPRAY_CHART[direction]?.outfield ?? [];
+  const outfield = sprayDirection(state, direction)?.outfield ?? [];
   const defense = getDefense(state);
   for (const pos of outfield) {
     const player = fielderAt(state, defense.side, pos);
@@ -116,9 +118,9 @@ export function applyThrowPitch(state: GameState, rng: Rng): GameEvent[] {
 
   // ---- pitch roll loop: pitcher vs batter, ties are balls ----
   while (true) {
-    const { mod: bBase, note: bNote } = batterPitchMod(batterSeason);
+    const { mod: bBase, note: bNote } = batterPitchMod(batterSeason, rulesOf(state));
     const bRbi = batterRbiBonus(state, batter, batterSeason);
-    const { mod: pMod, note: pNote } = pitcherPitchMod(pitcherSeason);
+    const { mod: pMod, note: pNote } = pitcherPitchMod(pitcherSeason, rulesOf(state));
 
     const bRoll = rng.d6();
     const pRoll = rng.d6();
@@ -158,11 +160,11 @@ export function applyThrowPitch(state: GameState, rng: Rng): GameEvent[] {
         rolls,
       }),
     );
-    if (pa.balls >= RULES_CONFIG.walkBalls) {
+    if (pa.balls >= rulesOf(state).walkBalls) {
       events.push(
         pushEvent(state, {
           kind: 'walk',
-          text: `Three straight — ${batter.name} draws the walk.`,
+          text: `${pa.balls} straight — ${batter.name} draws the walk.`,
           refs: { playerId: batter.id, side: offense.side },
         }),
       );
@@ -186,6 +188,7 @@ function resolveContact(
   pitcher: EnginePlayer,
   batterSeason: ReturnType<typeof seasonForPlayer>,
 ): void {
+  const rules = rulesOf(state);
   const direction = rng.d6();
   const contactRoll = rng.d20();
   const info = contactInfo(contactRoll);
@@ -281,7 +284,7 @@ function resolveContact(
             fromBase: lead.base,
             toBase,
             throwerId: defender.id,
-            advantage: contactAdvantage(contactRoll),
+            advantage: contactAdvantage(contactRoll, rules),
             context: 'tag-up',
           },
         };
@@ -290,7 +293,7 @@ function resolveContact(
           side: getOffense(state).side,
           playerId: lead.id,
           prompt: `${defender.name} makes the catch — ${lead.name} tags up and tries for ${baseName(toBase)}?`,
-          detail: { targetBase: toBase, throwerId: defender.id, runnerAdvantage: contactAdvantage(contactRoll) },
+          detail: { targetBase: toBase, throwerId: defender.id, runnerAdvantage: contactAdvantage(contactRoll, rules) },
         };
         return;
       }
@@ -313,11 +316,15 @@ function resolveContact(
   }
 
   // ---- HIT ----
-  const hitKind = resolveHitKind(contactRoll, {
-    doubles: batterSeason.doubles,
-    triples: batterSeason.triples,
-    homeRuns: batterSeason.homeRuns,
-  });
+  const hitKind = resolveHitKind(
+    contactRoll,
+    {
+      doubles: batterSeason.doubles,
+      triples: batterSeason.triples,
+      homeRuns: batterSeason.homeRuns,
+    },
+    rules.powerTiers,
+  );
   const hitName = { single: 'single', double: 'double', triple: 'triple', 'home-run': 'home run' }[hitKind];
   events.push(
     pushEvent(state, {
@@ -350,7 +357,7 @@ function resolveContact(
         fromBase: leadBase,
         toBase,
         throwerId: thrower?.id ?? defender.id,
-        advantage: contactAdvantage(contactRoll),
+        advantage: contactAdvantage(contactRoll, rules),
         context: 'hit',
       },
     };
@@ -359,7 +366,7 @@ function resolveContact(
       side: getOffense(state).side,
       playerId: lead.id,
       prompt: `${lead.name} into ${baseName(leadBase + advance)} — send him for ${baseName(toBase)}?`,
-      detail: { targetBase: toBase, throwerId: thrower?.id ?? defender.id, runnerAdvantage: contactAdvantage(contactRoll) },
+      detail: { targetBase: toBase, throwerId: thrower?.id ?? defender.id, runnerAdvantage: contactAdvantage(contactRoll, rules) },
     };
     return;
   }
@@ -404,7 +411,7 @@ export function applyDpDecision(state: GameState, attempt: boolean, rng: Rng): G
   const involved = dpInvolvedDefenders(state, defender);
   const fieldingSum = involved.reduce((sum, p) => sum + fieldingRating(p, p.fieldPosition ?? 'C'), 0);
   const batterSeason = seasonForPlayer(state, batter);
-  const bSb = sbMod(batterSeason.sb);
+  const bSb = sbMod(batterSeason.sb, rulesOf(state).sbBands);
   const dpRoll = rng.d20();
   const total = diff + fieldingSum + bSb + dpRoll;
 
@@ -420,10 +427,10 @@ export function applyDpDecision(state: GameState, attempt: boolean, rng: Rng): G
   if (leadForced) leadForced.base = null;
   advanceTrailingForcedRunners(state, forcedBase);
 
-  if (total > RULES_CONFIG.dpTarget) {
+  if (total > rulesOf(state).dpTarget) {
     batter.base = null;
     recordOut(state, events, `${leadForced?.name ?? 'The lead runner'} is forced out.`, leadForced?.id, offense.side);
-    recordOut(state, events, `${defender.name} turns it — DOUBLE PLAY! (${total} > ${RULES_CONFIG.dpTarget})`, batter.id, offense.side);
+    recordOut(state, events, `${defender.name} turns it — DOUBLE PLAY! (${total} > ${rulesOf(state).dpTarget})`, batter.id, offense.side);
     events.push(
       pushEvent(state, {
         kind: 'dp-made',
@@ -494,10 +501,11 @@ export function applySendDecision(state: GameState, send: boolean, rng: Rng): Ga
   }
 
   // ---- the send / tag-up roll ----
+  const rules = rulesOf(state);
   const runnerSeason = seasonForPlayer(state, runner);
-  const rMod = sbMod(runnerSeason.sb) + advantage;
+  const rMod = sbMod(runnerSeason.sb, rules.sbBands) + advantage;
   let rRoll = rng.d6();
-  if (RULES_CONFIG.sendRerollOnes) {
+  if (rules.sendRerollOnes) {
     let guard = 0;
     while (rRoll === 1 && guard < 10) {
       rRoll = rng.d6();
@@ -516,7 +524,7 @@ export function applySendDecision(state: GameState, send: boolean, rng: Rng): Ga
       6,
       rRoll,
       rMod,
-      `${runnerSeason.sb} SB ${fmtMod(sbMod(runnerSeason.sb))}${advantage ? `, ball ${advantage > 0 ? 'red' : 'blue'} ${fmtMod(advantage)}` : ''}`,
+      `${runnerSeason.sb} SB ${fmtMod(sbMod(runnerSeason.sb, rules.sbBands))}${advantage ? `, ball ${advantage > 0 ? 'red' : 'blue'} ${fmtMod(advantage)}` : ''}`,
     ),
     roll(`${thrower?.name ?? 'The throw'} (throwing)`, 6, tRoll, tMod, thrower ? `${thrower.fieldPosition} rating` : ''),
   ];
@@ -682,5 +690,5 @@ function dpFactorPreview(state: GameState, ctx: PlayContext): { diff: number; fi
     0,
   );
   const batterSeason = seasonForPlayer(state, batter);
-  return { diff, fielding, batterSb: sbMod(batterSeason.sb) };
+  return { diff, fielding, batterSb: sbMod(batterSeason.sb, rulesOf(state).sbBands) };
 }

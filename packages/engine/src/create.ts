@@ -1,29 +1,30 @@
-import { RULES_CONFIG } from '@cardball/shared';
-import type { Position, SeasonStats } from '@cardball/shared';
+import { resolveHouseRules } from '@cardball/shared';
+import type { HouseRules, Position, SeasonStats } from '@cardball/shared';
 import { pushEvent, roll } from './events.js';
 import { GameError } from './errors.js';
 import type { Rng } from './rng.js';
 import type { EnginePlayer, GameEvent, GameSetup, GameState, PlayerSetup, Side, TeamSetup } from './types.js';
-import { cardSeasons } from './queries.js';
+import { cardSeasons, rulesOf } from './queries.js';
 import { startHalfInning } from './flow.js';
 
 const FIELD_POSITIONS: readonly Position[] = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'];
 
+/** The seasons listed on a card's back, under the rules in force. */
+function cardSeasonsList(seasons: SeasonStats[], cardYear: number, rules: HouseRules): SeasonStats[] {
+  const minYear = cardYear - rules.statWindowSeasons;
+  return seasons.filter((s) => s.games > 0 && s.year < cardYear && s.year >= minYear);
+}
+
 /** A card may bat when at least one window season has the required AB. */
-export function cardCanBat(player: PlayerSetup): boolean {
-  return cardSeasonsList(player.seasons, player.cardYear).some((s) => s.ab >= 100);
+export function cardCanBat(player: PlayerSetup, rules: HouseRules): boolean {
+  return cardSeasonsList(player.seasons, player.cardYear, rules).some((s) => s.ab >= rules.fullGameAb);
 }
 
 /** A card may pitch when at least one window season has any pitching appearance. */
-export function cardCanPitch(player: PlayerSetup): boolean {
-  return cardSeasonsList(player.seasons, player.cardYear).some(
+export function cardCanPitch(player: PlayerSetup, rules: HouseRules): boolean {
+  return cardSeasonsList(player.seasons, player.cardYear, rules).some(
     (s) => s.pitching !== null && (s.pitching.games > 0 || s.pitching.ipOuts > 0),
   );
-}
-
-function cardSeasonsList(seasons: SeasonStats[], cardYear: number): SeasonStats[] {
-  const minYear = cardYear - RULES_CONFIG.statWindowSeasons;
-  return seasons.filter((s) => s.games > 0 && s.year < cardYear && s.year >= minYear);
 }
 
 export interface LineupData {
@@ -33,12 +34,12 @@ export interface LineupData {
 }
 
 /** Validate a team's lineup the way the rules require. Throws GameError. */
-export function validateTeamSetup(players: PlayerSetup[], lineupData: LineupData, teamName: string): void {
+export function validateTeamSetup(players: PlayerSetup[], lineupData: LineupData, teamName: string, rules: HouseRules): void {
   const byId = new Map(players.map((p) => [p.id, p]));
 
   if (players.length === 0) throw new GameError(`${teamName}: roster is empty`);
   for (const p of players) {
-    if (cardSeasonsList(p.seasons, p.cardYear).length === 0) {
+    if (cardSeasonsList(p.seasons, p.cardYear, rules).length === 0) {
       throw new GameError(`${teamName}: ${p.name}'s card has no seasons on the back`);
     }
   }
@@ -62,8 +63,8 @@ export function validateTeamSetup(players: PlayerSetup[], lineupData: LineupData
     if (!player.positions.includes(pos)) {
       throw new GameError(`${teamName}: ${player.name} is not eligible to field ${pos}`);
     }
-    if (!cardCanBat(player)) {
-      throw new GameError(`${teamName}: ${player.name}'s card is not game-eligible (needs a 100 AB season)`);
+    if (!cardCanBat(player, rules)) {
+      throw new GameError(`${teamName}: ${player.name}'s card is not game-eligible (needs a ${rules.fullGameAb} AB season)`);
     }
   }
   const fielders = new Set(Object.values(fieldPositions));
@@ -82,9 +83,9 @@ export function validateTeamSetup(players: PlayerSetup[], lineupData: LineupData
     throw new GameError(`${teamName}: the pitcher cannot be in the batting lineup`);
   }
   if (pitcher.pitcherClass !== 'SP') {
-    throw new GameError(`${teamName}: ${pitcher.name} is not a starting pitcher (needs a 100+ IP season)`);
+    throw new GameError(`${teamName}: ${pitcher.name} is not a starting pitcher (needs a ${rules.starterIpThreshold}+ IP season)`);
   }
-  if (!cardCanPitch(pitcher)) {
+  if (!cardCanPitch(pitcher, rules)) {
     throw new GameError(`${teamName}: ${pitcher.name}'s card has no pitching stats`);
   }
 }
@@ -126,8 +127,8 @@ function buildPlayer(
   };
 }
 
-function buildTeam(setup: TeamSetup, side: Side): GameState['home'] {
-  validateTeamSetup(setup.players, setup, setup.name);
+function buildTeam(setup: TeamSetup, side: Side, rules: HouseRules): GameState['home'] {
+  validateTeamSetup(setup.players, setup, setup.name, rules);
   const players = setup.players.map((p) => buildPlayer(p, setup.lineup, setup.fieldPositions, p.id === setup.startingPitcherId));
   return {
     side,
@@ -146,9 +147,12 @@ function buildTeam(setup: TeamSetup, side: Side): GameState['home'] {
 /** Create a new game: validate both teams, roll for home/away, phase = lobby. */
 export function createGame(setup: GameSetup, rng: Rng): { state: GameState; events: GameEvent[] } {
   const events: GameEvent[] = [];
+  // Snapshot the rules now; the game keeps these even if the commissioner
+  // changes them mid-series.
+  const rules = resolveHouseRules(setup.rules);
 
-  if (!RULES_CONFIG.regulationInningsOptions.includes(setup.regulationInnings as 3 | 6 | 9)) {
-    throw new GameError(`Games must be ${RULES_CONFIG.regulationInningsOptions.join(', ')} innings`);
+  if (!rules.regulationInningsOptions.includes(setup.regulationInnings)) {
+    throw new GameError(`Games must be ${rules.regulationInningsOptions.join(', ')} innings`);
   }
 
   // Roll for home team, re-rolling ties.
@@ -161,12 +165,12 @@ export function createGame(setup: GameSetup, rng: Rng): { state: GameState; even
   const homeIdx = rollA > rollB ? 0 : 1;
   const awayIdx = homeIdx === 0 ? 1 : 0;
 
-  const [teamHome, teamAway] = [buildTeam(setup.teams[homeIdx]!, 'home'), buildTeam(setup.teams[awayIdx]!, 'away')];
+  const [teamHome, teamAway] = [buildTeam(setup.teams[homeIdx]!, 'home', rules), buildTeam(setup.teams[awayIdx]!, 'away', rules)];
 
   const state: GameState = {
     id: setup.id,
     version: 0,
-    config: { mode: setup.mode, regulationInnings: setup.regulationInnings },
+    config: { mode: setup.mode, regulationInnings: setup.regulationInnings, rules },
     phase: 'lobby',
     home: teamHome,
     away: teamAway,
@@ -222,7 +226,7 @@ export function applySetLineup(state: GameState, side: Side, lineup: string[], f
     fielding: p.fielding,
     pitcherClass: p.pitcherClass,
   }));
-  validateTeamSetup(setups, { lineup, fieldPositions, startingPitcherId }, team.name);
+  validateTeamSetup(setups, { lineup, fieldPositions, startingPitcherId }, team.name, rulesOf(state));
 
   team.players = setups.map((p) => buildPlayer(p, lineup, fieldPositions, p.id === startingPitcherId));
   team.lineup = [...lineup];

@@ -10,6 +10,7 @@ import {
   getPlayerTeam,
   isSeasonInjured,
   roleForEnteringPitcher,
+  rulesOf,
 } from './queries.js';
 import type { EnginePlayer, GameEvent, GameState, Side, TeamState } from './types.js';
 
@@ -19,12 +20,13 @@ function betweenPitches(state: GameState): boolean {
 }
 
 function flagIfInjured(state: GameState, team: TeamState, player: EnginePlayer, events: GameEvent[]): void {
-  if (team.yearRoll === null || !isSeasonInjured(player, team.yearRoll)) return;
+  const rules = rulesOf(state);
+  if (team.yearRoll === null || !isSeasonInjured(player, team.yearRoll, rules)) return;
   player.injured = true;
   events.push(
     pushEvent(state, {
       kind: 'injury',
-      text: `${player.name} enters on his ${activeSeason(player, team.yearRoll).year} season — injured, he'll leave after his next plate appearance.`,
+      text: `${player.name} enters on his ${activeSeason(player, team.yearRoll, rules).year} season — injured, he'll leave after his next plate appearance.`,
       refs: { playerId: player.id, side: team.side },
     }),
   );

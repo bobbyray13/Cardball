@@ -467,6 +467,94 @@ describe('teams', () => {
   });
 });
 
+describe('house rules', () => {
+  it('shows the rules to any signed-in manager and nobody else', async () => {
+    expect((await call('GET', '/api/settings/rules')).statusCode).toBe(401);
+
+    const res = await call('GET', '/api/settings/rules', { token: guestToken });
+    expect(res.statusCode).toBe(200);
+    const rules = body<{ rules: { statWindowSeasons: number; hitBands: { min: number; mod: number }[] } }>(res).rules;
+    expect(rules.statWindowSeasons).toBe(6);
+    expect(rules.hitBands[0]).toEqual({ min: 0.325, mod: 3 });
+  });
+
+  it('only lets the commissioner change them', async () => {
+    const current = body<{ rules: unknown }>(await call('GET', '/api/settings/rules', { token: guestToken })).rules;
+    const denied = await call('PUT', '/api/settings/rules', { token: guestToken, body: current });
+    expect(denied.statusCode).toBe(403);
+  });
+
+  it('refuses a rule set with a value out of range', async () => {
+    const current = body<{ rules: Record<string, unknown> }>(await call('GET', '/api/settings/rules', { token: hostToken })).rules;
+    const bad = await call('PUT', '/api/settings/rules', { token: hostToken, body: { ...current, statWindowSeasons: 0 } });
+    expect(bad.statusCode).toBe(400);
+    expect(body<{ error: string }>(bad).error).toMatch(/statWindowSeasons/);
+
+    const worse = await call('PUT', '/api/settings/rules', { token: hostToken, body: { ...current, walkBalls: 'three' } });
+    expect(worse.statusCode).toBe(400);
+  });
+
+  it('applies a saved stat window to the cards the server builds', async () => {
+    const current = body<{ rules: Record<string, unknown> }>(await call('GET', '/api/settings/rules', { token: hostToken })).rules;
+    const mays = body<{ people: { id: number }[] }>(await call('GET', '/api/people/search?q=Willie%20Mays', { token: hostToken })).people[0]!;
+
+    const saved = await call('PUT', '/api/settings/rules', { token: hostToken, body: { ...current, statWindowSeasons: 2 } });
+    expect(saved.statusCode).toBe(200);
+    expect(body<{ rules: { statWindowSeasons: number } }>(saved).rules.statWindowSeasons).toBe(2);
+
+    const preview = body<{ card: { seasons: { year: number }[] } }>(
+      await call('GET', `/api/cards/preview?personId=${mays.id}&cardYear=1955`, { token: hostToken }),
+    ).card;
+    expect(preview.seasons.map((s) => s.year)).toEqual([1953, 1954]);
+
+    const restored = await call('PUT', '/api/settings/rules', { token: hostToken, body: current });
+    expect(restored.statusCode).toBe(200);
+    const back = body<{ card: { seasons: { year: number }[] } }>(
+      await call('GET', `/api/cards/preview?personId=${mays.id}&cardYear=1955`, { token: hostToken }),
+    ).card;
+    expect(back.seasons.map((s) => s.year)).toEqual([1951, 1952, 1953, 1954]);
+  });
+
+  it('snapshots the rules into a new game and leaves that game alone afterwards', async () => {
+    const current = body<{ rules: Record<string, unknown> }>(await call('GET', '/api/settings/rules', { token: hostToken })).rules;
+    await call('PUT', '/api/settings/rules', { token: hostToken, body: { ...current, walkBalls: 5, dpTarget: 25 } });
+
+    const created = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'bot', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId },
+    });
+    expect(created.statusCode, created.body).toBe(200);
+    const gameId = body<{ game: { id: number } }>(created).game.id;
+
+    type Snap = { state: { config: { rules: { walkBalls: number; dpTarget: number } } } };
+    const first = body<{ game: Snap }>(await call('GET', `/api/games/${gameId}`, { token: hostToken })).game;
+    expect(first.state.config.rules.walkBalls).toBe(5);
+    expect(first.state.config.rules.dpTarget).toBe(25);
+
+    // The commissioner changes his mind mid-game.
+    await call('PUT', '/api/settings/rules', { token: hostToken, body: { ...current, walkBalls: 2, dpTarget: 40 } });
+    const second = body<{ game: Snap }>(await call('GET', `/api/games/${gameId}`, { token: hostToken })).game;
+    expect(second.state.config.rules.walkBalls).toBe(5);
+    expect(second.state.config.rules.dpTarget).toBe(25);
+
+    await call('DELETE', `/api/games/${gameId}`, { token: hostToken });
+    await call('PUT', '/api/settings/rules', { token: hostToken, body: current });
+  });
+
+  it('refuses a regulation length the commissioner has taken off the menu', async () => {
+    const current = body<{ rules: Record<string, unknown> }>(await call('GET', '/api/settings/rules', { token: hostToken })).rules;
+    await call('PUT', '/api/settings/rules', { token: hostToken, body: { ...current, regulationInningsOptions: [3, 6] } });
+    const nine = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'bot', regulationInnings: 9, teamId: hostTeamId, opponentTeamId: hostTeamId },
+    });
+    expect(nine.statusCode).toBe(400);
+    expect(body<{ error: string }>(nine).error).toMatch(/regulation/i);
+
+    await call('PUT', '/api/settings/rules', { token: hostToken, body: current });
+  });
+});
+
 describe('games', () => {
   it('plays a bot game to the final out and records the play-by-play', async () => {
     const created = await call('POST', '/api/games', {

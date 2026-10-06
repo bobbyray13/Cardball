@@ -1,6 +1,4 @@
 import {
-  RUNNER_ADVANTAGE,
-  RULES_CONFIG,
   hitMod,
   pitMod,
   sbMod,
@@ -12,7 +10,17 @@ import {
 import { GameError } from './errors.js';
 import type { EnginePlayer, GameState, Side, TeamState } from './types.js';
 import { otherSide } from './types.js';
-import type { Position, SeasonStats } from '@cardball/shared';
+import type { HouseRules, Position, SeasonStats } from '@cardball/shared';
+
+/** The rules this game is playing under. */
+export function rulesOf(state: GameState): HouseRules {
+  return state.config.rules;
+}
+
+/** The spray-chart direction for a d6 roll under this game's rules. */
+export function sprayDirection(state: GameState, direction: number): { infield: Position[]; outfield: Position[] } | undefined {
+  return rulesOf(state).sprayChart.find((d) => d.roll === direction);
+}
 
 // ---------------------------------------------------------------------------
 // Teams & players
@@ -70,8 +78,8 @@ export function activePitcher(state: GameState): EnginePlayer {
 // ---------------------------------------------------------------------------
 
 /** Seasons listed "on the back" of the card: appearances within the window years. */
-export function cardSeasons(player: EnginePlayer): SeasonStats[] {
-  const years = new Set(statWindowYears(player.cardYear));
+export function cardSeasons(player: EnginePlayer, rules: HouseRules): SeasonStats[] {
+  const years = new Set(statWindowYears(player.cardYear, rules.statWindowSeasons));
   return player.seasons.filter((s) => years.has(s.year) && seasonAppeared(s)).sort((a, b) => a.year - b.year);
 }
 
@@ -79,8 +87,8 @@ export function cardSeasons(player: EnginePlayer): SeasonStats[] {
  * The season a player uses this inning: count back `roll` seasons from the
  * most recent on the card, wrapping around (roll 5 with 3 listed years → 2nd).
  */
-export function activeSeason(player: EnginePlayer, yearRoll: number | null): SeasonStats {
-  const seasons = cardSeasons(player);
+export function activeSeason(player: EnginePlayer, yearRoll: number | null, rules: HouseRules): SeasonStats {
+  const seasons = cardSeasons(player, rules);
   if (seasons.length === 0) throw new GameError(`${player.name} has no eligible seasons on this card`);
   if (yearRoll === null) throw new GameError('No roll-for-year yet this inning');
   const index = (seasons.length - 1 - ((yearRoll - 1) % seasons.length)) as number;
@@ -92,39 +100,39 @@ export function activeSeason(player: EnginePlayer, yearRoll: number | null): Sea
 /** Team-level helper: this player's season for the current inning. */
 export function seasonForPlayer(state: GameState, player: EnginePlayer): SeasonStats {
   const team = getPlayerTeam(state, player.id);
-  return activeSeason(player, team.yearRoll);
+  return activeSeason(player, team.yearRoll, rulesOf(state));
 }
 
-export function isSeasonInjured(player: EnginePlayer, yearRoll: number | null): boolean {
-  const seasons = cardSeasons(player);
+export function isSeasonInjured(player: EnginePlayer, yearRoll: number | null, rules: HouseRules): boolean {
+  const seasons = cardSeasons(player, rules);
   if (seasons.length === 0) return false;
   // A card with a single healthy season can never roll an injured year.
-  return seasonIsInjuredYear(activeSeason(player, yearRoll));
+  return seasonIsInjuredYear(activeSeason(player, yearRoll, rules), rules.fullGameAb, rules.pitcherInjuryIpOuts);
 }
 
 // ---------------------------------------------------------------------------
 // Modifiers
 // ---------------------------------------------------------------------------
 
-export function batterPitchMod(season: SeasonStats): { mod: number; note: string } {
-  const mod = hitMod(season.avg);
+export function batterPitchMod(season: SeasonStats, rules: HouseRules): { mod: number; note: string } {
+  const mod = hitMod(season.avg, rules.hitBands);
   return { mod, note: `${season.avg?.toFixed(3) ?? '—'} AVG → ${fmtMod(mod)}` };
 }
 
-export function pitcherPitchMod(season: SeasonStats): { mod: number; note: string } {
-  const mod = pitMod(season.pitching?.era ?? null);
+export function pitcherPitchMod(season: SeasonStats, rules: HouseRules): { mod: number; note: string } {
+  const mod = pitMod(season.pitching?.era ?? null, rules.pitBands);
   return { mod, note: `${season.pitching?.era?.toFixed(2) ?? '—'} ERA → ${fmtMod(mod)}` };
 }
 
-export function runnerSbMod(season: SeasonStats): { mod: number; note: string } {
-  const mod = sbMod(season.sb);
+export function runnerSbMod(season: SeasonStats, rules: HouseRules): { mod: number; note: string } {
+  const mod = sbMod(season.sb, rules.sbBands);
   return { mod, note: `${season.sb} SB → ${fmtMod(mod)}` };
 }
 
 /** Red/blue contact-roll advantage for baserunners (+1 / 0 / -1). */
-export function contactAdvantage(contactRoll: number): number {
-  if ((RUNNER_ADVANTAGE.red as readonly number[]).includes(contactRoll)) return 1;
-  if ((RUNNER_ADVANTAGE.blue as readonly number[]).includes(contactRoll)) return -1;
+export function contactAdvantage(contactRoll: number, rules: HouseRules): number {
+  if (rules.runnerAdvantage.red.includes(contactRoll)) return 1;
+  if (rules.runnerAdvantage.blue.includes(contactRoll)) return -1;
   return 0;
 }
 
@@ -137,7 +145,7 @@ export function batterRbiBonus(state: GameState, batter: EnginePlayer, season: S
   const offense = getOffense(state);
   const risp = offense.players.some((p) => p.base === 2 || p.base === 3);
   if (!risp) return 0;
-  return rbiBonus(season.rbi);
+  return rbiBonus(season.rbi, rulesOf(state).rbiBands);
 }
 
 // ---------------------------------------------------------------------------
@@ -187,8 +195,8 @@ export function outsRemaining(state: GameState): number {
 // Pitcher legality
 // ---------------------------------------------------------------------------
 
-export function pitcherCap(role: 'starter' | 'reliever' | 'closer'): number {
-  return RULES_CONFIG.ipCaps[role] * 3; // in outs
+export function pitcherCap(state: GameState, role: 'starter' | 'reliever' | 'closer'): number {
+  return rulesOf(state).ipCaps[role] * 3; // in outs
 }
 
 /**
@@ -199,7 +207,7 @@ export function pitcherCap(role: 'starter' | 'reliever' | 'closer'): number {
 export function isRelieverOnlyInning(state: GameState): boolean {
   const reg = state.config.regulationInnings;
   if (state.inning > reg) return true;
-  const count = reg >= 9 ? RULES_CONFIG.relieverOnlyInnings.length : reg >= 6 ? 1 : 0;
+  const count = reg >= 9 ? rulesOf(state).relieverOnlyInnings.length : reg >= 6 ? 1 : 0;
   return state.inning > reg - count;
 }
 
@@ -242,7 +250,7 @@ export function pitcherLegalOnMound(state: GameState, player: EnginePlayer): { o
     return { ok: false, reason: 'is a starter — this inning must be pitched by a reliever' };
   }
 
-  const cap = pitcherCap(player.pitchingRole);
+  const cap = pitcherCap(state, player.pitchingRole);
   if (player.outsPitched >= cap) {
     return { ok: false, reason: `has reached the ${player.pitchingRole} limit (${formatIp(player.outsPitched)} IP)` };
   }
