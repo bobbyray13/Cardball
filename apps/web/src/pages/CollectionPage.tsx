@@ -1,23 +1,103 @@
 import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { CollectionCard } from '@cardball/shared';
+import { RARITY_LABEL, RARITY_ORDER, faceLabel, rarityRank, rateCard } from '@cardball/shared';
+import type { CardRating, CollectionCard, DraftRarity } from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
+import { RarityBadge } from '../components/RarityBadge.js';
 import { PhotoUploader } from '../components/PhotoUploader.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+
+type SortKey = 'rarity' | 'newest' | 'name' | 'year-desc' | 'year-asc';
+type RoleFilter = 'all' | 'hitters' | 'pitchers';
+
+const SORTS: { key: SortKey; label: string }[] = [
+  { key: 'rarity', label: 'Rarest first' },
+  { key: 'newest', label: 'Newest added' },
+  { key: 'name', label: 'Name A–Z' },
+  { key: 'year-desc', label: 'Card year, newest' },
+  { key: 'year-asc', label: 'Card year, oldest' },
+];
+
+const SORT_STORAGE_KEY = 'cardball.collection.sort';
 
 export function CollectionPage() {
   const collection = useLoad(() => api.collection(), []);
   const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<SortKey>(() => (localStorage.getItem(SORT_STORAGE_KEY) as SortKey | null) ?? 'rarity');
+  const [tierFilter, setTierFilter] = useState<DraftRarity | 'all'>('all');
+  const [role, setRole] = useState<RoleFilter>('all');
+  const [photosOnly, setPhotosOnly] = useState(false);
   const [selected, setSelected] = useState<CollectionCard | null>(null);
-  const cards = collection.data?.cards ?? [];
+  const cards = useMemo(() => collection.data?.cards ?? [], [collection.data]);
+
+  const ratings = useMemo(() => new Map(cards.map((c) => [c.id, rateCard(c.card)])), [cards]);
+  const ratingOf = (c: CollectionCard) => ratings.get(c.id) ?? rateCard(c.card);
+
+  const tierCounts = useMemo(() => {
+    const counts: Record<DraftRarity, number> = { common: 0, uncommon: 0, rare: 0, chase: 0 };
+    for (const r of ratings.values()) counts[r.rarity]++;
+    return counts;
+  }, [ratings]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return cards;
-    return cards.filter((c) => c.card.name.toLowerCase().includes(needle) || c.setLabel.toLowerCase().includes(needle) || String(c.card.cardYear).includes(needle));
-  }, [cards, query]);
+    const list = cards.filter((c) => {
+      const r = ratings.get(c.id)!;
+      if (tierFilter !== 'all' && r.rarity !== tierFilter) return false;
+      if (role === 'hitters' && !c.card.canBat) return false;
+      if (role === 'pitchers' && !c.card.canPitch) return false;
+      if (photosOnly && !c.photoId) return false;
+      if (!needle) return true;
+      return (
+        c.card.name.toLowerCase().includes(needle) ||
+        c.setLabel.toLowerCase().includes(needle) ||
+        c.card.teamLabel.toLowerCase().includes(needle) ||
+        String(c.card.cardYear).includes(needle) ||
+        c.card.positions.some((p) => p.toLowerCase() === needle)
+      );
+    });
+    const byRarity = (a: CollectionCard, b: CollectionCard) => {
+      const ra = ratings.get(a.id)!;
+      const rb = ratings.get(b.id)!;
+      return rarityRank(rb.rarity) - rarityRank(ra.rarity) || rb.score - ra.score;
+    };
+    const compare: Record<SortKey, (a: CollectionCard, b: CollectionCard) => number> = {
+      rarity: byRarity,
+      newest: (a, b) => b.addedAt.localeCompare(a.addedAt),
+      name: (a, b) => a.card.name.localeCompare(b.card.name),
+      'year-desc': (a, b) => b.card.cardYear - a.card.cardYear || a.card.name.localeCompare(b.card.name),
+      'year-asc': (a, b) => a.card.cardYear - b.card.cardYear || a.card.name.localeCompare(b.card.name),
+    };
+    return [...list].sort(compare[sort]);
+  }, [cards, ratings, query, sort, tierFilter, role, photosOnly]);
+
+  // The binder's best cards, for the showcase shelf.
+  const highlights = useMemo(
+    () =>
+      [...cards]
+        .filter((c) => rarityRank(ratings.get(c.id)!.rarity) >= rarityRank('rare'))
+        .sort((a, b) => {
+          const ra = ratings.get(a.id)!;
+          const rb = ratings.get(b.id)!;
+          return rarityRank(rb.rarity) - rarityRank(ra.rarity) || rb.score - ra.score;
+        })
+        .slice(0, 5),
+    [cards, ratings],
+  );
+
+  const filtering = query.trim() !== '' || tierFilter !== 'all' || role !== 'all' || photosOnly;
+
+  // Under "Rarest first", split the grid into one shelf per tier.
+  const groups = useMemo(() => {
+    if (sort !== 'rarity') return [{ tier: null as DraftRarity | null, cards: filtered }];
+    return [...RARITY_ORDER]
+      .reverse()
+      .map((tier) => ({ tier: tier as DraftRarity | null, cards: filtered.filter((c) => ratings.get(c.id)!.rarity === tier) }))
+      .filter((g) => g.cards.length > 0);
+  }, [filtered, sort, ratings]);
 
   return (
     <div className="space-y-6">
@@ -25,7 +105,7 @@ export function CollectionPage() {
         <div>
           <h1 className="font-display text-3xl font-bold text-chalk">Your collection</h1>
           <p className="mt-1 text-sm text-chalk/60">
-            {cards.length} {cards.length === 1 ? 'card' : 'cards'} ·{' '}
+            {cards.length} {cards.length === 1 ? 'card' : 'cards'} · {tierCounts.chase} chase · {tierCounts.rare} rare ·{' '}
             {cards.filter((c) => c.photoId).length} with your own photo
           </p>
         </div>
@@ -34,13 +114,58 @@ export function CollectionPage() {
         </Link>
       </div>
 
+      {highlights.length > 0 && !filtering ? (
+        <Showcase cards={highlights} ratingOf={ratingOf} onSelect={setSelected} />
+      ) : null}
+
       <Panel>
-        <input
-          className={inputClass}
-          placeholder="Filter by player, year, or set…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <input
+              name="collectionFilter"
+              className={`${inputClass} min-w-0 flex-1`}
+              placeholder="Search player, team, year, set, or position (SS, CF)…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+            <select
+              name="collectionSort"
+              aria-label="Sort"
+              className={`${inputClass} w-auto`}
+              value={sort}
+              onChange={(e) => {
+                const next = e.target.value as SortKey;
+                setSort(next);
+                localStorage.setItem(SORT_STORAGE_KEY, next);
+              }}
+            >
+              {SORTS.map((s) => (
+                <option key={s.key} value={s.key}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Chip active={tierFilter === 'all'} onClick={() => setTierFilter('all')}>
+              All {cards.length}
+            </Chip>
+            {[...RARITY_ORDER].reverse().map((tier) => (
+              <Chip key={tier} active={tierFilter === tier} onClick={() => setTierFilter(tierFilter === tier ? 'all' : tier)} disabled={tierCounts[tier] === 0}>
+                {RARITY_LABEL[tier]} {tierCounts[tier]}
+              </Chip>
+            ))}
+            <span className="mx-1 h-4 w-px bg-white/15" />
+            {(['all', 'hitters', 'pitchers'] as const).map((r) => (
+              <Chip key={r} active={role === r} onClick={() => setRole(r)}>
+                {r === 'all' ? 'Everyone' : r === 'hitters' ? 'Hitters' : 'Pitchers'}
+              </Chip>
+            ))}
+            <Chip active={photosOnly} onClick={() => setPhotosOnly(!photosOnly)}>
+              With photo
+            </Chip>
+          </div>
+        </div>
       </Panel>
 
       <ErrorNote error={collection.error} />
@@ -59,15 +184,33 @@ export function CollectionPage() {
           ) : null}
         </EmptyState>
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
-          {filtered.map((entry) => (
-            <button key={entry.id} type="button" className="text-left transition-transform hover:-translate-y-1" onClick={() => setSelected(entry)}>
-              <BallCard card={entry.card} photoId={entry.photoId} rarity={entry.rarity} />
-              <p className="mt-2 truncate text-xs text-chalk/55">
-                {entry.setLabel || 'Cardball'} {entry.card.cardYear}
-                {entry.quantity > 1 ? ` · ×${entry.quantity}` : ''}
-              </p>
-            </button>
+        <div className="space-y-6">
+          {groups.map((group) => (
+            <section key={group.tier ?? 'all'}>
+              {group.tier ? (
+                <h2 className="mb-3 flex items-center gap-2 font-display text-lg text-chalk">
+                  <RarityBadge rarity={group.tier} /> <span className="text-sm text-chalk/50">{group.cards.length}</span>
+                </h2>
+              ) : null}
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+                {group.cards.map((entry) => {
+                  const rating = ratingOf(entry);
+                  return (
+                    <button key={entry.id} type="button" className="text-left transition-transform hover:-translate-y-1" onClick={() => setSelected(entry)}>
+                      <BallCard card={entry.card} photoId={entry.photoId} rarity={faceLabel(rating.rarity)} tier={rating.rarity} />
+                      <div className="mt-2 flex items-center gap-1.5">
+                        {sort !== 'rarity' ? <RarityBadge rarity={rating.rarity} /> : null}
+                        <p className="min-w-0 truncate text-xs text-chalk/55">
+                          {entry.setLabel || 'Cardball'} {entry.card.cardYear}
+                          {entry.quantity > 1 ? ` · ×${entry.quantity}` : ''}
+                        </p>
+                      </div>
+                      <p className="truncate font-mono text-[11px] text-chalk/40">{rating.headline}</p>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
           ))}
         </div>
       )}
@@ -89,6 +232,64 @@ export function CollectionPage() {
         ) : null}
       </AnimatePresence>
     </div>
+  );
+}
+
+function Chip({ active, disabled, onClick, children }: { active: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors disabled:opacity-35 ${
+        active ? 'bg-chalk text-field-deep' : 'border border-white/15 text-chalk/70 hover:bg-white/10'
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+/** The binder's best cards, fanned out on a shelf. */
+function Showcase({
+  cards,
+  ratingOf,
+  onSelect,
+}: {
+  cards: CollectionCard[];
+  ratingOf: (c: CollectionCard) => CardRating;
+  onSelect: (c: CollectionCard) => void;
+}) {
+  const mid = (cards.length - 1) / 2;
+  return (
+    <section className="panel overflow-hidden bg-[radial-gradient(600px_220px_at_50%_100%,rgba(216,168,60,0.18),transparent)] px-4 pt-4 pb-6">
+      <div className="mb-2 flex items-baseline justify-between">
+        <h2 className="font-display text-xl font-semibold text-chalk">Top of the binder</h2>
+        <span className="text-xs text-chalk/45">Your rarest cards, by their best season</span>
+      </div>
+      <div className="flex items-end justify-center pt-4">
+        {cards.map((entry, i) => {
+          const offset = i - mid;
+          const rating = ratingOf(entry);
+          return (
+            <motion.button
+              key={entry.id}
+              type="button"
+              onClick={() => onSelect(entry)}
+              className="relative -mx-3 w-[30%] max-w-[180px] min-w-[96px] sm:-mx-2"
+              style={{ zIndex: 10 - Math.abs(Math.round(offset)) }}
+              initial={{ opacity: 0, y: 30, rotate: 0 }}
+              animate={{ opacity: 1, y: Math.abs(offset) * 10, rotate: offset * 5 }}
+              whileHover={{ y: -12, rotate: 0, scale: 1.06, zIndex: 20 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 22, delay: i * 0.05 }}
+            >
+              <BallCard card={entry.card} photoId={entry.photoId} rarity={faceLabel(rating.rarity)} tier={rating.rarity} />
+            </motion.button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

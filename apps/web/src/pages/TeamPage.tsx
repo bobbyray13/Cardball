@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { faceLabel, rateCard } from '@cardball/shared';
 import type { CollectionCard, RosterEntryView, SavedLineup, TeamView } from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
+import { RarityBadge } from '../components/RarityBadge.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 
 const FIELD: readonly { pos: string; label: string }[] = [
@@ -29,6 +31,7 @@ export function TeamPage() {
   const roster = view?.roster ?? [];
   const rosterIds = new Set(roster.map((r) => r.id));
   const available = (collection.data?.cards ?? []).filter((c) => !rosterIds.has(c.id));
+  const ratings = useMemo(() => new Map(roster.map((r) => [r.id, rateCard(r.card)])), [roster]);
 
   const setRoster = useAction(async (ids: number[]) => {
     const { team: updated } = await api.setRoster(teamId, ids);
@@ -84,22 +87,29 @@ export function TeamPage() {
       <ErrorNote error={setRoster.error ?? auto.error} />
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Panel title="Roster" subtitle="Up to 26 cards.">
+        <Panel title="Roster" subtitle={`${roster.length} of 26 cards.`}>
           {roster.length === 0 ? (
             <EmptyState title="No cards on this team">Add cards from your collection below.</EmptyState>
           ) : (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {roster.map((entry) => (
-                <div key={entry.teamCardId}>
-                  <BallCard card={entry.card} photoId={entry.photoId} rarity={entry.rarity} />
-                  <div className="mt-1.5 flex items-center justify-between gap-1">
-                    <span className="truncate text-xs text-chalk/55">{entry.card.name}</span>
-                    <Button size="sm" variant="ghost" onClick={() => void setRoster.execute(roster.filter((r) => r.id !== entry.id).map((r) => r.id))}>
-                      Remove
-                    </Button>
+            <div className="max-h-[32rem] overflow-y-auto pr-1">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                {roster.map((entry) => (
+                  <div key={entry.teamCardId}>
+                    <BallCard
+                      card={entry.card}
+                      photoId={entry.photoId}
+                      rarity={faceLabel(ratings.get(entry.id)?.rarity ?? 'common')}
+                      tier={ratings.get(entry.id)?.rarity ?? 'common'}
+                    />
+                    <div className="mt-1.5 flex items-center justify-between gap-1">
+                      <span className="truncate text-xs text-chalk/55">{entry.card.name}</span>
+                      <Button size="sm" variant="ghost" onClick={() => void setRoster.execute(roster.filter((r) => r.id !== entry.id).map((r) => r.id))}>
+                        Remove
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </Panel>
@@ -113,29 +123,34 @@ export function TeamPage() {
             </EmptyState>
           ) : (
             <ul className="max-h-[32rem] space-y-1.5 overflow-y-auto pr-1">
-              {available.map((card) => (
-                <li key={card.id}>
-                  <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-chalk">
-                        {card.card.name} <span className="font-mono text-xs text-chalk/50">{card.card.cardYear}</span>
-                      </p>
-                      <p className="truncate font-mono text-xs text-chalk/45">
-                        {card.card.positions.join(' ')}
-                        {card.card.pitcherClass ? ` · ${card.card.pitcherClass}` : ''}
-                        {card.card.playable ? '' : ' · not game-legal'}
-                      </p>
+              {available.map((card) => {
+                const rating = rateCard(card.card);
+                return (
+                  <li key={card.id}>
+                    <div className="flex items-center gap-3 rounded-lg border border-white/10 bg-black/20 px-3 py-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="flex items-center gap-1.5 truncate text-sm font-medium text-chalk">
+                          {card.card.name} <span className="font-mono text-xs text-chalk/50">{card.card.cardYear}</span>
+                          <RarityBadge rarity={rating.rarity} />
+                        </p>
+                        <p className="truncate font-mono text-xs text-chalk/45">
+                          {card.card.positions.join(' ')}
+                          {card.card.pitcherClass ? ` · ${card.card.pitcherClass}` : ''}
+                          {card.card.playable ? '' : ' · not game-legal'}
+                        </p>
+                        <p className="truncate font-mono text-[11px] text-chalk/40">{rating.headline}</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        disabled={setRoster.busy || roster.length >= 26}
+                        onClick={() => void setRoster.execute([...roster.map((r) => r.id), card.id])}
+                      >
+                        Add
+                      </Button>
                     </div>
-                    <Button
-                      size="sm"
-                      disabled={setRoster.busy || roster.length >= 26}
-                      onClick={() => void setRoster.execute([...roster.map((r) => r.id), card.id])}
-                    >
-                      Add
-                    </Button>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </Panel>

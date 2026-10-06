@@ -8,6 +8,7 @@ import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction } from '../components/ui.js';
+import { pushCardToast } from '../components/Toasts.js';
 import { useSession } from '../session.js';
 
 export function DraftPage() {
@@ -51,8 +52,20 @@ export function DraftPage() {
   const join = useAction(async () => setDraft((await api.joinDraft(draftId)).draft));
   const start = useAction(async () => setDraft((await api.startDraft(draftId)).draft));
   const pick = useAction(async (cardId: string) => {
+    const taken = draft?.myPack.find((c) => c.id === cardId) ?? null;
+    const round = draft?.round;
     setDraft((await api.pickDraftCard(draftId, cardId)).draft);
     setSelectedId(null);
+    if (taken) {
+      pushCardToast({
+        title: taken.name,
+        detail: `Drafted${round ? ` in round ${round}` : ''} · filed in your collection`,
+        rarity: taken.rarity,
+        headline: taken.headline,
+        year: taken.cardYear,
+        href: '/collection',
+      });
+    }
   });
   const close = useAction(async () => {
     await api.deleteDraft(draftId);

@@ -261,9 +261,15 @@ describe('draft rooms', () => {
   });
 
   it('hands every drafted card to the collection', async () => {
+    const expected = config.rounds * config.packSize;
     for (const token of [hostToken, guestToken]) {
-      const cards = parse<{ cards: unknown[] }>(await call('GET', '/api/collection', { token })).cards;
-      expect(cards).toHaveLength(config.rounds * config.packSize);
+      const cards = parse<{ cards: { quantity: number }[] }>(await call('GET', '/api/collection', { token })).cards;
+      expect(cards.length).toBeGreaterThan(0);
+      // The same player can come around in a later pack; that copy bumps the
+      // count on the row instead of stacking a duplicate.
+      const copies = cards.reduce((sum, card) => sum + card.quantity, 0);
+      expect(copies).toBe(expected);
+      expect(cards.length).toBeLessThanOrEqual(expected);
     }
   });
 

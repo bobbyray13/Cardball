@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { rateCard } from '@cardball/shared';
 import type { CardSnapshot, PersonSummary } from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
 import { PhotoUploader } from '../components/PhotoUploader.js';
+import { pushCardToast } from '../components/Toasts.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 
 /**
@@ -133,6 +135,15 @@ function CardPicker({ person }: { person: PersonSummary }) {
       source: photoId ? 'photo' : 'database',
     });
     setAdded(`${card.card.name} ${card.card.cardYear} added to your collection.`);
+    const rating = rateCard(card.card);
+    pushCardToast({
+      title: card.card.name,
+      detail: 'Filed in your collection',
+      rarity: rating.rarity,
+      headline: rating.headline,
+      year: card.card.cardYear,
+      href: '/collection',
+    });
   });
 
   const card: CardSnapshot | null = preview.data?.card ?? null;

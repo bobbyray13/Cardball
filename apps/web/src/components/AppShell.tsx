@@ -1,5 +1,6 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useSession } from '../session.js';
+import { CardToaster } from './Toasts.js';
 
 const link = ({ isActive }: { isActive: boolean }) =>
   `rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
@@ -64,6 +65,8 @@ export function AppShell() {
       <footer className="mx-auto max-w-6xl px-4 pt-4 pb-10 text-xs text-chalk/40">
         Play the tabletop dice game with your real baseball cards. Stats from the Baseball Databank.
       </footer>
+
+      <CardToaster />
     </div>
   );
 }

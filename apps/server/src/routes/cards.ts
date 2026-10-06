@@ -7,8 +7,9 @@ import { createReadStream } from 'node:fs';
 import { and, asc, eq, ilike, or, sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
-import { cardModels, people, photos, seasonRowToStats, seasons, userCards } from '@cardball/db';
+import { people, photos, seasonRowToStats, seasons, userCards } from '@cardball/db';
 import { requireUser } from '../auth.js';
+import { fileCardIntoCollection } from '../cardFiling.js';
 import { buildCard, validCardYears } from '../cards.js';
 import { loadCollection, loadUserCards } from '../collection.js';
 import type { Ctx } from '../context.js';
@@ -37,34 +38,6 @@ async function loadPerson(ctx: Ctx, personId: number) {
   const [person] = await ctx.db.select().from(people).where(eq(people.id, personId)).limit(1);
   if (!person) throw notFound('Player not found');
   return person;
-}
-
-/** Find or create the catalog card for player + year + set. */
-export async function ensureCardModel(
-  ctx: Ctx,
-  input: { personId: number; cardYear: number; setLabel: string; rarity?: string | null; source: string; userId: number },
-): Promise<number> {
-  const [existing] = await ctx.db
-    .select({ id: cardModels.id })
-    .from(cardModels)
-    .where(and(eq(cardModels.personId, input.personId), eq(cardModels.cardYear, input.cardYear), eq(cardModels.setLabel, input.setLabel)))
-    .limit(1);
-  if (existing) return existing.id;
-  const [created] = await ctx.db
-    .insert(cardModels)
-    .values({
-      personId: input.personId,
-      cardYear: input.cardYear,
-      setLabel: input.setLabel,
-      rarity: input.rarity ?? null,
-      source: input.source,
-      createdByUserId: input.userId,
-    })
-    .onConflictDoNothing()
-    .returning({ id: cardModels.id });
-  if (created) return created.id;
-  // Lost a race with a concurrent insert: read it back.
-  return ensureCardModel(ctx, input);
 }
 
 export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
@@ -132,12 +105,8 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
     }
     if (body.photoId) await assertOwnPhoto(ctx, user.id, body.photoId);
 
-    const cardModelId = await ensureCardModel(ctx, { ...body, userId: user.id });
-    const [row] = await ctx.db
-      .insert(userCards)
-      .values({ userId: user.id, cardModelId, photoId: body.photoId ?? null, notes: body.notes ?? null })
-      .returning({ id: userCards.id });
-    const [card] = await loadUserCards(ctx, user.id, [row!.id]);
+    const cardId = await fileCardIntoCollection(ctx, { ...body, userId: user.id });
+    const [card] = await loadUserCards(ctx, user.id, [cardId]);
     return { card };
   });
 

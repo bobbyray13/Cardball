@@ -355,6 +355,31 @@ describe('card database and collection', () => {
     expect(list[0]!.card.name).toBe('Willie Mays');
   });
 
+  it('bumps the copy count instead of stacking a second identical row', async () => {
+    const mays = body<{ people: { id: number }[] }>(await call('GET', '/api/people/search?q=Willie%20Mays', { token: hostToken })).people[0]!;
+    const second = await call('POST', '/api/collection', { token: hostToken, body: { personId: mays.id, cardYear: 1955, setLabel: 'Topps' } });
+    expect(second.statusCode).toBe(200);
+
+    const list = body<{ cards: { id: number; quantity: number; setLabel: string; card: { cardYear: number } }[] }>(
+      await call('GET', '/api/collection', { token: hostToken }),
+    ).cards;
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({ quantity: 2, setLabel: 'Topps' });
+    expect(body<{ card: { id: number } }>(second).card.id).toBe(list[0]!.id);
+
+    // A different set is a different card, so it gets its own row.
+    const otherSet = await call('POST', '/api/collection', {
+      token: hostToken,
+      body: { personId: mays.id, cardYear: 1955, setLabel: 'Bowman' },
+    });
+    expect(otherSet.statusCode).toBe(200);
+    const after = body<{ cards: { quantity: number }[] }>(await call('GET', '/api/collection', { token: hostToken })).cards;
+    expect(after).toHaveLength(2);
+    expect(after.map((c) => c.quantity).sort()).toEqual([1, 2]);
+
+    await call('DELETE', `/api/collection/${body<{ card: { id: number } }>(otherSet).card.id}`, { token: hostToken });
+  });
+
   it('uploads a card photo and serves it back to signed-in members', async () => {
     const boundary = '----cardballtest';
     const bytes = Buffer.from('not-really-a-jpeg-but-the-server-only-checks-the-mime-type');

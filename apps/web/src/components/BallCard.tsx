@@ -1,4 +1,4 @@
-import type { CardSnapshot } from '@cardball/shared';
+import type { CardSnapshot, DraftRarity } from '@cardball/shared';
 import { hitMod, pitMod, sbMod } from '@cardball/shared';
 import { formatIp } from '@cardball/engine';
 
@@ -21,6 +21,8 @@ interface BallCardProps {
   photoId?: number | null;
   /** the collection entry's rarity label ("Refractor", "Rookie"), when it has one */
   rarity?: string | null;
+  /** stat-based tier; rare and chase cards get a foil finish on the front */
+  tier?: DraftRarity | null;
   face?: CardFace;
   className?: string;
 }
@@ -41,10 +43,10 @@ export function teamColors(label: string): { primary: string; secondary: string;
 const fmtAvg = (avg: number | null) => (avg === null ? '—' : avg.toFixed(3).replace(/^0/, ''));
 const fmtMod = (mod: number) => (mod > 0 ? `+${mod}` : String(mod));
 
-export function BallCard({ card, photoId, rarity, face = 'front', className = '' }: BallCardProps) {
+export function BallCard({ card, photoId, rarity, tier, face = 'front', className = '' }: BallCardProps) {
   const colors = teamColors(card.teamLabel);
-  const shell =
-    '@container relative aspect-[5/7] w-full overflow-hidden rounded-[var(--radius-card)] card-stock text-ink shadow-[0_18px_40px_-18px_rgba(0,0,0,0.8)] ring-1 ring-black/25 select-none';
+  const ring = tier === 'chase' ? 'ring-2 ring-gold/80' : tier === 'rare' ? 'ring-2 ring-sky-300/50' : 'ring-1 ring-black/25';
+  const shell = `@container relative aspect-[5/7] w-full overflow-hidden rounded-[var(--radius-card)] card-stock text-ink shadow-[0_18px_40px_-18px_rgba(0,0,0,0.8)] select-none ${ring}`;
 
   return (
     <div className={`${shell} ${className}`} style={{ containerType: 'inline-size' }}>
@@ -53,6 +55,9 @@ export function BallCard({ card, photoId, rarity, face = 'front', className = ''
       ) : (
         <CardBack card={card} colors={colors} />
       )}
+      {face === 'front' && (tier === 'rare' || tier === 'chase') ? (
+        <div aria-hidden className={`pointer-events-none absolute inset-0 ${tier === 'chase' ? 'foil-chase' : 'foil-rare'}`} />
+      ) : null}
     </div>
   );
 }
@@ -86,7 +91,7 @@ function CardFront({
         )}
         {rarity ? (
           <span
-            className="absolute top-[2cqw] right-[2cqw] rounded-full px-[2.4cqw] py-[0.8cqw] text-[2.6cqw] font-bold tracking-wider text-ink uppercase"
+            className="absolute top-[2cqw] right-[2cqw] z-10 rounded-full px-[2.4cqw] py-[0.8cqw] text-[2.6cqw] font-bold tracking-wider text-ink uppercase"
             style={{ background: 'var(--color-gold)' }}
           >
             {rarity}

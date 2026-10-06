@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { and, asc, between, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type { DraftCard, DraftConfig, DraftListItem, DraftParticipant, DraftRarity, DraftView } from '@cardball/shared';
-import { DRAFT_LIMITS, RULES_CONFIG } from '@cardball/shared';
-import { draftParticipants, drafts, people, seasons, userCards, users } from '@cardball/db';
+import { DRAFT_LIMITS, RULES_CONFIG, rateCard } from '@cardball/shared';
+import { draftParticipants, drafts, people, seasons, users } from '@cardball/db';
 import type { DraftRow, PersonRow, SeasonRow } from '@cardball/db';
+import { fileCardIntoCollection } from './cardFiling.js';
 import { buildCard } from './cards.js';
 import type { CardSnapshot } from './cards.js';
-import { ensureCardModel } from './routes/cards.js';
 import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
 import { badRequest, forbidden, notFound } from './http.js';
@@ -53,31 +53,6 @@ function withLock<T>(draftId: number, fn: () => Promise<T>): Promise<T> {
 // ---------------------------------------------------------------------------
 // The card pool
 // ---------------------------------------------------------------------------
-
-/** How good a card looks, from the same stats the dice read. */
-function rateCard(card: CardSnapshot): { rarity: DraftRarity; headline: string } {
-  const bestHr = Math.max(0, ...card.seasons.map((s) => s.homeRuns));
-  const bestAvg = Math.max(0, ...card.seasons.filter((s) => s.ab >= 100).map((s) => s.avg ?? 0));
-  const bestSb = Math.max(0, ...card.seasons.map((s) => s.sb));
-  const bestEra = Math.min(
-    99,
-    // 40 innings, so a reliever's sharp ten-inning cameo doesn't read as an ace.
-    ...card.seasons.filter((s) => (s.pitching?.ipOuts ?? 0) >= 120).map((s) => s.pitching?.era ?? 99),
-  );
-
-  // Each number is that stat's best season in the window, so speed shows up
-  // on the cards whose rarity it earned.
-  const avgText = `.${String(Math.round(bestAvg * 1000)).padStart(3, '0')}`;
-  const batting = [`${bestHr} HR`, `${avgText} AVG`, ...(bestSb >= 20 ? [`${bestSb} SB`] : [])].join(' · ');
-  const pitching = bestEra < 99 ? `${bestEra.toFixed(2)} ERA` : 'no pitching';
-  const headline = card.canPitch && !card.canBat ? pitching : card.canPitch ? `${batting} · ${pitching}` : batting;
-
-  let rarity: DraftRarity = 'common';
-  if (bestHr >= 40 || bestAvg >= 0.33 || bestEra <= 2.5 || bestSb >= 60) rarity = 'chase';
-  else if (bestHr >= 30 || bestAvg >= 0.31 || bestEra <= 3.0 || bestSb >= 40) rarity = 'rare';
-  else if (bestHr >= 20 || bestAvg >= 0.29 || bestEra <= 3.75 || bestSb >= 25) rarity = 'uncommon';
-  return { rarity, headline };
-}
 
 /**
  * Deal a pack: `count` random players who appeared in the card's stat window.
@@ -336,15 +311,15 @@ async function startUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise
 
 /** Move the drafted card into the manager's collection. */
 async function filePickedCard(ctx: Ctx, userId: number, card: DraftCard): Promise<void> {
-  const cardModelId = await ensureCardModel(ctx, {
+  await fileCardIntoCollection(ctx, {
+    userId,
     personId: card.personId,
     cardYear: card.cardYear,
     setLabel: 'Draft',
     rarity: card.rarity,
     source: 'draft',
-    userId,
+    notes: `Drafted (${card.rarity})`,
   });
-  await ctx.db.insert(userCards).values({ userId, cardModelId, notes: `Drafted (${card.rarity})` });
 }
 
 async function pickUnlocked(ctx: Ctx, user: AuthUser, draftId: number, cardId: string): Promise<DraftView> {
