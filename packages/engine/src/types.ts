@@ -1,4 +1,4 @@
-import type { ContactType, HitKind, Position, SeasonStats, ContactTypeInfo } from '@cardball/shared';
+import type { ContactType, GameMode, HitKind, Position, SeasonStats, ContactTypeInfo } from '@cardball/shared';
 
 // ---------------------------------------------------------------------------
 // Basics
@@ -11,7 +11,7 @@ export function otherSide(side: Side): Side {
   return side === 'home' ? 'away' : 'home';
 }
 
-export type GameMode = 'remote' | 'hotseat' | 'bot';
+export type { GameMode };
 
 // ---------------------------------------------------------------------------
 // Players

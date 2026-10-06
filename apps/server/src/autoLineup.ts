@@ -15,27 +15,44 @@ const bestAvg = (c: CardSnapshot) => Math.max(...c.seasons.map((s) => (s.ab >= 1
 const bestEra = (c: CardSnapshot) => Math.min(...c.seasons.map((s) => (s.pitching && s.pitching.ipOuts >= 30 ? (s.pitching.era ?? 99) : 99)), 99);
 
 /**
- * Fill a sensible default lineup: scarcest positions first, best fielder that
- * also hits; DH is the best remaining bat; order by batting modifier.
- * Returns null with a reason when the roster can't field a legal team.
+ * Fill a sensible default lineup.
+ *
+ * Two things matter beyond raw quality. First, positions are filled in order of
+ * scarcity: if only one card on the roster can catch, the catcher has to be
+ * decided before anything else, or a versatile star will have already been used
+ * up elsewhere. Second, among candidates for a spot, a card that can *only*
+ * play that spot is preferred over one that could cover several — that is what
+ * keeps a Sosa (RF, and a good CF) from being spent at CF and leaving right
+ * field empty.
+ *
+ * DH is the best remaining bat; the order is by batting modifier. Returns an
+ * error when the roster cannot field a legal team.
  */
 export function autoLineup(roster: RosterCard[]): { lineup: SavedLineup } | { error: string } {
   const hitters = roster.filter((r) => r.card.playable && r.card.canBat);
   const used = new Set<string>();
   const fieldPositions: Partial<Record<Position, string>> = {};
 
-  for (const pos of FIELD) {
-    const candidates = hitters
-      .filter((r) => !used.has(r.id) && r.card.positions.includes(pos))
-      .sort((a, b) => score(b, pos) - score(a, pos));
-    const pick = candidates[0];
-    if (!pick) return { error: `Nobody on the roster can play ${pos}` };
+  const candidatesFor = (pos: Position) => hitters.filter((r) => !used.has(r.id) && r.card.positions.includes(pos));
+
+  // Scarcest position first (fewest eligible cards), original order as the tie-break.
+  const order = [...FIELD].sort((a, b) => {
+    const count = candidatesFor(a).length - candidatesFor(b).length;
+    return count !== 0 ? count : FIELD.indexOf(a) - FIELD.indexOf(b);
+  });
+
+  for (const pos of order) {
+    const candidates = candidatesFor(pos);
+    if (candidates.length === 0) return { error: `Nobody on the roster can play ${pos}` };
+    const open = order.filter((p) => p !== pos && !fieldPositions[p]);
+    const pick = candidates.sort((a, b) => score(b, pos, open) - score(a, pos, open))[0]!;
     fieldPositions[pos] = pick.id;
     used.add(pick.id);
   }
 
-  const dh = hitters.filter((r) => !used.has(r.id) && r.card.pitcherClass === null).sort((a, b) => bestAvg(b.card) - bestAvg(a.card))[0]
-    ?? hitters.filter((r) => !used.has(r.id)).sort((a, b) => bestAvg(b.card) - bestAvg(a.card))[0];
+  const remaining = hitters.filter((r) => !used.has(r.id));
+  const dh = remaining.filter((r) => r.card.pitcherClass === null).sort((a, b) => bestAvg(b.card) - bestAvg(a.card))[0]
+    ?? remaining.sort((a, b) => bestAvg(b.card) - bestAvg(a.card))[0];
   if (!dh) return { error: 'Need a 9th hitter for the DH spot' };
   used.add(dh.id);
 
@@ -53,6 +70,9 @@ export function autoLineup(roster: RosterCard[]): { lineup: SavedLineup } | { er
   return { lineup: { lineup, fieldPositions, startingPitcherId: starter.id } };
 }
 
-function score(r: RosterCard, pos: Position): number {
-  return (r.card.fielding[pos] ?? 0) * 2 + hitMod(bestAvg(r.card));
+function score(r: RosterCard, pos: Position, openPositions: Position[]): number {
+  // Fielding first, then the bat, then a bonus for cards that cannot cover the
+  // positions still to be filled (they are the ones with nowhere else to go).
+  const coversOthers = openPositions.some((other) => r.card.positions.includes(other)) ? 1 : 0;
+  return (r.card.fielding[pos] ?? 0) * 2 + hitMod(bestAvg(r.card)) - coversOthers;
 }
