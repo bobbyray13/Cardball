@@ -157,3 +157,89 @@ export interface GameListItem {
   half: 'top' | 'bottom' | null;
   winner: 'home' | 'away' | null;
 }
+
+// ---------------------------------------------------------------------------
+// Drafts — pass-the-pack card drafts
+// ---------------------------------------------------------------------------
+
+/** How good a drafted card looks, for the foil on the front. */
+export type DraftRarity = 'common' | 'uncommon' | 'rare' | 'chase';
+
+export interface DraftConfig {
+  /** how many packs each manager opens */
+  rounds: number;
+  /** cards in each pack */
+  packSize: number;
+  /** the card year the pool is built from */
+  cardYear: number;
+  /** only deal cards that can actually play a game */
+  playableOnly: boolean;
+}
+
+/** Draft room limits, shared so the client and server agree on them. */
+export const DRAFT_LIMITS = {
+  minSeats: 2,
+  maxSeats: 8,
+  maxRounds: 10,
+  minPackSize: 3,
+  maxPackSize: 15,
+} as const;
+
+/** A card sitting in a pack, or one a manager has taken. */
+export interface DraftCard {
+  /** stable within the draft */
+  id: string;
+  personId: number;
+  cardYear: number;
+  name: string;
+  teamLabel: string;
+  rarity: DraftRarity;
+  /** one-line scouting note, e.g. "41 HR, .328 AVG" or "2.44 ERA" */
+  headline: string;
+  /** true when the card can bat or pitch in a game */
+  playable: boolean;
+}
+
+export interface DraftParticipant {
+  userId: number;
+  name: string;
+  seat: number;
+  isHost: boolean;
+}
+
+export type DraftPhase = 'lobby' | 'active' | 'finished';
+
+/** The draft room, generic-free: the server owns the whole shape. */
+export interface DraftView {
+  id: number;
+  phase: DraftPhase;
+  config: DraftConfig;
+  hostUserId: number;
+  participants: DraftParticipant[];
+  /** round currently being opened, 1-based */
+  round: number;
+  /** seat index whose turn it is */
+  turn: number;
+  /** the pack the viewer is holding, empty when it is not their turn to hold one */
+  myPack: DraftCard[];
+  /** every card the viewer has taken */
+  myPicks: DraftCard[];
+  /** how many picks each seat has made */
+  pickCounts: Record<string, number>;
+  /** newest-last draft log */
+  log: { seq: number; text: string }[];
+  updatedAt: string;
+}
+
+export interface DraftListItem {
+  id: number;
+  phase: DraftPhase;
+  cardYear: number;
+  rounds: number;
+  packSize: number;
+  hostName: string;
+  seats: number;
+  seatsFilled: number;
+  isMine: boolean;
+  updatedAt: string;
+}

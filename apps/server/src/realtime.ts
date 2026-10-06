@@ -5,6 +5,7 @@ import { gameActionSchema } from '@cardball/shared';
 import { tokenFromCookieHeader, userFromToken } from './auth.js';
 import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
+import { getDraft } from './draftService.js';
 import { getGame, performAction, postChat } from './gameService.js';
 import { HttpError } from './http.js';
 
@@ -64,6 +65,23 @@ export function attachRealtime(httpServer: HttpServer, ctx: Ctx): Server {
       const gameId = gameIdSchema.safeParse(rawId);
       if (!gameId.success) return;
       void Promise.resolve(socket.leave(`game:${gameId.data}`)).then(() => presence(gameId.data));
+    });
+
+    // Draft rooms broadcast a nudge; clients re-fetch the room over REST, which
+    // keeps the pack logic in one place and out of the socket layer.
+    socket.on('draft:join', (rawId: unknown, ack?: Ack) =>
+      run(ack, async () => {
+        const draftId = gameIdSchema.parse(rawId);
+        const draft = await getDraft(ctx, user, draftId);
+        await socket.join(`draft:${draftId}`);
+        return draft;
+      }),
+    );
+
+    socket.on('draft:leave', (rawId: unknown) => {
+      const draftId = gameIdSchema.safeParse(rawId);
+      if (!draftId.success) return;
+      void Promise.resolve(socket.leave(`draft:${draftId.data}`));
     });
 
     socket.on('game:action', (payload: unknown, ack?: Ack) =>

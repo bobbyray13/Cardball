@@ -310,6 +310,8 @@ export type GameRow = typeof games.$inferSelect;
 export type GameEventRow = typeof gameEvents.$inferSelect;
 export type ChatMessageRow = typeof chatMessages.$inferSelect;
 export type TeamRow = typeof teams.$inferSelect;
+export type DraftRow = typeof drafts.$inferSelect;
+export type DraftParticipantRow = typeof draftParticipants.$inferSelect;
 
 /** DB row → engine-facing SeasonStats. */
 export function seasonRowToStats(row: SeasonRow): SeasonStats {
