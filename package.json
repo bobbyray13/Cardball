@@ -1,0 +1,28 @@
+{
+  "name": "cardball",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Baseball Cardball — play the tabletop baseball dice game with your real baseball cards, online.",
+  "packageManager": "pnpm@10.28.1",
+  "engines": {
+    "node": ">=22"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @cardball/server --filter @cardball/web dev",
+    "dev:server": "pnpm --filter @cardball/server dev",
+    "dev:web": "pnpm --filter @cardball/web dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose stop postgres",
+    "db:migrate": "pnpm --filter @cardball/db migrate",
+    "db:generate": "pnpm --filter @cardball/db generate",
+    "db:studio": "pnpm --filter @cardball/db studio",
+    "import:stats": "pnpm --filter @cardball/import-stats dev"
+  }
+}
