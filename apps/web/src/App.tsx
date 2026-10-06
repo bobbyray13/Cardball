@@ -3,6 +3,8 @@ import { AppShell } from './components/AppShell.js';
 import { AdminPage } from './pages/AdminPage.js';
 import { CollectionPage } from './pages/CollectionPage.js';
 import { DashboardPage } from './pages/DashboardPage.js';
+import { DraftPage } from './pages/DraftPage.js';
+import { DraftsPage } from './pages/DraftsPage.js';
 import { GamePage } from './pages/GamePage.js';
 import { LoginPage } from './pages/LoginPage.js';
 import { SearchPage } from './pages/SearchPage.js';
@@ -31,6 +33,8 @@ export default function App() {
         <Route path="/teams" element={<TeamsPage />} />
         <Route path="/teams/:id" element={<TeamPage />} />
         <Route path="/games/:id" element={<GamePage />} />
+        <Route path="/drafts" element={<DraftsPage />} />
+        <Route path="/drafts/:id" element={<DraftPage />} />
         <Route path="/admin" element={user?.isAdmin ? <AdminPage /> : <Navigate to="/" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -161,7 +161,9 @@ describe('draft rooms', () => {
     const draft = parse<{ draft: DraftView }>(started).draft;
     expect(draft.phase).toBe('active');
     expect(draft.round).toBe(1);
-    expect(draft.turn).toBe(0);
+    expect(draft.waitingOn).toEqual([0, 1]);
+    expect(draft.passDirection).toBe('left');
+    expect(draft.iHavePicked).toBe(false);
     expect(draft.myPack).toHaveLength(config.packSize);
     expect(draft.myPack.every((c) => c.cardYear === CARD_YEAR)).toBe(true);
     expect(draft.myPack.every((c) => c.playable)).toBe(true);
@@ -169,12 +171,23 @@ describe('draft rooms', () => {
     expect((await call('POST', `/api/drafts/${draftId}/start`, { token: hostToken })).statusCode).toBe(400);
   });
 
-  it('keeps the guest out of the host’s turn', async () => {
-    const peek = await call('GET', `/api/drafts/${draftId}`, { token: guestToken });
-    const pack = parse<{ draft: DraftView }>(peek).draft.myPack;
-    const res = await call('POST', `/api/drafts/${draftId}/pick`, { token: guestToken, body: { cardId: pack[0]!.id } });
-    expect(res.statusCode).toBe(400);
-    expect(parse<{ error: string }>(res).error).toMatch(/wait for your turn/i);
+  let guestOpeningPack: string[] = [];
+
+  it('lets managers pick at the same time, but only once per pass', async () => {
+    const peek = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: guestToken })).draft;
+    guestOpeningPack = peek.myPack.map((c) => c.id);
+
+    const first = await call('POST', `/api/drafts/${draftId}/pick`, { token: guestToken, body: { cardId: peek.myPack[0]!.id } });
+    expect(first.statusCode).toBe(200);
+    const after = parse<{ draft: DraftView }>(first).draft;
+    expect(after.iHavePicked).toBe(true);
+    expect(after.waitingOn).toEqual([0]);
+    // Nothing passes until the host picks too.
+    expect(after.myPack).toHaveLength(config.packSize - 1);
+
+    const again = await call('POST', `/api/drafts/${draftId}/pick`, { token: guestToken, body: { cardId: peek.myPack[1]!.id } });
+    expect(again.statusCode).toBe(400);
+    expect(parse<{ error: string }>(again).error).toMatch(/already took a card/i);
   });
 
   it('rejects a card that is not in the pack', async () => {
@@ -183,7 +196,7 @@ describe('draft rooms', () => {
     expect(parse<{ error: string }>(res).error).toMatch(/not in your pack/i);
   });
 
-  it('passes the pack after a pick, and files the card in the collection', async () => {
+  it('passes every pack once everyone has picked, and files the card in the collection', async () => {
     const before = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: hostToken })).draft;
     const taken = before.myPack[0]!;
 
@@ -191,12 +204,13 @@ describe('draft rooms', () => {
     expect(res.statusCode).toBe(200);
     const draft = parse<{ draft: DraftView }>(res).draft;
 
-    expect(draft.turn).toBe(1);
     expect(draft.myPicks.map((c) => c.id)).toEqual([taken.id]);
-    // The host now holds the untouched pack passed from the other seat.
-    expect(draft.myPack).toHaveLength(config.packSize);
+    expect(draft.waitingOn).toEqual([0, 1]);
+    expect(draft.iHavePicked).toBe(false);
+    // The host now holds the guest's leftovers…
+    expect(draft.myPack.map((c) => c.id).sort()).toEqual(guestOpeningPack.slice(1).sort());
 
-    // The guest now holds the host's leftovers, one short.
+    // …and the guest holds the host's.
     const guest = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: guestToken })).draft;
     expect(guest.myPack.map((c) => c.id).sort()).toEqual(
       before.myPack.map((c) => c.id).filter((id) => id !== taken.id).sort(),
@@ -215,34 +229,82 @@ describe('draft rooms', () => {
     let picks = 0;
     let finished: DraftView | null = null;
 
-    for (let step = 0; step < totalPicks + 2 && !finished; step++) {
+    const directions = new Set<string>();
+
+    for (let pass = 0; pass < totalPicks && !finished; pass++) {
       const view = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: hostToken })).draft;
       if (view.phase === 'finished') {
         finished = view;
         break;
       }
-      const token = tokens[view.turn]!;
-      const mine = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token })).draft;
-      const card = mine.myPack[0];
-      expect(card, `seat ${view.turn} should be holding a pack on turn ${view.turn}`).toBeDefined();
-
-      const res = await call('POST', `/api/drafts/${draftId}/pick`, { token, body: { cardId: card!.id } });
-      expect(res.statusCode).toBe(200);
-      picks++;
+      directions.add(view.passDirection);
+      // Guest first this time, to show the order within a pass doesn't matter.
+      for (const seat of [...view.waitingOn].reverse()) {
+        const token = tokens[seat]!;
+        const mine = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token })).draft;
+        const card = mine.myPack[0];
+        expect(card, `seat ${seat} should be holding cards`).toBeDefined();
+        const res = await call('POST', `/api/drafts/${draftId}/pick`, { token, body: { cardId: card!.id } });
+        expect(res.statusCode, res.body).toBe(200);
+        picks++;
+      }
     }
 
     const final = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: hostToken })).draft;
     expect(final.phase).toBe('finished');
-    // The previous test already made the opening pick.
-    expect(picks).toBe(totalPicks - 1);
+    expect(directions).toEqual(new Set(['left', 'right']));
+    // The previous two tests made the opening pass.
+    expect(picks).toBe(totalPicks - 2);
     expect(final.myPicks).toHaveLength(config.rounds * config.packSize);
     expect(final.pickCounts).toEqual({ '0': config.rounds * config.packSize, '1': config.rounds * config.packSize });
     expect(final.log.at(-1)?.text).toMatch(/draft complete/i);
   });
 
   it('hands every drafted card to the collection', async () => {
-    const cards = parse<{ cards: unknown[] }>(await call('GET', '/api/collection', { token: hostToken })).cards;
-    expect(cards).toHaveLength(config.rounds * config.packSize);
+    for (const token of [hostToken, guestToken]) {
+      const cards = parse<{ cards: unknown[] }>(await call('GET', '/api/collection', { token })).cards;
+      expect(cards).toHaveLength(config.rounds * config.packSize);
+    }
+  });
+
+  it('passes left in the first pack and right in the second', async () => {
+    const invite = parse<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
+    const thirdToken = await register('third@example.com', 'Third', invite);
+    const tokens = [hostToken, guestToken, thirdToken];
+    const three = { rounds: 2, packSize: 3, cardYear: CARD_YEAR, playableOnly: true };
+
+    const room = parse<{ draft: DraftView }>(await call('POST', '/api/drafts', { token: hostToken, body: three })).draft;
+    await call('POST', `/api/drafts/${room.id}/join`, { token: guestToken });
+    await call('POST', `/api/drafts/${room.id}/join`, { token: thirdToken });
+    await call('POST', `/api/drafts/${room.id}/start`, { token: hostToken });
+
+    const view = async (seat: number) =>
+      parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${room.id}`, { token: tokens[seat]! })).draft;
+
+    /** Everyone takes their first card; returns what each seat had left over. */
+    async function onePass(): Promise<string[][]> {
+      const leftovers: string[][] = [];
+      for (let seat = 0; seat < 3; seat++) {
+        const pack = (await view(seat)).myPack;
+        leftovers.push(pack.slice(1).map((c) => c.id).sort());
+        expect((await call('POST', `/api/drafts/${room.id}/pick`, { token: tokens[seat]!, body: { cardId: pack[0]!.id } })).statusCode).toBe(200);
+      }
+      return leftovers;
+    }
+    const holding = async (seat: number) => (await view(seat)).myPack.map((c) => c.id).sort();
+
+    // Pack 1 passes left: seat s receives seat s-1's leftovers.
+    let left = await onePass();
+    for (let seat = 0; seat < 3; seat++) expect(await holding(seat)).toEqual(left[(seat + 2) % 3]);
+    await onePass();
+    await onePass();
+
+    const second = await view(0);
+    expect(second.round).toBe(2);
+    expect(second.passDirection).toBe('right');
+    // Pack 2 passes right: seat s receives seat s+1's leftovers.
+    left = await onePass();
+    for (let seat = 0; seat < 3; seat++) expect(await holding(seat)).toEqual(left[(seat + 1) % 3]);
   });
 
   it('will not start a room with one manager', async () => {

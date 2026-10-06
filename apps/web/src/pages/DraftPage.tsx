@@ -1,0 +1,288 @@
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
+import { io } from 'socket.io-client';
+import type { Socket } from 'socket.io-client';
+import type { CardSnapshot, DraftCard, DraftView } from '@cardball/shared';
+import { api } from '../api.js';
+import { BallCard } from '../components/BallCard.js';
+import { RarityBadge } from '../components/RarityBadge.js';
+import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction } from '../components/ui.js';
+import { useSession } from '../session.js';
+
+export function DraftPage() {
+  const draftId = Number(useParams().id);
+  const { user } = useSession();
+  const navigate = useNavigate();
+
+  const [draft, setDraft] = useState<DraftView | null>(null);
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const [closed, setClosed] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    try {
+      const { draft: next } = await api.draft(draftId);
+      setDraft(next);
+      setLoadError(null);
+    } catch (err) {
+      setLoadError(err);
+    }
+  }, [draftId]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  // The server only sends a nudge; the room itself always comes from REST so
+  // each manager sees just their own pack.
+  useEffect(() => {
+    if (!Number.isFinite(draftId)) return;
+    const socket: Socket = io({ path: '/socket.io', withCredentials: true });
+    socket.on('connect', () => socket.emit('draft:join', draftId, () => void refresh()));
+    socket.on('draft:update', () => void refresh());
+    socket.on('draft:closed', () => setClosed(true));
+    return () => {
+      socket.emit('draft:leave', draftId);
+      socket.close();
+    };
+  }, [draftId, refresh]);
+
+  const join = useAction(async () => setDraft((await api.joinDraft(draftId)).draft));
+  const start = useAction(async () => setDraft((await api.startDraft(draftId)).draft));
+  const pick = useAction(async (cardId: string) => {
+    setDraft((await api.pickDraftCard(draftId, cardId)).draft);
+    setSelectedId(null);
+  });
+  const close = useAction(async () => {
+    await api.deleteDraft(draftId);
+    navigate('/drafts');
+  });
+
+  if (closed) {
+    return (
+      <EmptyState title="The host closed this room">
+        <Link className="text-gold underline" to="/drafts">
+          Back to drafts
+        </Link>
+      </EmptyState>
+    );
+  }
+  if (loadError && !draft) return <ErrorNote error={loadError} />;
+  if (!draft) return <Spinner label="Opening the room…" />;
+
+  const me = draft.participants.find((p) => p.userId === user?.id) ?? null;
+  const isHost = draft.hostUserId === user?.id;
+  const stillPicking = draft.participants.filter((p) => draft.waitingOn.includes(p.seat));
+  const myTurn = draft.phase === 'active' && me !== null && draft.waitingOn.includes(me.seat);
+  const { config } = draft;
+  const selected = draft.myPack.find((c) => c.id === selectedId) ?? null;
+
+  return (
+    <div className="space-y-6">
+      <section className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <Link to="/drafts" className="text-sm text-chalk/50 hover:text-chalk">
+            ← Drafts
+          </Link>
+          <h1 className="font-display text-3xl font-bold text-chalk">{config.cardYear} draft</h1>
+          <p className="mt-1 text-sm text-chalk/60">
+            {config.rounds} packs of {config.packSize} ·{' '}
+            {draft.phase === 'lobby' ? 'taking seats' : draft.phase === 'active' ? `pack ${draft.round} of ${config.rounds}` : 'complete'}
+          </p>
+        </div>
+        {isHost ? (
+          <Button variant="danger" size="sm" disabled={close.busy} onClick={() => void close.execute()}>
+            Close room
+          </Button>
+        ) : null}
+      </section>
+
+      <SeatStrip draft={draft} />
+
+      <ErrorNote error={join.error ?? start.error ?? pick.error ?? close.error} />
+
+      {draft.phase === 'lobby' ? (
+        <Panel title="Waiting for managers">
+          <div className="space-y-3 text-sm text-chalk/70">
+            <p>Share this page's link with your league. The host deals when everyone has a seat.</p>
+            {!me ? (
+              <Button variant="primary" disabled={join.busy} onClick={() => void join.execute()}>
+                Take a seat
+              </Button>
+            ) : isHost ? (
+              <Button variant="primary" disabled={start.busy || draft.participants.length < 2} onClick={() => void start.execute()}>
+                {draft.participants.length < 2 ? 'Need one more manager' : start.busy ? 'Dealing…' : 'Deal the packs'}
+              </Button>
+            ) : (
+              <Notice>You're in. Waiting for the host to deal.</Notice>
+            )}
+          </div>
+        </Panel>
+      ) : null}
+
+      {draft.phase === 'active' && me ? (
+        <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+          <Panel
+            title={myTurn ? 'Your pick' : `Waiting on ${stillPicking.map((p) => p.name).join(', ') || '…'}`}
+            subtitle={
+              myTurn
+                ? `Tap a card to look at it, then take it. The rest pass ${draft.passDirection} once everyone has picked.`
+                : `You've taken your card. The packs pass ${draft.passDirection} when everyone has picked.`
+            }
+          >
+            {draft.myPack.length === 0 ? (
+              <EmptyState title="No pack in hand" />
+            ) : (
+              <ul className="grid gap-2 sm:grid-cols-2">
+                <AnimatePresence initial={false}>
+                  {draft.myPack.map((card) => (
+                    <motion.li key={card.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                      <PackCardButton card={card} selected={card.id === selectedId} disabled={!myTurn} onSelect={() => setSelectedId(card.id)} />
+                      {myTurn && card.id === selectedId ? (
+                        <Button variant="primary" size="sm" className="mt-1.5 w-full lg:hidden" disabled={pick.busy} onClick={() => void pick.execute(card.id)}>
+                          {pick.busy ? 'Taking…' : `Take ${card.name}`}
+                        </Button>
+                      ) : null}
+                    </motion.li>
+                  ))}
+                </AnimatePresence>
+              </ul>
+            )}
+          </Panel>
+
+          <Panel title={selected ? selected.name : 'Card preview'}>
+            {selected ? (
+              <div className="space-y-3">
+                <CardPreview card={selected} />
+                <Button variant="primary" className="w-full" disabled={!myTurn || pick.busy} onClick={() => void pick.execute(selected.id)}>
+                  {pick.busy ? 'Taking…' : `Take ${selected.name}`}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm text-chalk/55">{myTurn ? 'Pick a card from your pack to see its front and back.' : 'Hang tight.'}</p>
+            )}
+          </Panel>
+        </div>
+      ) : null}
+
+      {draft.phase === 'finished' ? (
+        <Panel title="Draft complete">
+          <p className="text-sm text-chalk/70">
+            Your {draft.myPicks.length} picks are in your{' '}
+            <Link to="/collection" className="text-gold underline">
+              collection
+            </Link>
+            . Build a team with them next.
+          </p>
+        </Panel>
+      ) : null}
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        {me ? (
+          <Panel title={`Your picks (${draft.myPicks.length})`}>
+            {draft.myPicks.length === 0 ? (
+              <p className="text-sm text-chalk/55">Nothing yet.</p>
+            ) : (
+              <ol className="space-y-1.5">
+                {draft.myPicks.map((card, i) => (
+                  <li key={card.id} className="flex items-center gap-2 text-sm">
+                    <span className="w-6 font-mono text-xs text-chalk/40">{i + 1}.</span>
+                    <span className="text-chalk">{card.name}</span>
+                    <RarityBadge rarity={card.rarity} />
+                    <span className="ml-auto truncate text-xs text-chalk/50">{card.headline}</span>
+                  </li>
+                ))}
+              </ol>
+            )}
+          </Panel>
+        ) : null}
+
+        <Panel title="Draft log">
+          <ol className="max-h-80 space-y-1 overflow-y-auto text-sm text-chalk/70">
+            {[...draft.log].reverse().map((entry) => (
+              <li key={entry.seq}>{entry.text}</li>
+            ))}
+          </ol>
+        </Panel>
+      </div>
+    </div>
+  );
+}
+
+function SeatStrip({ draft }: { draft: DraftView }) {
+  return (
+    <ul className="flex flex-wrap gap-2">
+      {draft.participants.map((p) => {
+        const onClock = draft.phase === 'active' && draft.waitingOn.includes(p.seat);
+        return (
+          <li
+            key={p.userId}
+            className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+              onClock ? 'border-gold bg-gold/15 text-chalk' : 'border-white/15 text-chalk/70'
+            }`}
+          >
+            <span className="font-mono text-xs text-chalk/40">{p.seat + 1}</span>
+            <span className="font-medium">{p.name}</span>
+            {p.isHost ? <span className="text-[10px] tracking-wide text-gold uppercase">host</span> : null}
+            {draft.phase !== 'lobby' ? <span className="font-mono text-xs text-chalk/50">{draft.pickCounts[String(p.seat)] ?? 0}</span> : null}
+            {onClock ? <span className="h-2 w-2 animate-pulse rounded-full bg-gold" aria-label="still picking" /> : null}
+            {draft.phase === 'active' && !onClock ? <span className="text-xs text-chalk/60" aria-label="picked">✓</span> : null}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+
+function PackCardButton({ card, selected, disabled, onSelect }: { card: DraftCard; selected: boolean; disabled: boolean; onSelect: () => void }) {
+  return (
+    <button
+      type="button"
+      name={`pack-${card.personId}`}
+      onClick={onSelect}
+      className={`w-full rounded-xl border px-3 py-2.5 text-left transition-colors ${
+        selected ? 'border-gold bg-gold/10' : 'border-white/10 bg-black/20 hover:border-white/30'
+      } ${disabled ? 'opacity-75' : ''}`}
+    >
+      <span className="flex items-center gap-2">
+        <span className="font-medium text-chalk">{card.name}</span>
+        <span className="ml-auto">
+          <RarityBadge rarity={card.rarity} />
+        </span>
+      </span>
+      <span className="mt-0.5 block text-xs text-chalk/55">{card.teamLabel}</span>
+      <span className="mt-1 block font-mono text-xs text-chalk/75">{card.headline}</span>
+    </button>
+  );
+}
+
+function CardPreview({ card }: { card: DraftCard }) {
+  const [snapshot, setSnapshot] = useState<CardSnapshot | null>(null);
+  const [face, setFace] = useState<'front' | 'back'>('front');
+  const [error, setError] = useState<unknown>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSnapshot(null);
+    setError(null);
+    api
+      .previewCard(card.personId, card.cardYear)
+      .then((res) => !cancelled && setSnapshot(res.card))
+      .catch((err: unknown) => !cancelled && setError(err));
+    return () => {
+      cancelled = true;
+    };
+  }, [card.personId, card.cardYear]);
+
+  if (error) return <ErrorNote error={error} />;
+  if (!snapshot) return <Spinner label="Pulling the card…" />;
+  return (
+    <div className="space-y-2">
+      <button type="button" className="mx-auto block w-full max-w-[260px]" onClick={() => setFace((f) => (f === 'front' ? 'back' : 'front'))}>
+        <BallCard card={snapshot} rarity={card.rarity === 'common' ? null : card.rarity} face={face} />
+      </button>
+      <p className="text-center text-xs text-chalk/45">Tap the card to flip it.</p>
+    </div>
+  );
+}

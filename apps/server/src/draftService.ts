@@ -30,8 +30,8 @@ const { minSeats: MIN_SEATS, maxSeats: MAX_SEATS, maxRounds: MAX_ROUNDS, minPack
 interface DraftState {
   /** 1-based round being opened */
   round: number;
-  /** seat index whose turn it is */
-  turn: number;
+  /** seats that still have to take a card before the packs pass */
+  waitingOn: number[];
   /** pack each seat is holding, keyed by seat index */
   packs: Record<string, DraftCard[]>;
   /** cards each seat has taken, keyed by seat index */
@@ -40,6 +40,15 @@ interface DraftState {
 }
 
 const stored = (row: DraftRow) => row.state as DraftState;
+
+// Commands on one draft run one at a time, so a double-clicked pick can't take two cards.
+const locks = new Map<number, Promise<unknown>>();
+function withLock<T>(draftId: number, fn: () => Promise<T>): Promise<T> {
+  const prev = locks.get(draftId) ?? Promise.resolve();
+  const next = prev.then(fn, fn);
+  locks.set(draftId, next.catch(() => undefined));
+  return next;
+}
 
 // ---------------------------------------------------------------------------
 // The card pool
@@ -52,10 +61,14 @@ function rateCard(card: CardSnapshot): { rarity: DraftRarity; headline: string }
   const bestSb = Math.max(0, ...card.seasons.map((s) => s.sb));
   const bestEra = Math.min(
     99,
-    ...card.seasons.filter((s) => (s.pitching?.ipOuts ?? 0) >= 30).map((s) => s.pitching?.era ?? 99),
+    // 40 innings, so a reliever's sharp ten-inning cameo doesn't read as an ace.
+    ...card.seasons.filter((s) => (s.pitching?.ipOuts ?? 0) >= 120).map((s) => s.pitching?.era ?? 99),
   );
 
-  const batting = `max(${bestHr} HR, .${String(Math.round(bestAvg * 1000)).padStart(3, '0')} AVG)`;
+  // Each number is that stat's best season in the window, so speed shows up
+  // on the cards whose rarity it earned.
+  const avgText = `.${String(Math.round(bestAvg * 1000)).padStart(3, '0')}`;
+  const batting = [`${bestHr} HR`, `${avgText} AVG`, ...(bestSb >= 20 ? [`${bestSb} SB`] : [])].join(' · ');
   const pitching = bestEra < 99 ? `${bestEra.toFixed(2)} ERA` : 'no pitching';
   const headline = card.canPitch && !card.canBat ? pitching : card.canPitch ? `${batting} · ${pitching}` : batting;
 
@@ -133,6 +146,13 @@ async function dealAllPacks(ctx: Ctx, config: DraftConfig, seats: number): Promi
 // Views
 // ---------------------------------------------------------------------------
 
+const passDirection = (round: number): 'left' | 'right' => (round % 2 === 1 ? 'left' : 'right');
+
+/** Seats holding cards; they all pick before the packs move. */
+function seatsWithCards(packs: Record<string, DraftCard[]>, seatCount: number): number[] {
+  return Array.from({ length: seatCount }, (_, seat) => seat).filter((seat) => (packs[String(seat)] ?? []).length > 0);
+}
+
 function parseConfig(row: DraftRow): DraftConfig {
   return row.config as DraftConfig;
 }
@@ -156,8 +176,10 @@ function toView(row: DraftRow, seatOfUser: number | null, participants: DraftPar
     hostUserId: row.hostUserId,
     participants,
     round: state.round,
-    turn: state.turn,
+    waitingOn: state.waitingOn,
+    passDirection: passDirection(state.round),
     myPack: myKey ? (state.packs[myKey] ?? []) : [],
+    iHavePicked: seatOfUser !== null && row.status === 'active' && !state.waitingOn.includes(seatOfUser),
     myPicks: myKey ? (state.picks[myKey] ?? []) : [],
     pickCounts,
     log: state.log.slice(-60),
@@ -219,7 +241,7 @@ export async function createDraft(ctx: Ctx, user: AuthUser, input: CreateDraftIn
   // Fail fast if the year has no pool at all, instead of at deal time.
   await dealPack(ctx, config, 1);
 
-  const state: DraftState = { round: 1, turn: 0, packs: {}, picks: {}, log: [{ seq: 1, text: `${user.displayName} opened the room.` }] };
+  const state: DraftState = { round: 1, waitingOn: [], packs: {}, picks: {}, log: [{ seq: 1, text: `${user.displayName} opened the room.` }] };
   const [row] = await ctx.db
     .insert(drafts)
     .values({ hostUserId: user.id, status: 'lobby', config, state })
@@ -242,7 +264,7 @@ export async function listDrafts(ctx: Ctx, user: AuthUser): Promise<DraftListIte
       rounds: config.rounds,
       packSize: config.packSize,
       hostName: names.get(row.hostUserId) ?? '?',
-      seats: seats.length,
+      seats: MAX_SEATS,
       seatsFilled: seats.length,
       isMine: seats.some((s) => s.userId === user.id),
       updatedAt: row.updatedAt.toISOString(),
@@ -255,7 +277,19 @@ export async function getDraft(ctx: Ctx, user: AuthUser, draftId: number): Promi
   return viewOf(ctx, await loadRow(ctx, draftId), user.id);
 }
 
-export async function joinDraft(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
+export function joinDraft(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
+  return withLock(draftId, () => joinUnlocked(ctx, user, draftId));
+}
+
+export function startDraft(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
+  return withLock(draftId, () => startUnlocked(ctx, user, draftId));
+}
+
+export function pickCard(ctx: Ctx, user: AuthUser, draftId: number, cardId: string): Promise<DraftView> {
+  return withLock(draftId, () => pickUnlocked(ctx, user, draftId, cardId));
+}
+
+async function joinUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
   const row = await loadRow(ctx, draftId);
   const seats = await loadParticipants(ctx, draftId);
   if (seats.some((s) => s.userId === user.id)) return viewOf(ctx, row, user.id);
@@ -266,10 +300,11 @@ export async function joinDraft(ctx: Ctx, user: AuthUser, draftId: number): Prom
   const state = stored(row);
   state.log.push({ seq: state.log.length + 1, text: `${user.displayName} took seat ${seats.length + 1}.` });
   const [updated] = await ctx.db.update(drafts).set({ state, updatedAt: new Date() }).where(eq(drafts.id, draftId)).returning();
+  broadcast(ctx, updated!);
   return viewOf(ctx, updated!, user.id);
 }
 
-export async function startDraft(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
+async function startUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
   const row = await loadRow(ctx, draftId);
   if (row.hostUserId !== user.id) throw forbidden('Only the host can start the draft');
   if (row.status !== 'lobby') throw badRequest('That draft already started');
@@ -281,11 +316,15 @@ export async function startDraft(ctx: Ctx, user: AuthUser, draftId: number): Pro
   const packs = await dealAllPacks(ctx, config, seats.length);
   const state: DraftState = {
     round: 1,
-    turn: 0,
+    waitingOn: seatsWithCards(packs, seats.length),
     packs,
     picks: Object.fromEntries(seats.map((s) => [String(s.seat), []])),
-    log: [{ seq: 1, text: `Pack 1 of ${config.rounds} is open. ${config.packSize} cards each — take one and pass.` }],
+    log: stored(row).log,
   };
+  state.log.push({
+    seq: state.log.length + 1,
+    text: `Pack 1 of ${config.rounds} is open. ${config.packSize} cards each — everyone takes one, then pass left.`,
+  });
   const [updated] = await ctx.db
     .update(drafts)
     .set({ status: 'active', state, updatedAt: new Date() })
@@ -308,7 +347,7 @@ async function filePickedCard(ctx: Ctx, userId: number, card: DraftCard): Promis
   await ctx.db.insert(userCards).values({ userId, cardModelId, notes: `Drafted (${card.rarity})` });
 }
 
-export async function pickCard(ctx: Ctx, user: AuthUser, draftId: number, cardId: string): Promise<DraftView> {
+async function pickUnlocked(ctx: Ctx, user: AuthUser, draftId: number, cardId: string): Promise<DraftView> {
   const row = await loadRow(ctx, draftId);
   if (row.status !== 'active') throw badRequest('That draft is not running');
 
@@ -316,7 +355,7 @@ export async function pickCard(ctx: Ctx, user: AuthUser, draftId: number, cardId
   const state = stored(row);
   const me = seats.find((s) => s.userId === user.id);
   if (!me) throw forbidden('You are not in this draft');
-  if (state.turn !== me.seat) throw badRequest('Wait for your turn');
+  if (!state.waitingOn.includes(me.seat)) throw badRequest('You already took a card from this pack. Wait for the pass.');
 
   const key = String(me.seat);
   const pack = state.packs[key] ?? [];
@@ -332,34 +371,30 @@ export async function pickCard(ctx: Ctx, user: AuthUser, draftId: number, cardId
   const packAt = (seat: number) => state.packs[String(seat)] ?? [];
 
   log(`${user.displayName} took ${card!.name} (${card!.rarity}).`);
+  state.waitingOn = state.waitingOn.filter((seat) => seat !== me.seat);
 
-  // Pass every pack one seat along.
-  const rotated: Record<string, DraftCard[]> = {};
-  for (let seat = 0; seat < seatCount; seat++) rotated[String((seat + 1) % seatCount)] = packAt(seat);
-  state.packs = rotated;
-
-  const allEmpty = Array.from({ length: seatCount }, (_, seat) => packAt(seat).length === 0).every(Boolean);
   let status: string = 'active';
-  if (allEmpty) {
-    const config = parseConfig(row);
-    if (state.round >= config.rounds) {
-      status = 'finished';
-      state.packs = {};
-      log("That's the last pack — draft complete.");
-    } else {
-      state.round += 1;
-      // Alternate which seat opens each round, so the first-pick edge of the
-      // pass order evens out over the draft.
-      state.turn = (state.round - 1) % seatCount;
-      state.packs = await dealAllPacks(ctx, config, seatCount);
-      log(`Pack ${state.round} of ${config.rounds} is open.`);
+  if (state.waitingOn.length === 0) {
+    // Everyone has picked: pass every pack one seat along together.
+    const step = passDirection(state.round) === 'left' ? 1 : seatCount - 1;
+    const passed: Record<string, DraftCard[]> = {};
+    for (let seat = 0; seat < seatCount; seat++) passed[String((seat + step) % seatCount)] = packAt(seat);
+    state.packs = passed;
+    state.waitingOn = seatsWithCards(state.packs, seatCount);
+
+    if (state.waitingOn.length === 0) {
+      const config = parseConfig(row);
+      if (state.round >= config.rounds) {
+        status = 'finished';
+        state.packs = {};
+        log("That's the last pack — draft complete.");
+      } else {
+        state.round += 1;
+        state.packs = await dealAllPacks(ctx, config, seatCount);
+        state.waitingOn = seatsWithCards(state.packs, seatCount);
+        log(`Pack ${state.round} of ${config.rounds} is open. This one passes ${passDirection(state.round)}.`);
+      }
     }
-  } else {
-    // The turn follows the packs: the next seat actually holding cards picks.
-    // (A pack can run dry mid-round, so the next seat in line may be empty.)
-    let turn = (state.turn + 1) % seatCount;
-    while (packAt(turn).length === 0) turn = (turn + 1) % seatCount;
-    state.turn = turn;
   }
 
   const [updated] = await ctx.db
@@ -375,6 +410,7 @@ export async function deleteDraft(ctx: Ctx, user: AuthUser, draftId: number): Pr
   const row = await loadRow(ctx, draftId);
   if (row.hostUserId !== user.id) throw forbidden('Only the host can close the room');
   await ctx.db.delete(drafts).where(eq(drafts.id, draftId));
+  ctx.io?.to(`draft:${draftId}`).emit('draft:closed', { draftId });
 }
 
 function broadcast(ctx: Ctx, row: DraftRow): void {

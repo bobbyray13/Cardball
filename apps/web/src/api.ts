@@ -9,6 +9,9 @@ import type {
   CardSnapshot,
   ChatMessage,
   CollectionCard,
+  DraftConfig,
+  DraftListItem,
+  DraftView,
   GameAction,
   GameListItem,
   GameView,
@@ -125,4 +128,13 @@ export const api = {
   chat: (id: number, body: string) => request<{ message: ChatMessage }>('POST', `/api/games/${id}/chat`, { body }),
   setDiscord: (id: number, url: string | null) => request<{ game: GameRoom }>('PUT', `/api/games/${id}/discord`, { url }),
   deleteGame: (id: number) => request<{ ok: true }>('DELETE', `/api/games/${id}`),
+
+  // ---- drafts ----
+  drafts: () => request<{ drafts: DraftListItem[] }>('GET', '/api/drafts'),
+  createDraft: (input: DraftConfig) => request<{ draft: DraftView }>('POST', '/api/drafts', input),
+  draft: (id: number) => request<{ draft: DraftView }>('GET', `/api/drafts/${id}`),
+  joinDraft: (id: number) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/join`),
+  startDraft: (id: number) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/start`),
+  pickDraftCard: (id: number, cardId: string) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/pick`, { cardId }),
+  deleteDraft: (id: number) => request<{ ok: true }>('DELETE', `/api/drafts/${id}`),
 };

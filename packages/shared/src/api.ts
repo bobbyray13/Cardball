@@ -218,10 +218,14 @@ export interface DraftView {
   participants: DraftParticipant[];
   /** round currently being opened, 1-based */
   round: number;
-  /** seat index whose turn it is */
-  turn: number;
-  /** the pack the viewer is holding, empty when it is not their turn to hold one */
+  /** seats that still have to take a card before the packs pass; everyone picks at once */
+  waitingOn: number[];
+  /** packs pass to the next seat up in odd rounds and back down in even ones */
+  passDirection: 'left' | 'right';
+  /** the pack in front of the viewer; empty once the round's packs run out */
   myPack: DraftCard[];
+  /** true once the viewer has taken this pass's card and is waiting for the others */
+  iHavePicked: boolean;
   /** every card the viewer has taken */
   myPicks: DraftCard[];
   /** how many picks each seat has made */

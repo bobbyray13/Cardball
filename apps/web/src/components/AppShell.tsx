@@ -12,7 +12,7 @@ export function AppShell() {
 
   return (
     <div className="min-h-screen">
-      <header className="sticky top-0 z-30 border-b border-white/10 bg-field-deep/85 backdrop-blur">
+      <header className="z-30 sm:sticky sm:top-0 border-b border-white/10 bg-field-deep/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-3">
           <NavLink to="/" className="flex items-baseline gap-2">
             <span className="font-display text-lg font-bold tracking-tight text-chalk">Baseball</span>
@@ -31,6 +31,9 @@ export function AppShell() {
             </NavLink>
             <NavLink to="/teams" className={link}>
               Teams
+            </NavLink>
+            <NavLink to="/drafts" className={link}>
+              Drafts
             </NavLink>
             {user?.isAdmin ? (
               <NavLink to="/admin" className={link}>
