@@ -1,0 +1,146 @@
+@import 'tailwindcss';
+
+/*
+ * Baseball Cardball design tokens.
+ *
+ * The look is a tabletop game: a mown-grass field, chalk lines, cream card
+ * stock, and the red/blue ink of a real ball card. Colors and fonts are
+ * declared here once so every screen stays consistent.
+ */
+@theme {
+  /* the field */
+  --color-field: #124a33;
+  --color-field-deep: #0b2f21;
+  --color-field-light: #1a6344;
+  --color-turf: #0f3d2a;
+  --color-dirt: #b4834f;
+  --color-chalk: #f6f2e6;
+
+  /* card stock and ink */
+  --color-stock: #f7f1e1;
+  --color-stock-dark: #e6dcc3;
+  --color-ink: #1d1b18;
+  --color-ink-soft: #57514a;
+
+  /* accents: the red/blue numbers on a card, plus foil */
+  --color-crimson: #b3241f;
+  --color-navy: #1b3a6b;
+  --color-gold: #d8a83c;
+  --color-clay: #c96a3f;
+
+  /* dark app chrome */
+  --color-dugout: #14161a;
+  --color-dugout-light: #1e222a;
+  --color-dugout-line: #2e333d;
+
+  --font-display: ui-serif, Georgia, Cambria, 'Times New Roman', serif;
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'Cascadia Mono', Menlo, Consolas, monospace;
+
+  --radius-card: 0.75rem;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #1b5a3f 0%, transparent 60%),
+      linear-gradient(180deg, var(--color-field-deep) 0%, #0a1a14 100%);
+    background-attachment: fixed;
+    color: var(--color-chalk);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  /* Keep focus rings visible: this app is keyboard-friendly. */
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+}
+
+@utility panel {
+  background: color-mix(in oklab, var(--color-dugout) 88%, transparent);
+  border: 1px solid var(--color-dugout-line);
+  border-radius: 1rem;
+  backdrop-filter: blur(6px);
+}
+
+@utility chalk-line {
+  border-color: color-mix(in oklab, var(--color-chalk) 35%, transparent);
+}
+
+/*
+ * Foil finishes for rare and chase cards. Pure CSS on an overlay with
+ * pointer-events off, so a shelf of them costs nothing in layout or input.
+ */
+@keyframes foil-sweep {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+@utility foil-rare {
+  background: linear-gradient(
+    115deg,
+    transparent 30%,
+    rgba(160, 200, 255, 0.28) 45%,
+    rgba(255, 255, 255, 0.4) 50%,
+    rgba(160, 200, 255, 0.28) 55%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  mix-blend-mode: screen;
+  animation: foil-sweep 6s linear infinite;
+}
+
+@utility foil-chase {
+  background:
+    linear-gradient(
+      115deg,
+      rgba(255, 90, 90, 0.18),
+      rgba(255, 220, 90, 0.18),
+      rgba(90, 255, 160, 0.18),
+      rgba(90, 170, 255, 0.18),
+      rgba(220, 110, 255, 0.18),
+      rgba(255, 90, 90, 0.18)
+    ),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 6px);
+  background-size: 200% 100%, auto;
+  mix-blend-mode: overlay;
+  animation: foil-sweep 4s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .foil-rare,
+  .foil-chase {
+    animation: none;
+  }
+}
+
+/* The faint diagonal weave of card stock, used behind the card face. */
+@utility card-stock {
+  background-color: var(--color-stock);
+  background-image: repeating-linear-gradient(
+    45deg,
+    rgba(0, 0, 0, 0.022) 0px,
+    rgba(0, 0, 0, 0.022) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}

@@ -1,0 +1,26 @@
+# Dev environment: just Postgres. The web app and server run on the host via `pnpm dev`.
+# Production compose lives in deploy/docker-compose.yml.
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: cardball-postgres
+    restart: unless-stopped
+    # Default bridge: avoids creating a project network (some dev machines run out of address pools).
+    network_mode: bridge
+    environment:
+      POSTGRES_USER: cardball
+      POSTGRES_PASSWORD: cardball
+      POSTGRES_DB: cardball
+    ports:
+      - "5433:5432"
+    volumes:
+      - cardball_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cardball -d cardball"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  cardball_pgdata:
