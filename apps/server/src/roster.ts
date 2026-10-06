@@ -1,8 +1,9 @@
 import { and, eq } from 'drizzle-orm';
 import { validateTeamSetup } from '@cardball/engine';
 import type { PlayerSetup, TeamSetup } from '@cardball/engine';
+import type { SavedLineup } from '@cardball/shared';
 import { teamCards, teams } from '@cardball/db';
-import type { SavedLineup, TeamRow } from '@cardball/db';
+import type { TeamRow } from '@cardball/db';
 import { autoLineup } from './autoLineup.js';
 import type { RosterCard } from './autoLineup.js';
 import { loadUserCards } from './collection.js';

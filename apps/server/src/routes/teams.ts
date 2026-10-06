@@ -2,8 +2,8 @@ import { and, count, eq, inArray } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { positionSchema } from '@cardball/shared';
+import type { SavedLineup, TeamView } from '@cardball/shared';
 import { teamCards, teams, userCards } from '@cardball/db';
-import type { SavedLineup } from '@cardball/db';
 import { requireUser } from '../auth.js';
 import { autoLineup } from '../autoLineup.js';
 import type { Ctx } from '../context.js';
@@ -27,7 +27,7 @@ const updateSchema = z.object({
   lineup: lineupSchema.nullable().optional(),
 });
 
-function teamView(loaded: LoadedTeam) {
+function teamView(loaded: LoadedTeam): TeamView {
   return {
     id: loaded.team.id,
     name: loaded.team.name,

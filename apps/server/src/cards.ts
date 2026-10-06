@@ -1,33 +1,11 @@
 import { and, between, inArray } from 'drizzle-orm';
 import { RULES_CONFIG, isPosition } from '@cardball/shared';
-import type { Position, SeasonStats } from '@cardball/shared';
+import type { CardSnapshot, Position, SeasonStats } from '@cardball/shared';
 import type { PersonRow, SeasonRow } from '@cardball/db';
 import { seasonRowToStats, seasons } from '@cardball/db';
 import type { Ctx } from './context.js';
 
-/** Everything the UI and engine need to know about one card (player + card year). */
-export interface CardSnapshot {
-  personId: number;
-  bbrefId: string;
-  name: string;
-  cardYear: number;
-  /** franchise on the most recent season of the card back */
-  teamLabel: string;
-  bats: string | null;
-  throws: string | null;
-  /** seasons on the back of the card, oldest first */
-  seasons: SeasonStats[];
-  /** eligible field positions, plus DH for anyone who can hit */
-  positions: Position[];
-  fielding: Partial<Record<Position, number>>;
-  pitcherClass: 'SP' | 'RP' | null;
-  canBat: boolean;
-  canPitch: boolean;
-  /** usable in a game at all */
-  playable: boolean;
-  /** why not, when it isn't */
-  ineligibleReason: string | null;
-}
+export type { CardSnapshot };
 
 /** Card years we accept for a player: the year after his debut through the year after his last season. */
 export function validCardYears(person: Pick<PersonRow, 'debutYear' | 'finalYear'>): { min: number; max: number } | null {

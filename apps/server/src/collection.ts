@@ -1,22 +1,11 @@
 import { and, eq, inArray } from 'drizzle-orm';
+import type { CollectionCard } from '@cardball/shared';
 import { cardModels, people, userCards } from '@cardball/db';
 import type { CardModelRow, PersonRow, UserCardRow } from '@cardball/db';
 import { buildCard, loadWindowSeasons } from './cards.js';
-import type { CardSnapshot } from './cards.js';
 import type { Ctx } from './context.js';
 
-/** A card in someone's collection, as the API returns it. */
-export interface CollectionCard {
-  id: number;
-  cardModelId: number;
-  setLabel: string;
-  rarity: string | null;
-  quantity: number;
-  photoId: number | null;
-  notes: string | null;
-  addedAt: string;
-  card: CardSnapshot;
-}
+export type { CollectionCard };
 
 type Row = { user_cards: UserCardRow; card_models: CardModelRow; people: PersonRow };
 

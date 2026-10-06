@@ -11,7 +11,7 @@ import {
   uniqueIndex,
   index,
 } from 'drizzle-orm/pg-core';
-import type { Position, SeasonStats } from '@cardball/shared';
+import type { Position, SavedLineup, SeasonStats } from '@cardball/shared';
 
 // ---------------------------------------------------------------------------
 // Stats database (imported from the Baseball Databank)
@@ -174,11 +174,8 @@ export const userCards = pgTable(
 // Teams
 // ---------------------------------------------------------------------------
 
-export interface SavedLineup {
-  lineup: string[];
-  fieldPositions: Partial<Record<Position, string>>;
-  startingPitcherId: string;
-}
+/** Re-exported for callers that only depend on this package. */
+export type { SavedLineup };
 
 export const teams = pgTable(
   'teams',

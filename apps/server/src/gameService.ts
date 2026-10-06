@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, or } from 'drizzle-orm';
 import { GameError, applyAction, botAction, createGame, cryptoRng, sidesFor, waitingOn } from '@cardball/engine';
 import type { GameEvent, GameMode, GameState, Side } from '@cardball/engine';
-import type { GameAction } from '@cardball/shared';
+import type { ChatMessage, GameAction, GameStatus, GameView } from '@cardball/shared';
 import { chatMessages, gameEvents, games, users } from '@cardball/db';
 import type { GameRow } from '@cardball/db';
 import type { AuthUser } from './auth.js';
@@ -22,7 +22,9 @@ export interface StoredGame {
   ready: Side[];
 }
 
-export type GameStatus = 'open' | 'lobby' | 'live' | 'finished';
+/** A game room as the API returns it. */
+export type GameRoomView = GameView<GameState>;
+export type { ChatMessage, GameStatus };
 
 const BOT = { userId: null, isBot: true } as const;
 const MAX_BOT_ACTIONS = 500;
@@ -47,22 +49,7 @@ export function canView(row: GameRow, userId: number): boolean {
   return s.hostUserId === userId || s.guestUserId === userId || statusOf(s) === 'open';
 }
 
-export interface GameView {
-  id: number;
-  mode: GameMode;
-  status: GameStatus;
-  regulationInnings: number;
-  version: number;
-  hostUserId: number;
-  guestUserId: number | null;
-  discordUrl: string | null;
-  ready: Side[];
-  photos: Record<string, number>;
-  state: GameState | null;
-  updatedAt: string;
-}
-
-export function toView(row: GameRow): GameView {
+export function toView(row: GameRow): GameRoomView {
   const s = stored(row);
   return {
     id: row.id,
@@ -147,7 +134,7 @@ export interface CreateGameInput {
   opponentTeamId?: number | undefined;
 }
 
-export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameInput): Promise<GameView> {
+export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameInput): Promise<GameRoomView> {
   const host = await loadTeam(ctx, input.teamId, user.id);
   const base: StoredGame = { engine: null, hostUserId: user.id, hostTeamId: host.team.id, guestUserId: null, photos: photoMap(host.roster, 'h'), ready: [] };
 
@@ -200,7 +187,7 @@ function buildEngine(
   }
 }
 
-export async function joinGame(ctx: Ctx, user: AuthUser, gameId: number, teamId: number): Promise<GameView> {
+export async function joinGame(ctx: Ctx, user: AuthUser, gameId: number, teamId: number): Promise<GameRoomView> {
   return withLock(gameId, async () => {
     const row = await loadRow(ctx, gameId);
     const s = stored(row);
@@ -221,7 +208,7 @@ export async function joinGame(ctx: Ctx, user: AuthUser, gameId: number, teamId:
   });
 }
 
-export async function performAction(ctx: Ctx, user: AuthUser, gameId: number, action: GameAction): Promise<{ game: GameView; events: GameEvent[] }> {
+export async function performAction(ctx: Ctx, user: AuthUser, gameId: number, action: GameAction): Promise<{ game: GameRoomView; events: GameEvent[] }> {
   return withLock(gameId, async () => {
     const row = await loadRow(ctx, gameId);
     const s = stored(row);
@@ -256,7 +243,7 @@ export async function performAction(ctx: Ctx, user: AuthUser, gameId: number, ac
   });
 }
 
-export async function setDiscordUrl(ctx: Ctx, user: AuthUser, gameId: number, url: string | null): Promise<GameView> {
+export async function setDiscordUrl(ctx: Ctx, user: AuthUser, gameId: number, url: string | null): Promise<GameRoomView> {
   const row = await loadRow(ctx, gameId);
   const s = stored(row);
   if (s.hostUserId !== user.id && s.guestUserId !== user.id) throw forbidden();
@@ -320,15 +307,7 @@ export async function listGames(ctx: Ctx, user: AuthUser) {
 // Chat
 // ---------------------------------------------------------------------------
 
-export interface ChatView {
-  id: number;
-  userId: number | null;
-  name: string;
-  body: string;
-  createdAt: string;
-}
-
-async function loadChat(ctx: Ctx, gameId: number): Promise<ChatView[]> {
+async function loadChat(ctx: Ctx, gameId: number): Promise<ChatMessage[]> {
   const rows = await ctx.db
     .select({ id: chatMessages.id, userId: chatMessages.userId, name: users.displayName, body: chatMessages.body, createdAt: chatMessages.createdAt })
     .from(chatMessages)
@@ -339,13 +318,13 @@ async function loadChat(ctx: Ctx, gameId: number): Promise<ChatView[]> {
   return rows.reverse().map((r) => ({ ...r, name: r.name ?? 'Former member', createdAt: r.createdAt.toISOString() }));
 }
 
-export async function postChat(ctx: Ctx, user: AuthUser, gameId: number, body: string): Promise<ChatView> {
+export async function postChat(ctx: Ctx, user: AuthUser, gameId: number, body: string): Promise<ChatMessage> {
   const text = body.trim().slice(0, 500);
   if (!text) throw badRequest('Say something!');
   const row = await loadRow(ctx, gameId);
   if (!canView(row, user.id)) throw forbidden();
   const [msg] = await ctx.db.insert(chatMessages).values({ gameId, userId: user.id, body: text }).returning();
-  const view: ChatView = { id: msg!.id, userId: user.id, name: user.displayName, body: text, createdAt: msg!.createdAt.toISOString() };
+  const view: ChatMessage = { id: msg!.id, userId: user.id, name: user.displayName, body: text, createdAt: msg!.createdAt.toISOString() };
   ctx.io?.to(`game:${gameId}`).emit('chat:message', { gameId, message: view });
   return view;
 }
