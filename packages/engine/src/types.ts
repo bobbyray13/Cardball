@@ -1,3 +1,4 @@
+import type { BattingLine, PitchingLine } from '@cardball/shared';
 import type { ContactType, GameMode, HitKind, HouseRules, MatchRules, Position, SeasonStats, ContactTypeInfo } from '@cardball/shared';
 
 // ---------------------------------------------------------------------------
@@ -57,6 +58,19 @@ export interface EnginePlayer {
   exitDue: boolean;
   /** pitch limits waived because no legal reliever was left in the bullpen */
   fatigueWaived: boolean;
+  /**
+   * While on base: the pitcher who let him on, who is charged with the run if
+   * he scores, even after being relieved. Missing in games saved before box
+   * scores existed; the pitcher on the mound takes the run then.
+   */
+  chargedTo?: string | null;
+}
+
+/** One team's box score, keyed by engine player id. */
+export interface TeamBox {
+  /** spot: lineup spot (0-8); order: entry order; position: where he played on entering */
+  batting: Record<string, BattingLine & { spot: number; order: number; position?: string }>;
+  pitching: Record<string, PitchingLine & { order: number }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -173,6 +187,11 @@ export interface GameState {
   winner: Side | null;
   /** how the game ended (score, concede) */
   endedBy: 'score' | 'concede' | null;
+  /**
+   * The box score, kept as the game is played. Missing in games saved before
+   * box scores existed; boxOf() starts one the first time it is needed.
+   */
+  box?: Record<Side, TeamBox>;
 }
 
 // ---------------------------------------------------------------------------

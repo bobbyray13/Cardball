@@ -12,8 +12,11 @@ import {
   performAction,
   postChat,
   setDiscordUrl,
+  unlockGame,
 } from '../gameService.js';
 import { idParam, parse } from '../http.js';
+
+const gamePassword = z.string().min(1, 'Enter the password').max(100);
 
 const createSchema = z.object({
   mode: z.enum(['remote', 'hotseat', 'bot']),
@@ -25,6 +28,8 @@ const createSchema = z.object({
   opponentTeamId: z.number().int().positive().optional(),
   /** what cards this match allows; missing means any card, no caps */
   match: matchRulesSchema.optional(),
+  /** opt-in: watching or joining takes this password */
+  password: gamePassword.optional(),
 });
 
 const discordSchema = z.object({
@@ -48,8 +53,14 @@ export function gameRoutes(app: FastifyInstance, ctx: Ctx): void {
 
   app.post('/api/games/:id/join', async (request) => {
     const user = requireUser(request);
-    const { teamId } = parse(z.object({ teamId: z.number().int().positive() }), request.body);
-    return { game: await joinGame(ctx, user, idParam(request.params), teamId) };
+    const { teamId, password } = parse(z.object({ teamId: z.number().int().positive(), password: gamePassword.optional() }), request.body);
+    return { game: await joinGame(ctx, user, idParam(request.params), teamId, password) };
+  });
+
+  app.post('/api/games/:id/unlock', async (request) => {
+    const user = requireUser(request);
+    const { password } = parse(z.object({ password: gamePassword }), request.body);
+    return unlockGame(ctx, user, idParam(request.params), password);
   });
 
   app.post('/api/games/:id/actions', async (request) => {

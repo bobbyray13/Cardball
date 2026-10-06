@@ -20,6 +20,7 @@ import {
   sprayDirection,
 } from './queries.js';
 import { applyWalkForces, finishPlateAppearance, maybeWalkOff, scoreRun } from './flow.js';
+import { creditOut, creditPlateAppearance } from './box.js';
 
 /** Scoring-notation position numbers (1 P … 9 RF). */
 const POSITION_NUMBERS: Record<Position, string> = {
@@ -43,6 +44,7 @@ export function recordOut(state: GameState, events: GameEvent[], text: string, p
     const pitcher = defense.players.find((p) => p.id === defense.activePitcherId);
     if (pitcher) pitcher.outsPitched += 1;
   }
+  creditOut(state);
   events.push(
     pushEvent(state, {
       kind: 'out',
@@ -137,6 +139,7 @@ export function applyThrowPitch(state: GameState, rng: Rng): GameEvent[] {
       events.push(
         pushEvent(state, { kind: 'pitch', text: `Pitch roll: ${pitcher.name} ${pTotal} vs ${batter.name} ${bTotal}.`, rolls }),
       );
+      creditPlateAppearance(state, 'strikeout');
       recordOut(state, events, `${batter.name} strikes out (pitch roll ${pTotal} over ${bTotal}).`, batter.id, offense.side);
       finishPlateAppearance(state, events);
       return events;
@@ -168,6 +171,7 @@ export function applyThrowPitch(state: GameState, rng: Rng): GameEvent[] {
           refs: { playerId: batter.id, side: offense.side },
         }),
       );
+      creditPlateAppearance(state, 'walk');
       applyWalkForces(state, batter, events);
       if (state.phase === 'live' && maybeWalkOff(state, events)) return events;
       finishPlateAppearance(state, events);
@@ -211,6 +215,7 @@ function resolveContact(
         refs: { playerId: batter.id, hitKind: 'home-run', contactRoll },
       }),
     );
+    creditPlateAppearance(state, 'home-run');
     applyAdvancesForHit(state, events, batter, 4);
     if (state.phase === 'live') maybeWalkOff(state, events);
     if (state.phase === 'live') finishPlateAppearance(state, events);
@@ -223,6 +228,7 @@ function resolveContact(
     events.push(
       pushEvent(state, { kind: 'hit', text: `Nobody home — ${batter.name} slips a single through.`, refs: { hitKind: 'single' } }),
     );
+    creditPlateAppearance(state, 'single');
     applyAdvancesForHit(state, events, batter, 1);
     if (state.phase === 'live') maybeWalkOff(state, events);
     if (state.phase === 'live') finishPlateAppearance(state, events);
@@ -300,6 +306,7 @@ function resolveContact(
     }
 
     // Simple out.
+    creditPlateAppearance(state, 'out');
     recordOut(
       state,
       events,
@@ -333,6 +340,7 @@ function resolveContact(
       refs: { playerId: batter.id, hitKind, contactRoll },
     }),
   );
+  creditPlateAppearance(state, hitKind);
 
   const advance = { single: 1, double: 2, triple: 3, 'home-run': 4 }[hitKind];
 
@@ -393,6 +401,8 @@ export function applyDpDecision(state: GameState, attempt: boolean, rng: Rng): G
   const batter = offense.players.find((p) => p.id === ctx.batterId);
   const defender = defense.players.find((p) => p.id === ctx.defenderId);
   if (!batter || !defender) throw new GameError('Missing players in double play context');
+  // Out, double play, or fielder's choice: an at-bat without a hit either way.
+  creditPlateAppearance(state, 'out');
 
   if (!attempt) {
     recordOut(
@@ -485,6 +495,7 @@ export function applySendDecision(state: GameState, send: boolean, rng: Rng): Ga
 
   if (!send) {
     if (isTagUp) {
+      creditPlateAppearance(state, 'out');
       recordOut(
         state,
         events,
@@ -530,6 +541,8 @@ export function applySendDecision(state: GameState, send: boolean, rng: Rng): Ga
   ];
 
   if (isTagUp) {
+    // A run that scores on the catch is a sacrifice fly: no at-bat charged.
+    creditPlateAppearance(state, toBase >= 4 && rTotal >= tTotal ? 'sac-fly' : 'out');
     recordOut(
       state,
       events,

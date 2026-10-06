@@ -51,6 +51,7 @@ import { cardModels, draftParticipants, drafts, gameEvents, games, teamCards, te
 import type { GameRow, TournamentRow } from '@cardball/db';
 import type { StoredGame } from './gameService.js';
 import { toView as gameView } from './gameService.js';
+import { recordCardLines } from './cardStats.js';
 import { autoLineup } from './autoLineup.js';
 import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
@@ -729,6 +730,7 @@ async function playMatch(ctx: Ctx, gameId: number): Promise<boolean> {
         result.events.map((e) => ({ gameId, seq: e.seq, inning: e.inning, half: e.half, kind: e.kind, text: e.text, data: e })),
       );
     }
+    await recordCardLines(tx, gameId, result.state);
     return saved[0]!;
   });
   if (updated === null) return false;

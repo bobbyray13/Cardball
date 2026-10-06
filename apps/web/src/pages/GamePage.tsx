@@ -6,15 +6,20 @@ import type { ChatMessage, GameAction, TeamSummary } from '@cardball/shared';
 import { MATCH_LIMITS, matchEraLabel, matchIsOpen } from '@cardball/shared';
 import { sidesFor, waitingOn } from '@cardball/engine';
 import type { GameEvent, GameState, Side } from '@cardball/engine';
-import { api } from '../api.js';
+import { ApiError, api } from '../api.js';
 import type { GameRoom } from '../api.js';
+import { BoxScore } from '../components/BoxScore.js';
+import { CardZoom } from '../components/CardZoom.js';
+import type { ZoomTarget } from '../components/CardZoom.js';
 import { ChatPanel } from '../components/ChatPanel.js';
 import { DecisionControls } from '../components/DecisionControls.js';
 import { ErrorBoundary } from '../components/ErrorBoundary.js';
 import { Field } from '../components/Field.js';
+import type { ZoomPlayer } from '../components/Field.js';
+import { zoomForPlayer } from '../components/gameZoom.js';
 import { LineScore } from '../components/LineScore.js';
 import { PlayByPlay } from '../components/PlayByPlay.js';
-import { Button, EmptyState, ErrorNote, Panel, Spinner, inputClass, useLoad } from '../components/ui.js';
+import { Button, EmptyState, ErrorNote, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 import { useSession } from '../session.js';
 
 export function GamePage() {
@@ -29,6 +34,9 @@ export function GamePage() {
   const [connected, setConnected] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
+  const [zoom, setZoom] = useState<ZoomTarget | null>(null);
+  // Bumped after a password opens the room, so the socket joins again.
+  const [admitted, setAdmitted] = useState(0);
 
   useEffect(() => {
     if (!initial.data) return;
@@ -75,7 +83,7 @@ export function GamePage() {
       socket.emit('game:leave', gameId);
       socket.close();
     };
-  }, [gameId, appendEvents]);
+  }, [gameId, appendEvents, admitted]);
 
   const runAction = useCallback(
     async (action: GameAction) => {
@@ -112,9 +120,27 @@ export function GamePage() {
 
   const state = game?.state ?? null;
   const mySides = useMemo<Side[]>(() => (state && user ? sidesFor(state, { userId: user.id }) : []), [state, user]);
+  const zoomPlayer = useCallback<ZoomPlayer>(
+    (side, player) => {
+      if (state) setZoom(zoomForPlayer(state, side, player, game?.photos ?? {}, user?.id ?? null));
+    },
+    [state, game?.photos, user?.id],
+  );
 
   if (initial.loading && !game) return <Spinner label="Finding your seat…" />;
-  if (initial.error) return <ErrorNote error={initial.error} />;
+  if (initial.error instanceof ApiError && initial.error.status === 403 && !game) {
+    return (
+      <PasswordGate
+        gameId={gameId}
+        message={initial.error.message}
+        onUnlocked={() => {
+          initial.reload();
+          setAdmitted((n) => n + 1);
+        }}
+      />
+    );
+  }
+  if (initial.error && !game) return <ErrorNote error={initial.error} />;
   if (!game) return <EmptyState title="Game not found" />;
 
   const waiting = state ? waitingOn(state) : null;
@@ -134,7 +160,7 @@ export function GamePage() {
 
                 <Panel title="The mat" subtitle={state.phase === 'finished' ? 'Final' : `${state.half === 'top' ? 'Top' : 'Bottom'} ${state.inning} · ${state.outs} out${state.outs === 1 ? '' : 's'}`}>
                   <ErrorBoundary label="The field">
-                    <Field state={state} photos={game.photos} />
+                    <Field state={state} photos={game.photos} onZoom={zoomPlayer} />
                   </ErrorBoundary>
                 </Panel>
 
@@ -164,6 +190,14 @@ export function GamePage() {
                 <Panel title="Line score">
                   <LineScore state={state} events={events} />
                 </Panel>
+
+                {state.phase !== 'lobby' ? (
+                  <Panel title="Box score" subtitle="Tap a name to see the card.">
+                    <ErrorBoundary label="The box score">
+                      <BoxScore state={state} onZoom={zoomPlayer} />
+                    </ErrorBoundary>
+                  </Panel>
+                ) : null}
               </>
             ) : null}
           </div>
@@ -187,6 +221,49 @@ export function GamePage() {
           </div>
         </div>
       )}
+      <CardZoom target={zoom} onClose={() => setZoom(null)} />
+    </div>
+  );
+}
+
+/** A password-protected game: give the password once and the room opens for good. */
+function PasswordGate({ gameId, message, onUnlocked }: { gameId: number; message: string; onUnlocked: () => void }) {
+  const [password, setPassword] = useState('');
+  const unlock = useAction(async () => {
+    await api.unlockGame(gameId, password);
+    onUnlocked();
+  });
+  return (
+    <div className="mx-auto max-w-md space-y-4 pt-8">
+      <Panel title="This game has a password" subtitle={message === 'This game is password protected' ? 'The host asked for one. Ask them for it to watch or join.' : message}>
+        <form
+          className="space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void unlock.execute();
+          }}
+        >
+          <input
+            type="password"
+            name="gamePassword"
+            autoFocus
+            autoComplete="off"
+            className={inputClass}
+            placeholder="Game password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <ErrorNote error={unlock.error} />
+          <div className="flex gap-2">
+            <Button type="submit" variant="primary" disabled={!password || unlock.busy}>
+              {unlock.busy ? 'Checking…' : 'Come in'}
+            </Button>
+            <Link to="/">
+              <Button type="button">Back to the lobby</Button>
+            </Link>
+          </div>
+        </form>
+      </Panel>
     </div>
   );
 }
@@ -235,6 +312,11 @@ function GameHeader({
         <span className="rounded-full bg-white/10 px-2 py-0.5 text-chalk/60">
           {game.mode} · {game.regulationInnings} inn
         </span>
+        {game.locked ? (
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-chalk/60" title="Watching or joining takes the host's password">
+            password
+          </span>
+        ) : null}
         {matchIsOpen(game.match) ? null : (
           <span
             className="rounded-full border border-gold/40 px-2 py-0.5 text-gold"

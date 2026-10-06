@@ -1,4 +1,5 @@
 import type { Position } from '@cardball/shared';
+import { battingLine, pitchingLine } from './box.js';
 import { pushEvent } from './events.js';
 import { GameError } from './errors.js';
 import { openPlateAppearance } from './flow.js';
@@ -84,7 +85,10 @@ export function applySubstitute(
   incoming.lineupSpot = spot;
   incoming.fieldPosition = targetPosition;
   incoming.base = outgoing.base;
+  // A pinch-runner inherits whoever is on the hook for the runner.
+  incoming.chargedTo = outgoing.chargedTo ?? null;
   team.lineup[spot] = incoming.id;
+  battingLine(state, team.side, incoming);
 
   outgoing.status = 'out';
   outgoing.base = null;
@@ -146,6 +150,7 @@ export function applyPitcherChange(state: GameState, inPlayerId: string): GameEv
   incoming.outsPitched = 0;
   defense.activePitcherId = incoming.id;
   if (state.currentPa) state.currentPa.pitcherId = incoming.id;
+  pitchingLine(state, defense.side, incoming.id);
 
   const events: GameEvent[] = [
     pushEvent(state, {

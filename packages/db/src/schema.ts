@@ -12,7 +12,7 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
-import type { Position, SavedLineup, SeasonStats } from '@cardball/shared';
+import type { BattingLine, PitchingLine, Position, SavedLineup, SeasonStats } from '@cardball/shared';
 
 // ---------------------------------------------------------------------------
 // Stats database (imported from the Baseball Databank)
@@ -236,6 +236,8 @@ export const games = pgTable(
     version: integer('version').notNull().default(0),
     state: jsonb('state').notNull(),
     discordInviteUrl: text('discord_invite_url'),
+    /** argon2 hash; when set, anyone but the two managers needs it to watch or join */
+    passwordHash: text('password_hash'),
     /** set when a tournament scheduled this game, so its other managers can watch */
     tournamentId: integer('tournament_id').references((): AnyPgColumn => tournaments.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
@@ -274,6 +276,44 @@ export const chatMessages = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [index('chat_messages_game_idx').on(t.gameId)],
+);
+
+/** Who has given a password-protected game's password, so they aren't asked again. */
+export const gameViewers = pgTable(
+  'game_viewers',
+  {
+    gameId: integer('game_id')
+      .notNull()
+      .references(() => games.id, { onDelete: 'cascade' }),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('game_viewers_idx').on(t.gameId, t.userId)],
+);
+
+/**
+ * What one collection card did in one finished game. Written once, when the
+ * game ends; a card's history in the collection is the sum of these.
+ */
+export const cardGameLines = pgTable(
+  'card_game_lines',
+  {
+    id: serial('id').primaryKey(),
+    /** kept when the game is deleted: the card still played it */
+    gameId: integer('game_id').references(() => games.id, { onDelete: 'set null' }),
+    userCardId: integer('user_card_id')
+      .notNull()
+      .references(() => userCards.id, { onDelete: 'cascade' }),
+    teamName: text('team_name').notNull(),
+    opponentName: text('opponent_name').notNull(),
+    won: boolean('won').notNull(),
+    batting: jsonb('batting').$type<BattingLine | null>(),
+    pitching: jsonb('pitching').$type<PitchingLine | null>(),
+    playedAt: timestamp('played_at').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('card_game_lines_game_card_idx').on(t.gameId, t.userCardId), index('card_game_lines_card_idx').on(t.userCardId)],
 );
 
 // ---------------------------------------------------------------------------

@@ -1,3 +1,4 @@
+import { creditRun } from './box.js';
 import { pushEvent } from './events.js';
 import type { Rng } from './rng.js';
 import type { EnginePlayer, GameEvent, GameState, Side, TeamState } from './types.js';
@@ -315,6 +316,7 @@ export function ordinal(n: number): string {
 export function scoreRun(state: GameState, runner: EnginePlayer, events: GameEvent[]): void {
   const offense = getOffense(state);
   offense.score += 1;
+  creditRun(state, runner);
   runner.base = null;
   events.push(
     pushEvent(state, {

@@ -6,6 +6,7 @@ import { RARITY_LABEL, RARITY_ORDER, faceLabel, rarityRank, rateCard } from '@ca
 import type { CardRating, CollectionCard, DraftRarity } from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
+import { CardZoom, CareerSummary } from '../components/CardZoom.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { PhotoUploader } from '../components/PhotoUploader.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
@@ -306,6 +307,7 @@ function CardDetail({
 }) {
   const [notes, setNotes] = useState(entry.notes ?? '');
   const [quantity, setQuantity] = useState(entry.quantity);
+  const [zoomed, setZoomed] = useState(false);
 
   const save = useAction(async () => {
     const { card } = await api.updateCard(entry.id, { notes: notes.trim() || null, quantity });
@@ -337,11 +339,15 @@ function CardDetail({
       >
         <div className="grid gap-6 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.1fr)]">
           <div>
-            <BallCard card={entry.card} photoId={entry.photoId} rarity={entry.rarity} face="front" />
-            <p className="mt-2 text-center text-xs text-chalk/50">Front</p>
+            <button type="button" className="block w-full cursor-zoom-in" onClick={() => setZoomed(true)} title="Zoom in">
+              <BallCard card={entry.card} photoId={entry.photoId} rarity={entry.rarity} face="front" />
+            </button>
+            <p className="mt-2 text-center text-xs text-chalk/50">Front · tap to zoom</p>
           </div>
           <div>
-            <BallCard card={entry.card} face="back" />
+            <button type="button" className="block w-full cursor-zoom-in" onClick={() => setZoomed(true)} title="Zoom in">
+              <BallCard card={entry.card} face="back" />
+            </button>
             <p className="mt-2 text-center text-xs text-chalk/50">Back — the stats the dice read</p>
           </div>
 
@@ -353,6 +359,8 @@ function CardDetail({
               </p>
               {entry.card.ineligibleReason ? <p className="mt-2 text-sm text-crimson">{entry.card.ineligibleReason}</p> : null}
             </div>
+
+            <CareerSummary userCardId={entry.id} />
 
             <div>
               <p className="mb-1 text-xs font-semibold tracking-wide text-chalk/60 uppercase">Your photo</p>
@@ -406,6 +414,7 @@ function CardDetail({
             </div>
           </div>
         </div>
+        <CardZoom target={zoomed ? { card: entry.card, photoId: entry.photoId, rarity: entry.rarity } : null} onClose={() => setZoomed(false)} />
       </motion.div>
     </motion.div>
   );

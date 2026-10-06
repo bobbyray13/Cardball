@@ -6,6 +6,7 @@
  * ("That invite code is invalid or already used") instead of "something failed".
  */
 import type {
+  CardCareer,
   CardSnapshot,
   ChatMessage,
   CollectionCard,
@@ -129,6 +130,7 @@ export const api = {
   updateCard: (id: number, input: { photoId?: number | null; notes?: string | null; quantity?: number }) =>
     request<{ card: CollectionCard }>('PATCH', `/api/collection/${id}`, input),
   deleteCard: (id: number) => request<{ ok: true }>('DELETE', `/api/collection/${id}`),
+  cardCareer: (id: number) => request<{ career: CardCareer }>('GET', `/api/collection/${id}/career`),
 
   /** Uploads a card photo and returns its id. */
   uploadPhoto: async (file: File, size: { width: number; height: number }): Promise<{ photoId: number }> => {
@@ -159,9 +161,13 @@ export const api = {
     opponentTeamId?: number;
     /** what cards the match allows; omit for any card, no caps */
     match?: MatchRules;
+    /** opt-in: watching or joining takes this password */
+    password?: string;
   }) => request<{ game: GameRoom }>('POST', '/api/games', input),
   game: (id: number) => request<GameDetail>('GET', `/api/games/${id}`),
-  joinGame: (id: number, teamId: number) => request<{ game: GameRoom }>('POST', `/api/games/${id}/join`, { teamId }),
+  unlockGame: (id: number, password: string) => request<GameDetail>('POST', `/api/games/${id}/unlock`, { password }),
+  joinGame: (id: number, teamId: number, password?: string) =>
+    request<{ game: GameRoom }>('POST', `/api/games/${id}/join`, { teamId, ...(password ? { password } : {}) }),
   action: (id: number, action: GameAction) => request<{ game: GameRoom; events: GameDetail['events'] }>('POST', `/api/games/${id}/actions`, { action }),
   chat: (id: number, body: string) => request<{ message: ChatMessage }>('POST', `/api/games/${id}/chat`, { body }),
   setDiscord: (id: number, url: string | null) => request<{ game: GameRoom }>('PUT', `/api/games/${id}/discord`, { url }),

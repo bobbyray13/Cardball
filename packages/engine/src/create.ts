@@ -6,6 +6,7 @@ import type { Rng } from './rng.js';
 import type { EnginePlayer, GameEvent, GameSetup, GameState, PlayerSetup, Side, TeamSetup } from './types.js';
 import { OUT_OF_POSITION_RATING, cardSeasons, rulesOf } from './queries.js';
 import { startHalfInning } from './flow.js';
+import { boxOf, seedBox } from './box.js';
 
 const FIELD_POSITIONS: readonly Position[] = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'];
 
@@ -201,6 +202,7 @@ export function createGame(setup: GameSetup, rng: Rng): { state: GameState; even
     winner: null,
     endedBy: null,
   };
+  boxOf(state);
 
   events.push(
     pushEvent(state, {
@@ -305,6 +307,7 @@ export function startGame(state: GameState, rng: Rng): GameEvent[] {
   ];
 
   state.phase = 'live';
+  seedBox(state);
   startHalfInning(state, events, rng);
   return events;
 }

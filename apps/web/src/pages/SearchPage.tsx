@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { rateCard } from '@cardball/shared';
 import type { CardSnapshot, PersonSummary } from '@cardball/shared';
 import { api } from '../api.js';
-import { BallCard } from '../components/BallCard.js';
+import { ZoomableCard } from '../components/CardZoom.js';
 import { PhotoUploader } from '../components/PhotoUploader.js';
 import { pushCardToast } from '../components/Toasts.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
@@ -184,8 +184,8 @@ function CardPicker({ person }: { person: PersonSummary }) {
 
           {card ? (
             <motion.div key={card.cardYear} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid gap-4 sm:grid-cols-2">
-              <BallCard card={card} photoId={photoId} face="front" />
-              <BallCard card={card} face="back" />
+              <ZoomableCard target={{ card, photoId }} face="front" />
+              <ZoomableCard target={{ card }} face="back" />
             </motion.div>
           ) : (
             <Spinner label="Building the card…" />

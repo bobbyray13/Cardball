@@ -10,6 +10,7 @@ import { z } from 'zod';
 import { people, photos, seasonRowToStats, seasons, userCards } from '@cardball/db';
 import { requireUser } from '../auth.js';
 import { fileCardIntoCollection } from '../cardFiling.js';
+import { cardCareer } from '../cardStats.js';
 import { buildCard, validCardYears } from '../cards.js';
 import { loadCollection, loadUserCards } from '../collection.js';
 import type { Ctx } from '../context.js';
@@ -93,6 +94,11 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
   app.get('/api/collection', async (request) => {
     const user = requireUser(request);
     return { cards: await loadCollection(ctx, user.id) };
+  });
+
+  app.get('/api/collection/:id/career', async (request) => {
+    const user = requireUser(request);
+    return { career: await cardCareer(ctx, user.id, idParam(request.params)) };
   });
 
   app.post('/api/collection', async (request) => {

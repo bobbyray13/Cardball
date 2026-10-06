@@ -603,7 +603,7 @@ describe('games', () => {
     expect((await call('DELETE', `/api/games/${gameId}`, { token: hostToken })).statusCode).toBe(200);
   });
 
-  it('runs a remote game with two managers, chat, and a private room', async () => {
+  it('runs a remote game with two managers, chat, and spectators', async () => {
     const created = await call('POST', '/api/games', {
       token: hostToken,
       body: { mode: 'remote', regulationInnings: 3, teamId: hostTeamId },
@@ -642,15 +642,96 @@ describe('games', () => {
     expect(detail.chat.map((m) => m.body)).toContain('Good luck!');
     expect(detail.events.length).toBeGreaterThan(10);
 
-    // A signed-in stranger cannot read someone else's game.
+    // Anyone signed in can pull up a seat in the stands and talk.
     const invite = body<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
     const outsider = await call('POST', '/api/auth/register', {
       body: { email: 'nosy@example.com', password: 'hunter2hunter2', displayName: 'Nosy', inviteCode: invite },
     });
     expect(outsider.statusCode).toBe(200);
     const nosyToken = tokenFrom(outsider);
-    expect((await call('GET', `/api/games/${gameId}`, { token: nosyToken })).statusCode).toBe(403);
-    expect((await call('POST', `/api/games/${gameId}/chat`, { token: nosyToken, body: { body: 'hi' } })).statusCode).toBe(403);
+    expect((await call('GET', `/api/games/${gameId}`, { token: nosyToken })).statusCode).toBe(200);
+    expect((await call('POST', `/api/games/${gameId}/chat`, { token: nosyToken, body: { body: 'Nice game' } })).statusCode).toBe(200);
+    const listed = body<{ games: { id: number; isMine: boolean; locked: boolean }[] }>(await call('GET', '/api/games', { token: nosyToken })).games;
+    expect(listed.find((g) => g.id === gameId)).toMatchObject({ isMine: false, locked: false });
+  });
+
+  it('keeps a password-protected game to its managers and whoever knows the password', async () => {
+    const created = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'remote', regulationInnings: 3, teamId: hostTeamId, password: 'secret sauce' },
+    });
+    expect(created.statusCode).toBe(200);
+    const gameId = body<{ game: { id: number; locked: boolean } }>(created).game.id;
+    expect(body<{ game: { locked: boolean } }>(created).game.locked).toBe(true);
+    // The hash never leaves the server.
+    expect(created.body).not.toMatch(/argon2/);
+
+    // Joining takes the password too.
+    expect((await call('POST', `/api/games/${gameId}/join`, { token: guestToken, body: { teamId: guestTeamId } })).statusCode).toBe(403);
+    const wrong = await call('POST', `/api/games/${gameId}/join`, { token: guestToken, body: { teamId: guestTeamId, password: 'nope' } });
+    expect(wrong.statusCode).toBe(403);
+    expect(body<{ error: string }>(wrong).error).toMatch(/not right/);
+    const joined = await call('POST', `/api/games/${gameId}/join`, { token: guestToken, body: { teamId: guestTeamId, password: 'secret sauce' } });
+    expect(joined.statusCode).toBe(200);
+    expect((await call('GET', `/api/games/${gameId}`, { token: guestToken })).statusCode).toBe(200);
+
+    // A stranger is asked for it, and is let in for good once they give it.
+    const invite = body<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
+    const stranger = tokenFrom(
+      await call('POST', '/api/auth/register', {
+        body: { email: 'stranger@example.com', password: 'hunter2hunter2', displayName: 'Stranger', inviteCode: invite },
+      }),
+    );
+    const locked = await call('GET', `/api/games/${gameId}`, { token: stranger });
+    expect(locked.statusCode).toBe(403);
+    expect(body<{ error: string }>(locked).error).toMatch(/password protected/);
+    expect((await call('POST', `/api/games/${gameId}/chat`, { token: stranger, body: { body: 'hi' } })).statusCode).toBe(403);
+    const listed = body<{ games: { id: number; locked: boolean }[] }>(await call('GET', '/api/games', { token: stranger })).games;
+    expect(listed.find((g) => g.id === gameId)?.locked).toBe(true);
+
+    expect((await call('POST', `/api/games/${gameId}/unlock`, { token: stranger, body: { password: 'secret' } })).statusCode).toBe(403);
+    const unlocked = await call('POST', `/api/games/${gameId}/unlock`, { token: stranger, body: { password: 'secret sauce' } });
+    expect(unlocked.statusCode).toBe(200);
+    expect(body<{ game: { id: number } }>(unlocked).game.id).toBe(gameId);
+    expect((await call('GET', `/api/games/${gameId}`, { token: stranger })).statusCode).toBe(200);
+    expect((await call('POST', `/api/games/${gameId}/chat`, { token: stranger, body: { body: 'hi' } })).statusCode).toBe(200);
+
+    await call('POST', `/api/games/${gameId}/actions`, { token: guestToken, body: { action: { type: 'concede' } } });
+  });
+
+  it('keeps each collection card a box-score history across finished games', async () => {
+    const roster = body<{ team: { roster: { id: number }[] } }>(await call('GET', `/api/teams/${hostTeamId}`, { token: hostToken })).team.roster;
+    const careerOf = async (id: number) =>
+      body<{ career: { games: number; batting: { pa: number; ab: number; h: number } | null; pitching: { outs: number } | null; recent: { gameId: number | null }[] } }>(
+        await call('GET', `/api/collection/${id}/career`, { token: hostToken }),
+      ).career;
+    const before = await Promise.all(roster.map((r) => careerOf(r.id)));
+
+    const created = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'bot', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId },
+    });
+    const gameId = body<{ game: { id: number } }>(created).game.id;
+    const state = await playOut(gameId, hostToken, () => hostToken);
+    expect(state.phase).toBe('finished');
+
+    const after = await Promise.all(roster.map((r) => careerOf(r.id)));
+    // Both teams were this roster, so every starter added exactly one game.
+    const played = after.filter((c, i) => c.games === before[i]!.games + 1);
+    expect(played.length).toBeGreaterThanOrEqual(9);
+    const totalPa = (cs: typeof after) => cs.reduce((n, c) => n + (c.batting?.pa ?? 0), 0);
+    expect(totalPa(after)).toBeGreaterThan(totalPa(before));
+    expect(after.some((c) => (c.pitching?.outs ?? 0) > (before[after.indexOf(c)]?.pitching?.outs ?? 0))).toBe(true);
+    expect(played[0]!.recent[0]!.gameId).toBe(gameId);
+
+    // Clearing the game out of the lobby doesn't erase what the cards did in it.
+    await call('DELETE', `/api/games/${gameId}`, { token: hostToken });
+    const kept = await careerOf(roster[after.indexOf(played[0]!)]!.id);
+    expect(kept.games).toBe(played[0]!.games);
+    expect(kept.recent[0]!.gameId).toBeNull();
+
+    // Only the card's owner can read its history.
+    expect((await call('GET', `/api/collection/${roster[0]!.id}/career`, { token: guestToken })).statusCode).toBe(404);
   });
 
   it('only accepts real Discord links, and makes a remote game concede-only', async () => {    const created = await call('POST', '/api/games', {

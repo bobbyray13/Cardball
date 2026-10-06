@@ -1,3 +1,4 @@
+import { creditSteal } from './box.js';
 import { pushEvent, roll } from './events.js';
 import { GameError } from './errors.js';
 import { endHalfInning } from './flow.js';
@@ -44,6 +45,7 @@ export function applySteal(state: GameState, runnerId: string, rng: Rng): GameEv
     roll(`${catcher?.name ?? 'Catcher'} (throwing)`, 6, cRoll, cBase + cBonus, `C rating ${fmtMod(cBase)}${cBonus ? `, +${cBonus} throw to 3rd` : ''}`),
   ];
 
+  creditSteal(state, runner, rTotal >= cTotal);
   if (rTotal >= cTotal) {
     runner.base = target;
     events.push(

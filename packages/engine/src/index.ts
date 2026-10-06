@@ -42,3 +42,4 @@ export {
   sideOfPlayer,
 } from './queries.js';
 export { benchHitters } from './flow.js';
+export { collectionLines, lineFor } from './box.js';

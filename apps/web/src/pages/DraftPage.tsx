@@ -8,6 +8,7 @@ import type { CardSnapshot, DraftCard, DraftView, Position } from '@cardball/sha
 import { packTheme } from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
+import { CardZoom } from '../components/CardZoom.js';
 import { PackArt, RevealCards, TearingPack } from '../components/PackArt.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction } from '../components/ui.js';
@@ -405,6 +406,7 @@ function overCap(draft: DraftView, card: DraftCard): boolean {
 function CardPreview({ card }: { card: DraftCard }) {
   const [snapshot, setSnapshot] = useState<CardSnapshot | null>(null);
   const [face, setFace] = useState<'front' | 'back'>('front');
+  const [zoomed, setZoomed] = useState(false);
   const [error, setError] = useState<unknown>(null);
 
   useEffect(() => {
@@ -427,7 +429,14 @@ function CardPreview({ card }: { card: DraftCard }) {
       <button type="button" className="mx-auto block w-full max-w-[260px]" onClick={() => setFace((f) => (f === 'front' ? 'back' : 'front'))}>
         <BallCard card={snapshot} rarity={card.rarity === 'common' ? null : card.rarity} face={face} />
       </button>
-      <p className="text-center text-xs text-chalk/45">Tap the card to flip it.</p>
+      <p className="text-center text-xs text-chalk/45">
+        Tap the card to flip it, or{' '}
+        <button type="button" className="text-gold underline" onClick={() => setZoomed(true)}>
+          zoom in
+        </button>{' '}
+        to read it.
+      </p>
+      <CardZoom target={zoomed ? { card: snapshot, rarity: card.rarity === 'common' ? null : card.rarity, tier: card.rarity } : null} onClose={() => setZoomed(false)} />
     </div>
   );
 }

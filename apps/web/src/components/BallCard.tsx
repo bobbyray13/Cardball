@@ -113,9 +113,7 @@ function CardFront({
       <footer className="border-t border-ink/10 bg-stock-dark/40 px-[4cqw] py-[2.6cqw]">
         <div className="truncate font-display text-[6.4cqw] leading-none font-semibold">{card.name}</div>
         <div className="mt-[1.4cqw] flex items-center justify-between font-mono text-[2.9cqw] text-ink-soft">
-          <span>
-            B/T {card.bats ?? '?'}/{card.throws ?? '?'}
-          </span>
+          <span>{card.bats || card.throws ? `B/T ${card.bats ?? '?'}/${card.throws ?? '?'}` : card.positions.slice(0, 3).join(' · ')}</span>
           <span>
             {card.pitcherClass ? `${card.pitcherClass} · ` : ''}
             {card.canBat ? 'hits' : 'no bat'}

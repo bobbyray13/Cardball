@@ -327,12 +327,20 @@ describe('tournaments', () => {
       }
     }
 
-    // A watching manager can talk in the game; someone outside the tournament can't see it.
+    // A watching manager can talk in the game, and so can anyone else in the league.
     const sittingOut = played.matches.find((m) => m.homeSeat !== 0 && m.awaySeat !== 0)!;
     const chat = await call('POST', `/api/games/${sittingOut.gameId}/chat`, { token: tokens[0], body: { body: 'Good game!' } });
     expect(chat.statusCode, chat.body).toBe(200);
     const outsider = await register('outsider@example.com', 'Outsider', parse<{ code: string }>(await call('POST', '/api/invites', { token: tokens[0], body: {} })).code);
-    expect((await call('GET', `/api/games/${sittingOut.gameId}`, { token: outsider })).statusCode).toBe(403);
+    expect((await call('GET', `/api/games/${sittingOut.gameId}`, { token: outsider })).statusCode).toBe(200);
+
+    // Simulated matches still write each drafted card's line into its history.
+    const myTeamId = parse<{ teams: { id: number }[] }>(await call('GET', '/api/teams', { token: tokens[0] })).teams[0]!.id;
+    const myRoster = parse<{ team: { roster: { id: number }[] } }>(await call('GET', `/api/teams/${myTeamId}`, { token: tokens[0] })).team.roster;
+    const careers = await Promise.all(
+      myRoster.map(async (entry) => parse<{ career: { games: number } }>(await call('GET', `/api/collection/${entry.id}/career`, { token: tokens[0] })).career),
+    );
+    expect(Math.max(...careers.map((c) => c.games))).toBeGreaterThan(0);
 
     expect(played.log.at(-1)!.text).toMatch(/wins the tournament/i);
 

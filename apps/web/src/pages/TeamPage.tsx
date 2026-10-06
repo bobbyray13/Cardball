@@ -4,7 +4,7 @@ import { OUT_OF_POSITION_RATING } from '@cardball/engine';
 import { faceLabel, rateCard } from '@cardball/shared';
 import type { CollectionCard, RosterEntryView, SavedLineup, TeamView } from '@cardball/shared';
 import { api } from '../api.js';
-import { BallCard } from '../components/BallCard.js';
+import { ZoomableCard } from '../components/CardZoom.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 
@@ -96,11 +96,14 @@ export function TeamPage() {
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {roster.map((entry) => (
                   <div key={entry.teamCardId}>
-                    <BallCard
-                      card={entry.card}
-                      photoId={entry.photoId}
-                      rarity={faceLabel(ratings.get(entry.id)?.rarity ?? 'common')}
-                      tier={ratings.get(entry.id)?.rarity ?? 'common'}
+                    <ZoomableCard
+                      target={{
+                        card: entry.card,
+                        photoId: entry.photoId,
+                        rarity: faceLabel(ratings.get(entry.id)?.rarity ?? 'common'),
+                        tier: ratings.get(entry.id)?.rarity ?? 'common',
+                        userCardId: entry.id,
+                      }}
                     />
                     <div className="mt-1.5 flex items-center justify-between gap-1">
                       <span className="truncate text-xs text-chalk/55">{entry.card.name}</span>

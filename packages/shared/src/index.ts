@@ -9,3 +9,4 @@ export * from './packs.js';
 export * from './match.js';
 export * from './tournament.js';
 export * from './rules.js';
+export * from './boxScore.js';

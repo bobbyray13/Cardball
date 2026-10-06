@@ -1,11 +1,13 @@
-import { and, asc, desc, eq, or } from 'drizzle-orm';
+import { and, asc, desc, eq } from 'drizzle-orm';
 import { GameError, applyAction, botAction, createGame, cryptoRng, sidesFor, waitingOn } from '@cardball/engine';
 import type { GameEvent, GameMode, GameState, Side } from '@cardball/engine';
 import { activeHouseRules, MATCH_LIMITS, matchProblem, openMatch } from '@cardball/shared';
 import type { ChatMessage, GameAction, GameStatus, GameView, MatchRules } from '@cardball/shared';
-import { chatMessages, draftParticipants, gameEvents, games, tournaments, users } from '@cardball/db';
+import { chatMessages, gameEvents, gameViewers, games, users } from '@cardball/db';
 import type { GameRow } from '@cardball/db';
+import { hashPassword, verifyPassword } from './auth.js';
 import type { AuthUser } from './auth.js';
+import { recordCardLines } from './cardStats.js';
 import type { Ctx } from './context.js';
 import { env } from './env.js';
 import { HttpError, badRequest, forbidden, notFound } from './http.js';
@@ -46,30 +48,33 @@ function statusOf(s: StoredGame): GameStatus {
   return s.engine ? s.engine.phase : 'open';
 }
 
-export function canView(row: GameRow, userId: number): boolean {
+const isManager = (row: GameRow, userId: number) => {
   const s = stored(row);
-  return s.hostUserId === userId || s.guestUserId === userId || statusOf(s) === 'open';
+  return s.hostUserId === userId || s.guestUserId === userId;
+};
+
+/** Said when a password-protected game turns someone away; the room asks for the password on it. */
+export const GAME_LOCKED = 'This game is password protected';
+
+/**
+ * Every game is open to anyone signed in, unless its host set a password:
+ * then only the two managers and whoever has given the password get in.
+ */
+async function canWatch(ctx: Ctx, row: GameRow, userId: number): Promise<boolean> {
+  if (!row.passwordHash || isManager(row, userId)) return true;
+  const [viewer] = await ctx.db
+    .select({ userId: gameViewers.userId })
+    .from(gameViewers)
+    .where(and(eq(gameViewers.gameId, row.id), eq(gameViewers.userId, userId)))
+    .limit(1);
+  return viewer !== undefined;
 }
 
-/** canView, plus everyone seated at the tournament that scheduled the game. */
-async function canWatch(ctx: Ctx, row: GameRow, userId: number): Promise<boolean> {
-  if (canView(row, userId)) return true;
-  if (row.tournamentId === null) return false;
-  const [tournament] = await ctx.db
-    .select({ hostUserId: tournaments.hostUserId, state: tournaments.state })
-    .from(tournaments)
-    .where(eq(tournaments.id, row.tournamentId))
-    .limit(1);
-  if (!tournament) return false;
-  if (tournament.hostUserId === userId) return true;
-  const draftId = (tournament.state as { draftId: number | null }).draftId;
-  if (draftId === null) return false;
-  const [seat] = await ctx.db
-    .select({ id: draftParticipants.id })
-    .from(draftParticipants)
-    .where(and(eq(draftParticipants.draftId, draftId), eq(draftParticipants.userId, userId)))
-    .limit(1);
-  return seat !== undefined;
+/** Check a game's password and remember that this user gave it. */
+async function admit(ctx: Ctx, row: GameRow, userId: number, password: string | undefined): Promise<void> {
+  if (await canWatch(ctx, row, userId)) return;
+  if (!password || !(await verifyPassword(row.passwordHash!, password))) throw forbidden(password ? 'That password is not right' : GAME_LOCKED);
+  await ctx.db.insert(gameViewers).values({ gameId: row.id, userId }).onConflictDoNothing();
 }
 
 export function toView(row: GameRow): GameRoomView {
@@ -84,6 +89,7 @@ export function toView(row: GameRow): GameRoomView {
     hostUserId: s.hostUserId,
     guestUserId: s.guestUserId,
     discordUrl: row.discordInviteUrl ?? env.discordVoiceUrl,
+    locked: row.passwordHash !== null,
     ready: s.ready,
     photos: s.photos,
     state: s.engine,
@@ -133,6 +139,7 @@ async function save(ctx: Ctx, row: GameRow, next: StoredGame, events: GameEvent[
         events.map((e) => ({ gameId: row.id, seq: e.seq, inning: e.inning, half: e.half, kind: e.kind, text: e.text, data: e })),
       );
     }
+    if (engine?.phase === 'finished' && stored(row).engine?.phase !== 'finished') await recordCardLines(tx, row.id, engine);
     return result;
   });
   return updated!;
@@ -167,6 +174,8 @@ export interface CreateGameInput {
   opponentTeamId?: number | undefined;
   /** what cards this match allows; missing means any card, no caps */
   match?: MatchRules | undefined;
+  /** when set, watching or joining takes this password */
+  password?: string | undefined;
 }
 
 /**
@@ -222,6 +231,7 @@ export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameI
       awayTeamId: input.opponentTeamId ?? null,
       status: statusOf(next),
       state: next,
+      passwordHash: input.password ? await hashPassword(input.password) : null,
     })
     .returning();
   if (events.length) {
@@ -256,12 +266,13 @@ function buildEngine(
   }
 }
 
-export async function joinGame(ctx: Ctx, user: AuthUser, gameId: number, teamId: number): Promise<GameRoomView> {
+export async function joinGame(ctx: Ctx, user: AuthUser, gameId: number, teamId: number, password?: string): Promise<GameRoomView> {
   return withLock(gameId, async () => {
     const row = await loadRow(ctx, gameId);
     const s = stored(row);
     if (s.engine) throw badRequest('This game already has two teams');
     if (s.hostUserId === user.id) throw badRequest("You can't join your own game — pick hotseat mode to play yourself");
+    await admit(ctx, row, user.id, password);
 
     const host = await loadTeam(ctx, s.hostTeamId);
     const guest = await loadTeam(ctx, teamId, user.id);
@@ -340,21 +351,23 @@ export async function deleteOpenGame(ctx: Ctx, user: AuthUser, gameId: number): 
 
 export async function getGame(ctx: Ctx, user: AuthUser, gameId: number) {
   const row = await loadRow(ctx, gameId);
-  if (!(await canWatch(ctx, row, user.id))) throw forbidden('This game is private to its managers');
+  if (!(await canWatch(ctx, row, user.id))) throw forbidden(GAME_LOCKED);
   const events = await ctx.db.select({ data: gameEvents.data }).from(gameEvents).where(eq(gameEvents.gameId, gameId)).orderBy(asc(gameEvents.seq));
   return { game: toView(row), events: events.map((e) => e.data as GameEvent), chat: await loadChat(ctx, gameId) };
 }
 
+/** Give a protected game's password; on success the room opens like any other. */
+export async function unlockGame(ctx: Ctx, user: AuthUser, gameId: number, password: string) {
+  const row = await loadRow(ctx, gameId);
+  await admit(ctx, row, user.id, password);
+  return getGame(ctx, user, gameId);
+}
+
+/** The lobby: every game in the league, newest first. */
 export async function listGames(ctx: Ctx, user: AuthUser) {
-  const rows = await ctx.db
-    .select()
-    .from(games)
-    .where(or(eq(games.homeUserId, user.id), eq(games.awayUserId, user.id), eq(games.status, 'open')))
-    .orderBy(desc(games.updatedAt))
-    .limit(100);
+  const rows = await ctx.db.select().from(games).orderBy(desc(games.updatedAt)).limit(100);
   const names = new Map((await ctx.db.select({ id: users.id, name: users.displayName }).from(users)).map((u) => [u.id, u.name]));
   return rows
-    .filter((r) => canView(r, user.id))
     .map((r) => {
       const v = toView(r);
       return {
@@ -367,6 +380,7 @@ export async function listGames(ctx: Ctx, user: AuthUser) {
         hostName: names.get(v.hostUserId) ?? '?',
         guestName: v.guestUserId ? (names.get(v.guestUserId) ?? '?') : null,
         isMine: v.hostUserId === user.id || v.guestUserId === user.id,
+        locked: v.locked,
         home: v.state ? { name: v.state.home.name, score: v.state.home.score } : null,
         away: v.state ? { name: v.state.away.name, score: v.state.away.score } : null,
         inning: v.state?.inning ?? null,

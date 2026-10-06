@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { MATCH_LIMITS, matchEraLabel } from '@cardball/shared';
 import type { GameListItem, MatchRules } from '@cardball/shared';
 import { api } from '../api.js';
-import { BallCard } from '../components/BallCard.js';
+import { ZoomableCard } from '../components/CardZoom.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 import { ERAS, eraById } from '../eras.js';
 import { useSession } from '../session.js';
@@ -20,6 +20,43 @@ function matchSummary(match: MatchRules): string {
   const era = matchEraLabel(match);
   if (!match.rarityCaps) return era;
   return `${era} · ${match.rarityCaps.rare} rare/${match.rarityCaps.chase} chase`;
+}
+
+function GameRow({ game }: { game: GameListItem }) {
+  return (
+    <li>
+      <Link
+        to={`/games/${game.id}`}
+        className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 transition-colors hover:border-gold/40 hover:bg-black/30"
+      >
+        <span
+          className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase ${
+            game.status === 'live' ? 'bg-crimson/25 text-crimson' : game.status === 'finished' ? 'bg-white/10 text-chalk/60' : 'bg-gold/20 text-gold'
+          }`}
+        >
+          {STATUS_LABEL[game.status]}
+        </span>
+        <span className="font-medium text-chalk">
+          {game.home && game.away ? `${game.away.name} at ${game.home.name}` : `${game.hostName} needs an opponent`}
+        </span>
+        {game.home && game.away ? (
+          <span className="font-mono text-sm text-chalk/70">
+            {game.away.score}–{game.home.score}
+          </span>
+        ) : null}
+        <span className="font-mono text-xs text-chalk/45">
+          {game.inning ? `${game.half === 'top' ? '▲' : '▼'} ${game.inning}` : `${game.regulationInnings} inn`} · {game.mode}
+        </span>
+        <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] tracking-wide text-chalk/60 uppercase">{matchSummary(game.match)}</span>
+        {game.locked ? (
+          <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] tracking-wide text-chalk/60 uppercase" title="Watching or joining takes a password">
+            password
+          </span>
+        ) : null}
+        {!game.isMine && game.status !== 'open' ? <span className="ml-auto text-xs text-gold/80">Watch →</span> : null}
+      </Link>
+    </li>
+  );
 }
 
 export function DashboardPage() {
@@ -40,6 +77,7 @@ export function DashboardPage() {
   const [yearTo, setYearTo] = useState<number>(MATCH_LIMITS.maxYear);
   const [maxRare, setMaxRare] = useState(0);
   const [maxChase, setMaxChase] = useState(0);
+  const [password, setPassword] = useState('');
 
   // "Any era" means the whole range, and sends no match at all when no cap is
   // set, so an ordinary game carries no restriction.
@@ -60,6 +98,7 @@ export function DashboardPage() {
       regulationInnings: innings,
       teamId: Number(teamId),
       ...(mode === 'remote' ? {} : { opponentTeamId: Number(opponentTeamId || teamId) }),
+      ...(password.trim() ? { password: password.trim() } : {}),
       ...(restricted
         ? {
             match: {
@@ -76,11 +115,15 @@ export function DashboardPage() {
     navigate(`/games/${created.game.id}`);
   });
 
-  const join = useAction(async (gameId: number) => {
-    await api.joinGame(gameId, Number(joinTeamId));
-    navigate(`/games/${gameId}`);
+  const join = useAction(async (game: GameListItem) => {
+    // A protected seat asks for the password in the room, then offers the join.
+    if (!game.locked) await api.joinGame(game.id, Number(joinTeamId));
+    navigate(`/games/${game.id}`);
   });
 
+  const allGames = games.data?.games ?? [];
+  const mine = allGames.filter((g) => g.isMine);
+  const league = allGames.filter((g) => !g.isMine && g.status !== 'open');
   const myTeams = teams.data?.teams ?? [];
   const cards = collection.data?.cards ?? [];
   const ready = myTeams.filter((t) => t.hasLineup).length;
@@ -117,53 +160,26 @@ export function DashboardPage() {
           <ErrorNote error={games.error} />
           {games.loading && !games.data ? (
             <Spinner />
-          ) : (games.data?.games.length ?? 0) === 0 ? (
-            <EmptyState title="No games yet">Start one below, or build a team first.</EmptyState>
+          ) : mine.length === 0 ? (
+            <EmptyState title="No games yet">Start one here, or build a team first.</EmptyState>
           ) : (
             <ul className="space-y-2">
-              {games.data!.games.map((game) => (
-                <li key={game.id}>
-                  <Link
-                    to={`/games/${game.id}`}
-                    className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 transition-colors hover:border-gold/40 hover:bg-black/30"
-                  >
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] font-semibold tracking-wide uppercase ${
-                        game.status === 'live'
-                          ? 'bg-crimson/25 text-crimson'
-                          : game.status === 'finished'
-                            ? 'bg-white/10 text-chalk/60'
-                            : 'bg-gold/20 text-gold'
-                      }`}
-                    >
-                      {STATUS_LABEL[game.status]}
-                    </span>
-                    <span className="font-medium text-chalk">
-                      {game.home && game.away ? `${game.away.name} at ${game.home.name}` : `${game.hostName} needs an opponent`}
-                    </span>
-                    {game.home && game.away ? (
-                      <span className="font-mono text-sm text-chalk/70">
-                        {game.away.score}–{game.home.score}
-                      </span>
-                    ) : null}
-                    {game.inning ? (
-                      <span className="font-mono text-xs text-chalk/45">
-                        {game.half === 'top' ? '▲' : '▼'} {game.inning} · {game.mode}
-                      </span>
-                    ) : (
-                      <span className="font-mono text-xs text-chalk/45">
-                        {game.regulationInnings} inn · {game.mode}
-                      </span>
-                    )}
-                    <span className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] tracking-wide text-chalk/60 uppercase">
-                      {matchSummary(game.match)}
-                    </span>
-                    {game.isMine ? <span className="text-xs text-chalk/45">yours</span> : null}
-                  </Link>
-                </li>
+              {mine.map((game) => (
+                <GameRow key={game.id} game={game} />
               ))}
             </ul>
           )}
+          {league.length > 0 ? (
+            <div className="mt-6">
+              <h3 className="mb-1 font-display text-lg font-semibold text-chalk">Around the league</h3>
+              <p className="mb-3 text-xs text-chalk/50">Anyone signed in can watch and talk. A game with a password asks for it first.</p>
+              <ul className="space-y-2">
+                {league.slice(0, 25).map((game) => (
+                  <GameRow key={game.id} game={game} />
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </Panel>
 
         <div className="space-y-6">
@@ -297,6 +313,19 @@ export function DashboardPage() {
                   </p>
                 )}
 
+                <Field label="Password (optional)" hint="Leave it blank and anyone in the league can watch. Set one and only people you tell can watch or join.">
+                  <input
+                    name="gamePassword"
+                    type="text"
+                    autoComplete="off"
+                    className={inputClass}
+                    maxLength={100}
+                    placeholder="No password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </Field>
+
                 <ErrorNote error={create.error} />
                 <Button type="submit" variant="primary" className="w-full" disabled={create.busy || !teamId}>
                   {create.busy ? 'Setting the field…' : 'Play ball'}
@@ -314,7 +343,7 @@ export function DashboardPage() {
                 onSubmit={(e) => {
                   e.preventDefault();
                   const open = games.data?.games.find((g) => g.status === 'open' && !g.isMine);
-                  if (open) void join.execute(open.id);
+                  if (open) void join.execute(open);
                 }}
               >
                 <Field label="Your team">
@@ -339,9 +368,10 @@ export function DashboardPage() {
                           type="button"
                           className="w-full"
                           disabled={!joinTeamId || join.busy}
-                          onClick={() => void join.execute(g.id)}
+                          onClick={() => void join.execute(g)}
                         >
                           Join {g.hostName}'s {g.regulationInnings}-inning game · {matchSummary(g.match)}
+                          {g.locked ? ' · password' : ''}
                         </Button>
                       ))
                   )}
@@ -357,7 +387,7 @@ export function DashboardPage() {
         <Panel title="Recently collected" actions={<Link to="/collection" className="text-sm text-gold hover:underline">See all {cards.length}</Link>}>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
             {cards.slice(-6).map((entry) => (
-              <BallCard key={entry.id} card={entry.card} photoId={entry.photoId} rarity={entry.rarity} />
+              <ZoomableCard key={entry.id} target={{ card: entry.card, photoId: entry.photoId, rarity: entry.rarity, userCardId: entry.id }} />
             ))}
           </div>
         </Panel>

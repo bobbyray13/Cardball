@@ -139,6 +139,8 @@ export interface GameView<S = unknown> {
   hostUserId: number;
   guestUserId: number | null;
   discordUrl: string | null;
+  /** the host set a password: anyone but the managers gives it to watch or join */
+  locked: boolean;
   /** sides whose manager has pressed play */
   ready: ('home' | 'away')[];
   /** engine player id → photo id, so real card art shows up in games */
@@ -159,6 +161,8 @@ export interface GameListItem {
   hostName: string;
   guestName: string | null;
   isMine: boolean;
+  /** watching or joining takes a password */
+  locked: boolean;
   home: { name: string; score: number } | null;
   away: { name: string; score: number } | null;
   inning: number | null;
