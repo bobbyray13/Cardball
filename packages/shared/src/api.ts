@@ -6,6 +6,7 @@
  * engine are generic over the engine's state type, which keeps this module free
  * of any engine import.
  */
+import type { PackThemeId } from './packs.js';
 import type { Position } from './positions.js';
 import type { SeasonStats } from './stats.js';
 
@@ -170,10 +171,17 @@ export interface DraftConfig {
   rounds: number;
   /** cards in each pack */
   packSize: number;
-  /** the card year the pool is built from */
+  /** the card year the pool is built from; the top of the era range */
   cardYear: number;
+  /** era cutoff: the pool is drawn from cards built on years in this range */
+  yearFrom: number;
+  yearTo: number;
   /** only deal cards that can actually play a game */
   playableOnly: boolean;
+  /** the themed packs in the rotation; empty means a mixed pack every round */
+  themes: PackThemeId[];
+  /** most rare and chase cards one manager may take all draft, or null for no limit */
+  rarityCaps: { rare: number; chase: number } | null;
 }
 
 /** Draft room limits, shared so the client and server agree on them. */
@@ -183,6 +191,10 @@ export const DRAFT_LIMITS = {
   maxRounds: 10,
   minPackSize: 3,
   maxPackSize: 15,
+  minYear: 1872,
+  maxYear: 2100,
+  maxRare: 20,
+  maxChase: 20,
 } as const;
 
 /** A card sitting in a pack, or one a manager has taken. */
@@ -224,10 +236,16 @@ export interface DraftView {
   passDirection: 'left' | 'right';
   /** the pack in front of the viewer; empty once the round's packs run out */
   myPack: DraftCard[];
+  /** the wrapper the viewer is holding, or null when they hold no pack */
+  myPackTheme: PackThemeId | null;
+  /** false while the viewer's pack is still sealed */
+  myPackOpened: boolean;
   /** true once the viewer has taken this pass's card and is waiting for the others */
   iHavePicked: boolean;
   /** every card the viewer has taken */
   myPicks: DraftCard[];
+  /** rare and chase cards the viewer has taken, against the draft's caps */
+  myTally: { rare: number; chase: number };
   /** how many picks each seat has made */
   pickCounts: Record<string, number>;
   /** newest-last draft log */
@@ -239,8 +257,11 @@ export interface DraftListItem {
   id: number;
   phase: DraftPhase;
   cardYear: number;
+  yearFrom: number;
+  yearTo: number;
   rounds: number;
   packSize: number;
+  themes: PackThemeId[];
   hostName: string;
   seats: number;
   seatsFilled: number;

@@ -23,6 +23,7 @@ const CARD_YEAR = 2004;
 
 let app: Awaited<ReturnType<typeof buildApp>>;
 let sql: Db['sql'];
+let db: Db['db'];
 let hostToken = '';
 let guestToken = '';
 
@@ -50,32 +51,56 @@ async function register(email: string, displayName: string, inviteCode?: string)
 
 /** A playable hitter with seasons across the card's stat window. */
 async function seedHitter(db: Db['db'], n: number): Promise<void> {
+  await seedBatter(db, {
+    bbrefId: `draft${String(n).padStart(2, '0')}`,
+    nameLast: `Player${n}`,
+    debutYear: 1998,
+    finalYear: 2004,
+    years: [1998, 1999, 2000, 2001, 2002, 2003],
+    homeRuns: 20 + n,
+  });
+}
+
+/** A batter with exactly the seasons and numbers a test needs. */
+async function seedBatter(
+  db: Db['db'],
+  opts: {
+    bbrefId: string;
+    nameLast: string;
+    debutYear: number;
+    finalYear: number;
+    years: number[];
+    homeRuns: number;
+    stolenBases?: number;
+    avg?: number;
+  },
+): Promise<void> {
   const [person] = await db
     .insert(people)
     .values({
-      bbrefId: `draft${String(n).padStart(2, '0')}`,
+      bbrefId: opts.bbrefId,
       nameFirst: 'Draft',
-      nameLast: `Player${n}`,
+      nameLast: opts.nameLast,
       bats: 'R',
       throws: 'R',
-      debutYear: 1998,
-      finalYear: 2004,
+      debutYear: opts.debutYear,
+      finalYear: opts.finalYear,
     })
     .returning({ id: people.id });
   await db.insert(seasons).values(
-    [1998, 1999, 2000, 2001, 2002, 2003].map((year) => ({
+    opts.years.map((year) => ({
       personId: person!.id,
       year,
       teamLabel: 'TST',
       games: 150,
       ab: 500,
-      h: 150,
-      avg: 0.3,
+      h: Math.round(500 * (opts.avg ?? 0.3)),
+      avg: opts.avg ?? 0.3,
       doubles: 25,
       triples: 3,
-      homeRuns: 20 + n,
+      homeRuns: opts.homeRuns,
       rbi: 80,
-      sb: 10,
+      sb: opts.stolenBases ?? 10,
       pa: 550,
       primaryPosition: 'RF',
       positionsPlayed: [{ position: 'RF' as const, games: 140, rating: 1 }],
@@ -93,8 +118,9 @@ beforeAll(async () => {
   }
   await runMigrations(TEST_URL);
 
-  const { db, sql: conn } = createDb(TEST_URL);
-  sql = conn;
+  const { db: conn, sql: sqlConn } = createDb(TEST_URL);
+  db = conn;
+  sql = sqlConn;
   const tables = await sql<{ tablename: string }[]>`select tablename from pg_tables where schemaname = 'public'`;
   if (tables.length) {
     await sql.unsafe(`truncate table ${tables.map((t) => `"${t.tablename}"`).join(', ')} restart identity cascade`);
@@ -119,7 +145,7 @@ afterAll(async () => {
 
 describe('draft rooms', () => {
   let draftId = 0;
-  const config = { rounds: 2, packSize: 3, cardYear: CARD_YEAR, playableOnly: true };
+  const config = { rounds: 2, packSize: 3, yearFrom: CARD_YEAR, yearTo: CARD_YEAR, playableOnly: true };
 
   beforeAll(async () => {
     hostToken = await register('drafter@example.com', 'Drafter');
@@ -139,10 +165,25 @@ describe('draft rooms', () => {
     expect(draft.myPack).toEqual([]);
   });
 
-  it('refuses a card year with nobody in its stat window', async () => {
-    const res = await call('POST', '/api/drafts', { token: hostToken, body: { ...config, cardYear: 1900 } });
+  it('refuses an era with nobody in its stat windows', async () => {
+    const res = await call('POST', '/api/drafts', { token: hostToken, body: { ...config, yearFrom: 1900, yearTo: 1900 } });
     expect(res.statusCode).toBe(400);
-    expect(parse<{ error: string }>(res).error).toMatch(/no players appeared/i);
+    expect(parse<{ error: string }>(res).error).toMatch(/no .* cards to deal/i);
+  });
+
+  it('refuses a pack that is not dealt in the era', async () => {
+    const res = await call('POST', '/api/drafts', {
+      token: hostToken,
+      body: { ...config, yearFrom: 1960, yearTo: 1979, themes: ['deadball'] },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(parse<{ error: string }>(res).error).toMatch(/deadball era is not dealt in 1960–1979/i);
+  });
+
+  it('refuses an era that runs backwards', async () => {
+    const res = await call('POST', '/api/drafts', { token: hostToken, body: { ...config, yearFrom: 1990, yearTo: 1980 } });
+    expect(res.statusCode).toBe(400);
+    expect(parse<{ error: string }>(res).error).toMatch(/end after it starts/i);
   });
 
   it('seats a second manager', async () => {
@@ -167,13 +208,33 @@ describe('draft rooms', () => {
     expect(draft.myPack).toHaveLength(config.packSize);
     expect(draft.myPack.every((c) => c.cardYear === CARD_YEAR)).toBe(true);
     expect(draft.myPack.every((c) => c.playable)).toBe(true);
+    expect(draft.myPackTheme).toBe('mixed');
+    expect(draft.myPackOpened).toBe(false);
 
     expect((await call('POST', `/api/drafts/${draftId}/start`, { token: hostToken })).statusCode).toBe(400);
   });
 
   let guestOpeningPack: string[] = [];
 
+  it('keeps the pack sealed until its holder tears it open', async () => {
+    const sealed = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: hostToken })).draft;
+    const peeked = await call('POST', `/api/drafts/${draftId}/pick`, { token: hostToken, body: { cardId: sealed.myPack[0]!.id } });
+    expect(peeked.statusCode).toBe(400);
+    expect(parse<{ error: string }>(peeked).error).toMatch(/open your pack first/i);
+
+    const opened = await call('POST', `/api/drafts/${draftId}/open`, { token: hostToken });
+    expect(opened.statusCode).toBe(200);
+    const draft = parse<{ draft: DraftView }>(opened).draft;
+    expect(draft.myPackOpened).toBe(true);
+    // Opening again is a no-op, not an error.
+    expect((await call('POST', `/api/drafts/${draftId}/open`, { token: hostToken })).statusCode).toBe(200);
+    // The other seat is still sealed; one manager opening doesn't reveal another's pack.
+    const guest = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: guestToken })).draft;
+    expect(guest.myPackOpened).toBe(false);
+  });
+
   it('lets managers pick at the same time, but only once per pass', async () => {
+    await call('POST', `/api/drafts/${draftId}/open`, { token: guestToken });
     const peek = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: guestToken })).draft;
     guestOpeningPack = peek.myPack.map((c) => c.id);
 
@@ -241,6 +302,7 @@ describe('draft rooms', () => {
       // Guest first this time, to show the order within a pass doesn't matter.
       for (const seat of [...view.waitingOn].reverse()) {
         const token = tokens[seat]!;
+        expect((await call('POST', `/api/drafts/${draftId}/open`, { token })).statusCode).toBe(200);
         const mine = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token })).draft;
         const card = mine.myPack[0];
         expect(card, `seat ${seat} should be holding cards`).toBeDefined();
@@ -277,7 +339,7 @@ describe('draft rooms', () => {
     const invite = parse<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
     const thirdToken = await register('third@example.com', 'Third', invite);
     const tokens = [hostToken, guestToken, thirdToken];
-    const three = { rounds: 2, packSize: 3, cardYear: CARD_YEAR, playableOnly: true };
+    const three = { rounds: 2, packSize: 3, yearFrom: CARD_YEAR, yearTo: CARD_YEAR, playableOnly: true };
 
     const room = parse<{ draft: DraftView }>(await call('POST', '/api/drafts', { token: hostToken, body: three })).draft;
     await call('POST', `/api/drafts/${room.id}/join`, { token: guestToken });
@@ -287,10 +349,11 @@ describe('draft rooms', () => {
     const view = async (seat: number) =>
       parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${room.id}`, { token: tokens[seat]! })).draft;
 
-    /** Everyone takes their first card; returns what each seat had left over. */
+    /** Everyone tears open and takes their first card; returns what each seat had left over. */
     async function onePass(): Promise<string[][]> {
       const leftovers: string[][] = [];
       for (let seat = 0; seat < 3; seat++) {
+        expect((await call('POST', `/api/drafts/${room.id}/open`, { token: tokens[seat]! })).statusCode).toBe(200);
         const pack = (await view(seat)).myPack;
         leftovers.push(pack.slice(1).map((c) => c.id).sort());
         expect((await call('POST', `/api/drafts/${room.id}/pick`, { token: tokens[seat]!, body: { cardId: pack[0]!.id } })).statusCode).toBe(200);
@@ -302,6 +365,8 @@ describe('draft rooms', () => {
     // Pack 1 passes left: seat s receives seat s-1's leftovers.
     let left = await onePass();
     for (let seat = 0; seat < 3; seat++) expect(await holding(seat)).toEqual(left[(seat + 2) % 3]);
+    // A passed pack comes back sealed: the new holder has to tear it open again.
+    expect((await view(0)).myPackOpened).toBe(false);
     await onePass();
     await onePass();
 
@@ -324,5 +389,142 @@ describe('draft rooms', () => {
     expect((await call('DELETE', `/api/drafts/${draftId}`, { token: guestToken })).statusCode).toBe(403);
     expect((await call('DELETE', `/api/drafts/${draftId}`, { token: hostToken })).statusCode).toBe(200);
     expect((await call('GET', `/api/drafts/${draftId}`, { token: hostToken })).statusCode).toBe(404);
+  });
+});
+
+/**
+ * Two tiny, deliberately narrow pools, so a pack's contents are known exactly:
+ * one where every card is a slugger, and one where only some are.
+ */
+const SLUGGER_YEAR = 1976;
+const CAP_YEAR = 1966;
+
+describe('themed packs and draft rules', () => {
+  let sluggers: string[] = [];
+  let token = '';
+  let other = '';
+
+  beforeAll(async () => {
+    // Only these five have seasons in 1970–1975, so the 1976 pool is exactly them.
+    for (const [i, hr] of [35, 33, 31, 12, 8].entries()) {
+      await seedBatter(db, {
+        bbrefId: `theme${i}`,
+        nameLast: `Themed${i}`,
+        debutYear: 1969,
+        finalYear: 1975,
+        years: [1970, 1971, 1972, 1973, 1974, 1975],
+        homeRuns: hr,
+      });
+    }
+    // Three rare bats in 1960–1965, for the cap: HR 30+ makes every one rare.
+    for (const [i, hr] of [35, 33, 31].entries()) {
+      await seedBatter(db, {
+        bbrefId: `cap${i}`,
+        nameLast: `Capped${i}`,
+        debutYear: 1959,
+        finalYear: 1965,
+        years: [1960, 1961, 1962, 1963, 1964, 1965],
+        homeRuns: hr,
+      });
+    }
+    sluggers = ['Draft Themed0', 'Draft Themed1', 'Draft Themed2'];
+
+    // The app is invite-only once the first manager exists; the first describe
+    // block registered that manager, so mint seats from their account.
+    const first = parse<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
+    token = await register('themes@example.com', 'Themer', first);
+    const second = parse<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
+    other = await register('capped@example.com', 'Capped', second);
+  });
+
+  /** Open a two-seat room, seat the second manager, and deal the packs. */
+  async function dealtRoom(body: Record<string, unknown>): Promise<DraftView> {
+    const res = await call('POST', '/api/drafts', { token, body });
+    expect(res.statusCode, res.body).toBe(200);
+    const room = parse<{ draft: DraftView }>(res).draft;
+    expect((await call('POST', `/api/drafts/${room.id}/join`, { token: other })).statusCode).toBe(200);
+    const started = await call('POST', `/api/drafts/${room.id}/start`, { token });
+    expect(started.statusCode, started.body).toBe(200);
+    return parse<{ draft: DraftView }>(started).draft;
+  }
+
+  it('deals only cards that fit the wrapper label', async () => {
+    const draft = await dealtRoom({
+      rounds: 1,
+      packSize: 3,
+      yearFrom: SLUGGER_YEAR,
+      yearTo: SLUGGER_YEAR,
+      playableOnly: true,
+      themes: ['sluggers'],
+    });
+
+    expect(draft.myPack).toHaveLength(3);
+    expect(draft.myPack.map((c) => c.name).sort()).toEqual([...sluggers].sort());
+    expect(draft.myPack.every((c) => c.rarity === 'rare')).toBe(true);
+    expect(draft.myPackTheme).toBe('sluggers');
+  });
+
+  it('deals from the whole pool for a mixed pack', async () => {
+    const draft = await dealtRoom({
+      rounds: 1,
+      packSize: 3,
+      yearFrom: SLUGGER_YEAR,
+      yearTo: SLUGGER_YEAR,
+      playableOnly: true,
+      themes: ['mixed'],
+    });
+
+    expect(draft.myPack).toHaveLength(3);
+    expect(draft.myPack.every((c) => c.cardYear === SLUGGER_YEAR)).toBe(true);
+    // A mixed pack may hold any of the five players, not just the sluggers.
+    const pool = new Set(['Draft Themed0', 'Draft Themed1', 'Draft Themed2', 'Draft Themed3', 'Draft Themed4']);
+    expect(draft.myPack.every((c) => pool.has(c.name))).toBe(true);
+    expect(draft.myPackTheme).toBe('mixed');
+  });
+
+  it('falls back to a mixed pack when the host names a theme that does not exist', async () => {
+    const draft = await dealtRoom({
+      rounds: 1,
+      packSize: 3,
+      yearFrom: SLUGGER_YEAR,
+      yearTo: SLUGGER_YEAR,
+      playableOnly: true,
+      themes: ['nonsense'],
+    });
+    expect(draft.config.themes).toEqual(['mixed']);
+  });
+
+  it('caps how many rare cards one manager may take', async () => {
+    const draft = await dealtRoom({
+      rounds: 1,
+      packSize: 3,
+      yearFrom: CAP_YEAR,
+      yearTo: CAP_YEAR,
+      playableOnly: true,
+      themes: ['mixed'],
+      rarityCaps: { rare: 1, chase: 0 },
+    });
+    const roomId = draft.id;
+    expect(draft.config.rarityCaps).toEqual({ rare: 1, chase: 20 });
+
+    // Everyone in this pool is rare, so the first pick uses up the allowance.
+    await call('POST', `/api/drafts/${roomId}/open`, { token });
+    const mine = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${roomId}`, { token })).draft;
+    expect(mine.myPack.every((c) => c.rarity === 'rare')).toBe(true);
+    const first = await call('POST', `/api/drafts/${roomId}/pick`, { token, body: { cardId: mine.myPack[0]!.id } });
+    expect(first.statusCode, first.body).toBe(200);
+    expect(parse<{ draft: DraftView }>(first).draft.myTally).toEqual({ rare: 1, chase: 0 });
+
+    // The other seat takes one, so the packs pass back around.
+    await call('POST', `/api/drafts/${roomId}/open`, { token: other });
+    const theirs = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${roomId}`, { token: other })).draft;
+    await call('POST', `/api/drafts/${roomId}/pick`, { token: other, body: { cardId: theirs.myPack[0]!.id } });
+
+    await call('POST', `/api/drafts/${roomId}/open`, { token });
+    const passed = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${roomId}`, { token })).draft;
+    expect(passed.myPack.length).toBeGreaterThan(0);
+    const blocked = await call('POST', `/api/drafts/${roomId}/pick`, { token, body: { cardId: passed.myPack[0]!.id } });
+    expect(blocked.statusCode).toBe(400);
+    expect(parse<{ error: string }>(blocked).error).toMatch(/already have 1 rare card/i);
   });
 });

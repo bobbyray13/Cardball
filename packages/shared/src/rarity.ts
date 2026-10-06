@@ -43,6 +43,20 @@ export interface CardRating {
   headline: string;
   /** a continuous score for sorting within a tier; higher is better */
   score: number;
+  /**
+   * The best season's headline numbers, so pack themes and the collection can
+   * ask "is this a slugger?" without re-reading the card back.
+   */
+  best: BestSeason;
+}
+
+/** A card's best season in the stat window, by each measure. */
+export interface BestSeason {
+  homeRuns: number;
+  avg: number;
+  stolenBases: number;
+  /** null when no season had enough innings to judge */
+  era: number | null;
 }
 
 /** 40 innings, so a reliever's sharp ten-inning cameo doesn't read as an ace. */
@@ -75,5 +89,5 @@ export function rateCard(card: RatableCard): CardRating {
   const pitcherScore = bestEra < 99 ? 2.5 / Math.max(bestEra, 0.5) : 0;
   const score = Math.round(Math.max(hitterScore, pitcherScore) * 1000) / 1000;
 
-  return { rarity, headline, score };
+  return { rarity, headline, score, best: { homeRuns: bestHr, avg: bestAvg, stolenBases: bestSb, era: bestEra < 99 ? bestEra : null } };
 }

@@ -9,7 +9,6 @@ import type {
   CardSnapshot,
   ChatMessage,
   CollectionCard,
-  DraftConfig,
   DraftListItem,
   DraftView,
   GameAction,
@@ -17,6 +16,7 @@ import type {
   GameView,
   HouseRules,
   InviteSummary,
+  PackThemeId,
   PersonDetail,
   PersonSummary,
   SavedLineup,
@@ -25,6 +25,17 @@ import type {
   TeamView,
 } from '@cardball/shared';
 import type { GameState } from '@cardball/engine';
+
+/** What the host fills in to open a draft room. */
+export interface NewDraft {
+  rounds: number;
+  packSize: number;
+  yearFrom: number;
+  yearTo: number;
+  playableOnly: boolean;
+  themes: PackThemeId[];
+  rarityCaps: { rare: number; chase: number } | null;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -132,10 +143,11 @@ export const api = {
 
   // ---- drafts ----
   drafts: () => request<{ drafts: DraftListItem[] }>('GET', '/api/drafts'),
-  createDraft: (input: DraftConfig) => request<{ draft: DraftView }>('POST', '/api/drafts', input),
+  createDraft: (input: NewDraft) => request<{ draft: DraftView }>('POST', '/api/drafts', input),
   draft: (id: number) => request<{ draft: DraftView }>('GET', `/api/drafts/${id}`),
   joinDraft: (id: number) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/join`),
   startDraft: (id: number) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/start`),
+  openDraftPack: (id: number) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/open`),
   pickDraftCard: (id: number, cardId: string) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/pick`, { cardId }),
   deleteDraft: (id: number) => request<{ ok: true }>('DELETE', `/api/drafts/${id}`),
 

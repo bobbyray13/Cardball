@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { DRAFT_LIMITS } from '@cardball/shared';
-import type { DraftListItem } from '@cardball/shared';
+import { DRAFT_LIMITS, PACK_THEMES, packTheme, packThemesForYears } from '@cardball/shared';
+import type { DraftListItem, PackThemeId } from '@cardball/shared';
 import { api } from '../api.js';
+import { PackArt } from '../components/PackArt.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 
 const PHASE_LABEL: Record<DraftListItem['phase'], string> = {
@@ -13,16 +14,57 @@ const PHASE_LABEL: Record<DraftListItem['phase'], string> = {
 
 const THIS_YEAR = new Date().getFullYear();
 
+/** Era shortcuts, so a host does not have to type two years to get a vibe. */
+const ERAS = [
+  { id: 'any', label: 'Any era', from: 1901, to: THIS_YEAR },
+  { id: 'deadball', label: 'Deadball', from: 1901, to: 1919 },
+  { id: 'golden', label: 'Golden age', from: 1920, to: 1946 },
+  { id: 'integration', label: 'Integration', from: 1947, to: 1960 },
+  { id: 'expansion', label: 'Expansion', from: 1961, to: 1992 },
+  { id: 'modern', label: 'Modern', from: 1993, to: THIS_YEAR },
+] as const;
+
 export function DraftsPage() {
   const navigate = useNavigate();
   const drafts = useLoad(() => api.drafts(), []);
 
-  const [cardYear, setCardYear] = useState(2004);
+  const [era, setEra] = useState<string>('expansion');
+  const [yearFrom, setYearFrom] = useState(1961);
+  const [yearTo, setYearTo] = useState(1992);
   const [rounds, setRounds] = useState(3);
   const [packSize, setPackSize] = useState(8);
+  const [themes, setThemes] = useState<PackThemeId[]>(['sluggers', 'aces', 'speedsters']);
+  const [maxRare, setMaxRare] = useState(0);
+  const [maxChase, setMaxChase] = useState(0);
+
+  const offered = useMemo(() => packThemesForYears(yearFrom, yearTo), [yearFrom, yearTo]);
+  const offeredIds = useMemo(() => new Set(offered.map((t) => t.id)), [offered]);
+  // A theme can fall out of the era when the years change; don't offer it then.
+  const chosen = themes.filter((t) => offeredIds.has(t));
+
+  const pickEra = (id: string) => {
+    setEra(id);
+    const preset = ERAS.find((e) => e.id === id);
+    if (preset) {
+      setYearFrom(preset.from);
+      setYearTo(preset.to);
+      setThemes((prev) => prev.filter((t) => packThemesForYears(preset.from, preset.to).some((x) => x.id === t)));
+    }
+  };
+
+  const toggleTheme = (id: PackThemeId) =>
+    setThemes((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
 
   const create = useAction(async () => {
-    const { draft } = await api.createDraft({ cardYear, rounds, packSize, playableOnly: true });
+    const { draft } = await api.createDraft({
+      rounds,
+      packSize,
+      yearFrom,
+      yearTo,
+      playableOnly: true,
+      themes: chosen,
+      rarityCaps: maxRare > 0 || maxChase > 0 ? { rare: maxRare, chase: maxChase } : null,
+    });
     navigate(`/drafts/${draft.id}`);
   });
 
@@ -38,8 +80,8 @@ export function DraftsPage() {
       <section>
         <h1 className="font-display text-3xl font-bold text-chalk">Drafts</h1>
         <p className="mt-1 max-w-2xl text-sm text-chalk/60">
-          Everyone opens a pack, takes one card, and passes the rest along. Every card you take goes straight into your
-          collection.
+          Everyone opens a themed pack, takes one card, and passes the rest along. Tear each wrapper open when it reaches
+          you, and every card you take goes straight into your collection.
         </p>
       </section>
 
@@ -73,7 +115,12 @@ export function DraftsPage() {
                     {PHASE_LABEL[d.phase]}
                   </span>
                   <span className="font-medium text-chalk">
-                    {d.cardYear} cards · {d.hostName}'s room
+                    {d.yearFrom === d.yearTo ? d.yearFrom : `${d.yearFrom}–${d.yearTo}`} cards · {d.hostName}'s room
+                  </span>
+                  <span className="flex gap-1">
+                    {d.themes.slice(0, 4).map((id) => (
+                      <PackArt key={id} theme={packTheme(id)} size="xs" className="shrink-0" />
+                    ))}
                   </span>
                   <span className="font-mono text-xs text-chalk/50">
                     {d.rounds} × {d.packSize} · {d.seatsFilled}/{d.seats} seats
@@ -95,7 +142,7 @@ export function DraftsPage() {
           )}
         </Panel>
 
-        <Panel title="Open a draft room" subtitle="Packs are dealt from players who played in the six seasons before the card year.">
+        <Panel title="Open a draft room" subtitle="A pack holds cards built on one year inside the era you pick, and only cards that fit the wrapper's label.">
           <form
             className="space-y-3"
             onSubmit={(e) => {
@@ -103,18 +150,79 @@ export function DraftsPage() {
               void create.execute();
             }}
           >
-            <Field label="Card year">
-              <input
-                name="cardYear"
-                type="number"
-                className={inputClass}
-                min={1877}
-                max={THIS_YEAR + 1}
-                value={cardYear}
-                onChange={(e) => setCardYear(Number(e.target.value))}
-                required
-              />
+            <Field label="Era">
+              <select name="era" className={inputClass} value={era} onChange={(e) => pickEra(e.target.value)}>
+                {ERAS.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.label} · {e.from}–{e.to}
+                  </option>
+                ))}
+                <option value="custom">Custom range</option>
+              </select>
             </Field>
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Card years from">
+                <input
+                  name="yearFrom"
+                  type="number"
+                  className={inputClass}
+                  min={DRAFT_LIMITS.minYear}
+                  max={DRAFT_LIMITS.maxYear}
+                  value={yearFrom}
+                  onChange={(e) => {
+                    setYearFrom(Number(e.target.value));
+                    setEra('custom');
+                  }}
+                  required
+                />
+              </Field>
+              <Field label="through">
+                <input
+                  name="yearTo"
+                  type="number"
+                  className={inputClass}
+                  min={DRAFT_LIMITS.minYear}
+                  max={DRAFT_LIMITS.maxYear}
+                  value={yearTo}
+                  onChange={(e) => {
+                    setYearTo(Number(e.target.value));
+                    setEra('custom');
+                  }}
+                  required
+                />
+              </Field>
+            </div>
+
+            <div>
+              <p className="mb-1.5 text-xs font-medium tracking-wide text-chalk/60 uppercase">Packs in the rotation</p>
+              <ul className="grid gap-1.5 sm:grid-cols-2">
+                {PACK_THEMES.map((t) => {
+                  const live = offeredIds.has(t.id);
+                  const on = chosen.includes(t.id);
+                  return (
+                    <li key={t.id}>
+                      <button
+                        type="button"
+                        name={`theme-${t.id}`}
+                        disabled={!live}
+                        onClick={() => toggleTheme(t.id)}
+                        className={`flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-colors ${
+                          on ? 'border-gold bg-gold/10' : 'border-white/10 bg-black/20 hover:border-white/30'
+                        } ${live ? '' : 'cursor-not-allowed opacity-40'}`}
+                      >
+                        <PackArt theme={t} size="xs" className="shrink-0" />
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm text-chalk">{t.name}</span>
+                          <span className="block truncate text-[10px] text-chalk/50">{live ? t.hold : `not dealt in this era`}</span>
+                        </span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+              {chosen.length === 0 ? <p className="mt-1 text-xs text-chalk/50">No packs chosen — a mixed pack is dealt instead.</p> : null}
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <Field label="Packs each">
                 <select name="rounds" className={inputClass} value={rounds} onChange={(e) => setRounds(Number(e.target.value))}>
@@ -135,6 +243,16 @@ export function DraftsPage() {
                 </select>
               </Field>
             </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Most rare each (0 = no cap)">
+                <input name="maxRare" type="number" className={inputClass} min={0} max={DRAFT_LIMITS.maxRare} value={maxRare} onChange={(e) => setMaxRare(Number(e.target.value))} />
+              </Field>
+              <Field label="Most chase each (0 = no cap)">
+                <input name="maxChase" type="number" className={inputClass} min={0} max={DRAFT_LIMITS.maxChase} value={maxChase} onChange={(e) => setMaxChase(Number(e.target.value))} />
+              </Field>
+            </div>
+
             <p className="text-xs text-chalk/50">
               Each manager ends with {rounds * packSize} cards. Rooms seat {DRAFT_LIMITS.minSeats}–{DRAFT_LIMITS.maxSeats} managers.
             </p>

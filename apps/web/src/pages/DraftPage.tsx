@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import type { CardSnapshot, DraftCard, DraftView } from '@cardball/shared';
+import { packTheme } from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
+import { PackArt, RevealCards, TearingPack } from '../components/PackArt.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction } from '../components/ui.js';
 import { pushCardToast } from '../components/Toasts.js';
@@ -51,6 +53,7 @@ export function DraftPage() {
 
   const join = useAction(async () => setDraft((await api.joinDraft(draftId)).draft));
   const start = useAction(async () => setDraft((await api.startDraft(draftId)).draft));
+  const openPack = useAction(async () => setDraft((await api.openDraftPack(draftId)).draft));
   const pick = useAction(async (cardId: string) => {
     const taken = draft?.myPack.find((c) => c.id === cardId) ?? null;
     const round = draft?.round;
@@ -90,6 +93,9 @@ export function DraftPage() {
   const myTurn = draft.phase === 'active' && me !== null && draft.waitingOn.includes(me.seat);
   const { config } = draft;
   const selected = draft.myPack.find((c) => c.id === selectedId) ?? null;
+  const myTheme = draft.myPackTheme ? packTheme(draft.myPackTheme) : null;
+  const sealed = draft.myPack.length > 0 && !draft.myPackOpened;
+  const era = config.yearFrom === config.yearTo ? `${config.yearFrom}` : `${config.yearFrom}–${config.yearTo}`;
 
   return (
     <div className="space-y-6">
@@ -98,11 +104,30 @@ export function DraftPage() {
           <Link to="/drafts" className="text-sm text-chalk/50 hover:text-chalk">
             ← Drafts
           </Link>
-          <h1 className="font-display text-3xl font-bold text-chalk">{config.cardYear} draft</h1>
+          <h1 className="font-display text-3xl font-bold text-chalk">{era} draft</h1>
           <p className="mt-1 text-sm text-chalk/60">
             {config.rounds} packs of {config.packSize} ·{' '}
             {draft.phase === 'lobby' ? 'taking seats' : draft.phase === 'active' ? `pack ${draft.round} of ${config.rounds}` : 'complete'}
           </p>
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {config.themes.map((id) => {
+              const theme = packTheme(id);
+              return (
+                <span
+                  key={id}
+                  className="rounded-full border border-white/15 px-2 py-0.5 text-[10px] font-medium tracking-wide uppercase"
+                  style={{ color: theme.colors.ink, background: `linear-gradient(120deg, ${theme.colors.from}, ${theme.colors.to})` }}
+                >
+                  {theme.name}
+                </span>
+              );
+            })}
+            {config.rarityCaps ? (
+              <span className="rounded-full border border-gold/40 px-2 py-0.5 text-[10px] tracking-wide text-gold uppercase">
+                cap {config.rarityCaps.rare} rare · {config.rarityCaps.chase} chase
+              </span>
+            ) : null}
+          </div>
         </div>
         {isHost ? (
           <Button variant="danger" size="sm" disabled={close.busy} onClick={() => void close.execute()}>
@@ -113,7 +138,7 @@ export function DraftPage() {
 
       <SeatStrip draft={draft} />
 
-      <ErrorNote error={join.error ?? start.error ?? pick.error ?? close.error} />
+      <ErrorNote error={join.error ?? start.error ?? openPack.error ?? pick.error ?? close.error} />
 
       {draft.phase === 'lobby' ? (
         <Panel title="Waiting for managers">
@@ -137,30 +162,56 @@ export function DraftPage() {
       {draft.phase === 'active' && me ? (
         <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <Panel
-            title={myTurn ? 'Your pick' : `Waiting on ${stillPicking.map((p) => p.name).join(', ') || '…'}`}
+            title={sealed ? 'Your pack' : myTurn ? 'Your pick' : `Waiting on ${stillPicking.map((p) => p.name).join(', ') || '…'}`}
             subtitle={
-              myTurn
-                ? `Tap a card to look at it, then take it. The rest pass ${draft.passDirection} once everyone has picked.`
-                : `You've taken your card. The packs pass ${draft.passDirection} when everyone has picked.`
+              sealed
+                ? `${myTheme?.name ?? 'A pack'} is in front of you. Tear it open.`
+                : myTurn
+                  ? `Tap a card to look at it, then take it. The rest pass ${draft.passDirection} once everyone has picked.`
+                  : `You've taken your card. The packs pass ${draft.passDirection} when everyone has picked.`
             }
           >
             {draft.myPack.length === 0 ? (
               <EmptyState title="No pack in hand" />
+            ) : sealed && myTheme ? (
+              <div className="py-4">
+                <TearingPack theme={myTheme} busy={openPack.busy} label="Tear it open" onOpen={() => void openPack.execute()} />
+              </div>
             ) : (
-              <ul className="grid gap-2 sm:grid-cols-2">
-                <AnimatePresence initial={false}>
+              <RevealCards>
+                <div className="mb-3 flex items-center gap-3">
+                  {myTheme ? <PackArt theme={myTheme} size="sm" sealed={false} /> : null}
+                  <p className="text-sm text-chalk/60">
+                    {draft.myPack.length} card{draft.myPack.length === 1 ? '' : 's'} left in this {myTheme?.name ?? 'pack'}.
+                  </p>
+                </div>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {/* The taken card leaves the pack on the next render; no exit
+                      animation, so a ghost of it can't linger in the list. */}
                   {draft.myPack.map((card) => (
-                    <motion.li key={card.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-                      <PackCardButton card={card} selected={card.id === selectedId} disabled={!myTurn} onSelect={() => setSelectedId(card.id)} />
+                    <motion.li key={card.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                      <PackCardButton
+                        card={card}
+                        selected={card.id === selectedId}
+                        disabled={!myTurn}
+                        capped={overCap(draft, card)}
+                        onSelect={() => setSelectedId(card.id)}
+                      />
                       {myTurn && card.id === selectedId ? (
-                        <Button variant="primary" size="sm" className="mt-1.5 w-full lg:hidden" disabled={pick.busy} onClick={() => void pick.execute(card.id)}>
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          className="mt-1.5 w-full lg:hidden"
+                          disabled={pick.busy || overCap(draft, card)}
+                          onClick={() => void pick.execute(card.id)}
+                        >
                           {pick.busy ? 'Taking…' : `Take ${card.name}`}
                         </Button>
                       ) : null}
                     </motion.li>
                   ))}
-                </AnimatePresence>
-              </ul>
+                </ul>
+              </RevealCards>
             )}
           </Panel>
 
@@ -168,12 +219,22 @@ export function DraftPage() {
             {selected ? (
               <div className="space-y-3">
                 <CardPreview card={selected} />
-                <Button variant="primary" className="w-full" disabled={!myTurn || pick.busy} onClick={() => void pick.execute(selected.id)}>
+                {overCap(draft, selected) ? (
+                  <Notice>You've hit this draft's {selected.rarity} cap. Pick a different card.</Notice>
+                ) : null}
+                <Button
+                  variant="primary"
+                  className="w-full"
+                  disabled={!myTurn || pick.busy || overCap(draft, selected)}
+                  onClick={() => void pick.execute(selected.id)}
+                >
                   {pick.busy ? 'Taking…' : `Take ${selected.name}`}
                 </Button>
               </div>
             ) : (
-              <p className="text-sm text-chalk/55">{myTurn ? 'Pick a card from your pack to see its front and back.' : 'Hang tight.'}</p>
+              <p className="text-sm text-chalk/55">
+                {sealed ? 'Tear the pack open to see what is inside.' : myTurn ? 'Pick a card from your pack to see its front and back.' : 'Hang tight.'}
+              </p>
             )}
           </Panel>
         </div>
@@ -193,7 +254,14 @@ export function DraftPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {me ? (
-          <Panel title={`Your picks (${draft.myPicks.length})`}>
+          <Panel
+            title={`Your picks (${draft.myPicks.length})`}
+            subtitle={
+              config.rarityCaps
+                ? `${draft.myTally.rare}/${config.rarityCaps.rare} rare · ${draft.myTally.chase}/${config.rarityCaps.chase} chase`
+                : undefined
+            }
+          >
             {draft.myPicks.length === 0 ? (
               <p className="text-sm text-chalk/55">Nothing yet.</p>
             ) : (
@@ -248,7 +316,19 @@ function SeatStrip({ draft }: { draft: DraftView }) {
   );
 }
 
-function PackCardButton({ card, selected, disabled, onSelect }: { card: DraftCard; selected: boolean; disabled: boolean; onSelect: () => void }) {
+function PackCardButton({
+  card,
+  selected,
+  disabled,
+  capped,
+  onSelect,
+}: {
+  card: DraftCard;
+  selected: boolean;
+  disabled: boolean;
+  capped: boolean;
+  onSelect: () => void;
+}) {
   return (
     <button
       type="button"
@@ -266,8 +346,18 @@ function PackCardButton({ card, selected, disabled, onSelect }: { card: DraftCar
       </span>
       <span className="mt-0.5 block text-xs text-chalk/55">{card.teamLabel}</span>
       <span className="mt-1 block font-mono text-xs text-chalk/75">{card.headline}</span>
+      {capped ? <span className="mt-1 block text-xs text-ember">At your {card.rarity} cap for this draft</span> : null}
     </button>
   );
+}
+
+/** Would taking this card break the draft's rarity cap? */
+function overCap(draft: DraftView, card: DraftCard): boolean {
+  const caps = draft.config.rarityCaps;
+  if (!caps) return false;
+  if (card.rarity === 'chase') return draft.myTally.chase >= caps.chase;
+  if (card.rarity === 'rare') return draft.myTally.rare >= caps.rare;
+  return false;
 }
 
 function CardPreview({ card }: { card: DraftCard }) {
