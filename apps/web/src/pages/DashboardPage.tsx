@@ -4,8 +4,9 @@ import { MATCH_LIMITS, matchEraLabel } from '@cardball/shared';
 import type { GameListItem, MatchRules } from '@cardball/shared';
 import { api } from '../api.js';
 import { ZoomableCard } from '../components/CardZoom.js';
+import { EraRangePicker, RarityCapFields, SegmentedToggle } from '../components/RoomConfig.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
-import { ERAS, eraById } from '../eras.js';
+import { eraById } from '../eras.js';
 import { useSession } from '../session.js';
 
 const STATUS_LABEL: Record<GameListItem['status'], string> = {
@@ -14,6 +15,14 @@ const STATUS_LABEL: Record<GameListItem['status'], string> = {
   live: 'In progress',
   finished: 'Final',
 };
+
+type GameMode = 'remote' | 'hotseat' | 'bot';
+
+const MODE_OPTIONS: ReadonlyArray<{ value: GameMode; label: string }> = [
+  { value: 'remote', label: 'Remote' },
+  { value: 'hotseat', label: 'Hotseat' },
+  { value: 'bot', label: 'Vs. bot' },
+];
 
 /** A one-line summary of what a match allows, for the room list. */
 function matchSummary(match: MatchRules): string {
@@ -66,7 +75,7 @@ export function DashboardPage() {
   const teams = useLoad(() => api.teams(), []);
   const collection = useLoad(() => api.collection(), []);
 
-  const [mode, setMode] = useState<'remote' | 'hotseat' | 'bot'>('remote');
+  const [mode, setMode] = useState<GameMode>('remote');
   const [innings, setInnings] = useState(9);
   const [teamId, setTeamId] = useState<number | ''>('');
   const [opponentTeamId, setOpponentTeamId] = useState<number | ''>('');
@@ -90,6 +99,13 @@ export function DashboardPage() {
       setYearFrom(preset.from);
       setYearTo(preset.to);
     }
+  };
+
+  // Editing either year means the range is custom, not one of the presets.
+  const setYears = (next: { yearFrom: number; yearTo: number }) => {
+    setYearFrom(next.yearFrom);
+    setYearTo(next.yearTo);
+    setEra('custom');
   };
 
   const create = useAction(async () => {
@@ -200,27 +216,7 @@ export function DashboardPage() {
                 }}
               >
                 <Field label="How are you playing?">
-                  <div className="flex gap-1 rounded-full border border-white/15 p-1">
-                    {(
-                      [
-                        ['remote', 'Remote'],
-                        ['hotseat', 'Hotseat'],
-                        ['bot', 'Vs. bot'],
-                      ] as const
-                    ).map(([value, label]) => (
-                      <button
-                        key={value}
-                        type="button"
-                        name={`mode-${value}`}
-                        onClick={() => setMode(value)}
-                        className={`flex-1 rounded-full px-2 py-1.5 text-sm transition-colors ${
-                          mode === value ? 'bg-chalk text-field-deep font-semibold' : 'text-chalk/70 hover:bg-white/10'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
+                  <SegmentedToggle namePrefix="mode" value={mode} options={MODE_OPTIONS} onChange={(next) => setMode(next)} />
                 </Field>
 
                 <Field label="Innings">
@@ -233,55 +229,27 @@ export function DashboardPage() {
                   </select>
                 </Field>
 
-                <Field label="Cards allowed" hint="Both rosters are checked against this before the first pitch.">
-                  <select name="matchEra" className={inputClass} value={era} onChange={(e) => pickEra(e.target.value)}>
-                    <option value="any">Any era · {MATCH_LIMITS.minYear}–{MATCH_LIMITS.maxYear}</option>
-                    {ERAS.filter((e) => e.id !== 'any').map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.label} · {e.from}–{e.to}
-                      </option>
-                    ))}
-                    <option value="custom">Custom range</option>
-                  </select>
-                </Field>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Card years from">
-                    <input
-                      name="yearFrom"
-                      type="number"
-                      className={inputClass}
-                      min={MATCH_LIMITS.minYear}
-                      max={MATCH_LIMITS.maxYear}
-                      value={yearFrom}
-                      onChange={(e) => {
-                        setYearFrom(Number(e.target.value));
-                        setEra('custom');
-                      }}
-                    />
-                  </Field>
-                  <Field label="through">
-                    <input
-                      name="yearTo"
-                      type="number"
-                      className={inputClass}
-                      min={MATCH_LIMITS.minYear}
-                      max={MATCH_LIMITS.maxYear}
-                      value={yearTo}
-                      onChange={(e) => {
-                        setYearTo(Number(e.target.value));
-                        setEra('custom');
-                      }}
-                    />
-                  </Field>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Most rare each (0 = no cap)">
-                    <input name="maxRare" type="number" className={inputClass} min={0} max={MATCH_LIMITS.maxRare} value={maxRare} onChange={(e) => setMaxRare(Number(e.target.value))} />
-                  </Field>
-                  <Field label="Most chase each (0 = no cap)">
-                    <input name="maxChase" type="number" className={inputClass} min={0} max={MATCH_LIMITS.maxChase} value={maxChase} onChange={(e) => setMaxChase(Number(e.target.value))} />
-                  </Field>
-                </div>
+                <EraRangePicker
+                  label="Cards allowed"
+                  hint="Both rosters are checked against this before the first pitch."
+                  selectName="matchEra"
+                  anyEraRange={{ from: MATCH_LIMITS.minYear, to: MATCH_LIMITS.maxYear }}
+                  era={era}
+                  onEraChange={pickEra}
+                  yearFrom={yearFrom}
+                  yearTo={yearTo}
+                  onYearsChange={setYears}
+                  minYear={MATCH_LIMITS.minYear}
+                  maxYear={MATCH_LIMITS.maxYear}
+                />
+                <RarityCapFields
+                  rare={maxRare}
+                  chase={maxChase}
+                  onRareChange={setMaxRare}
+                  onChaseChange={setMaxChase}
+                  maxRare={MATCH_LIMITS.maxRare}
+                  maxChase={MATCH_LIMITS.maxChase}
+                />
 
                 <Field label="Your team">
                   <select name="teamId" className={inputClass} value={teamId} onChange={(e) => setTeamId(Number(e.target.value))} required>

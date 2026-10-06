@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import type { ChatMessage } from '@cardball/shared';
 import { Button, inputClass } from './ui.js';
 
 /** In-game text chat, with the league's Discord voice invite alongside it. */
-export function ChatPanel({
+export const ChatPanel = memo(function ChatPanel({
   messages,
   meName,
   onSend,
@@ -25,11 +25,14 @@ export function ChatPanel({
   const [editing, setEditing] = useState(false);
   const [url, setUrl] = useState('');
   const [error, setError] = useState<unknown>(null);
-  const end = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
   const lastId = messages.at(-1)?.id ?? 0;
 
   useEffect(() => {
-    end.current?.scrollIntoView({ block: 'end' });
+    // Scroll the message list itself — scrolling the trailing node would yank
+    // the whole page on mobile.
+    const el = scroller.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [lastId]);
 
   return (
@@ -86,7 +89,7 @@ export function ChatPanel({
         </form>
       ) : null}
 
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-black/20 p-3">
+      <div ref={scroller} className="min-h-0 flex-1 space-y-2 overflow-y-auto rounded-lg border border-white/10 bg-black/20 p-3" aria-live="polite">
         {messages.length === 0 ? <p className="py-4 text-center text-sm text-chalk/40">Say hello.</p> : null}
         {messages.map((message) => (
           <div key={message.id} className="text-sm">
@@ -94,7 +97,6 @@ export function ChatPanel({
             <span className="ml-2 text-chalk/85">{message.body}</span>
           </div>
         ))}
-        <div ref={end} />
       </div>
 
       <form
@@ -104,11 +106,13 @@ export function ChatPanel({
           const text = body.trim();
           if (!text) return;
           setBusy(true);
+          setError(null);
           try {
             await onSend(text);
             setBody('');
-          } catch {
-            /* the panel keeps the text so it can be retried */
+          } catch (err) {
+            // Keep the text, so the manager can send it again.
+            setError(err);
           } finally {
             setBusy(false);
           }
@@ -119,6 +123,11 @@ export function ChatPanel({
           Send
         </Button>
       </form>
+      {error ? (
+        <p role="alert" className="mt-1 text-xs text-crimson">
+          Couldn't send that: {error instanceof Error ? error.message : 'try again'}
+        </p>
+      ) : null}
     </div>
   );
-}
+});

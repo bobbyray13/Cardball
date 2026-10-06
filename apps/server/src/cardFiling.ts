@@ -6,11 +6,15 @@
  * player, year, set, and photo — bumps the copy count instead of stacking
  * identical rows in the binder. Draft picks go through the same door, so a
  * player drafted twice in one draft lands as one card with two copies.
+ *
+ * The holding row is claimed under a Postgres advisory lock, so two adds of
+ * the same card racing each other (two tabs, two server processes) still land
+ * as one row with quantity 2.
  */
 
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { cardModels, userCards } from '@cardball/db';
-import type { Ctx } from './context.js';
+import type { Executor } from './context.js';
 
 const MAX_QUANTITY = 99;
 
@@ -24,14 +28,14 @@ export interface CardModelInput {
 }
 
 /** Find or create the catalog card for player + year + set. */
-export async function ensureCardModel(ctx: Ctx, input: CardModelInput): Promise<number> {
-  const [existing] = await ctx.db
+export async function ensureCardModel(db: Executor, input: CardModelInput): Promise<number> {
+  const [existing] = await db
     .select({ id: cardModels.id })
     .from(cardModels)
     .where(and(eq(cardModels.personId, input.personId), eq(cardModels.cardYear, input.cardYear), eq(cardModels.setLabel, input.setLabel)))
     .limit(1);
   if (existing) return existing.id;
-  const [created] = await ctx.db
+  const [created] = await db
     .insert(cardModels)
     .values({
       personId: input.personId,
@@ -45,7 +49,7 @@ export async function ensureCardModel(ctx: Ctx, input: CardModelInput): Promise<
     .returning({ id: cardModels.id });
   if (created) return created.id;
   // Lost a race with a concurrent insert: read it back.
-  return ensureCardModel(ctx, input);
+  return ensureCardModel(db, input);
 }
 
 export interface FilingInput extends CardModelInput {
@@ -54,31 +58,36 @@ export interface FilingInput extends CardModelInput {
 }
 
 /** File a card for a manager, returning the `user_cards` row id. */
-export async function fileCardIntoCollection(ctx: Ctx, input: FilingInput): Promise<number> {
-  const cardModelId = await ensureCardModel(ctx, input);
-  const [held] = await ctx.db
-    .select({ id: userCards.id, quantity: userCards.quantity })
-    .from(userCards)
-    .where(
-      and(
-        eq(userCards.userId, input.userId),
-        eq(userCards.cardModelId, cardModelId),
-        input.photoId ? eq(userCards.photoId, input.photoId) : isNull(userCards.photoId),
-      ),
-    )
-    .limit(1);
-  if (held) {
-    if (held.quantity < MAX_QUANTITY) {
-      await ctx.db
-        .update(userCards)
-        .set({ quantity: held.quantity + 1 })
-        .where(eq(userCards.id, held.id));
+export async function fileCardIntoCollection(db: Executor, input: FilingInput): Promise<number> {
+  const cardModelId = await ensureCardModel(db, input);
+  return db.transaction(async (tx) => {
+    // Serialize everyone filing the same card, so the count is bumped rather
+    // than duplicated. Held to the transaction's commit (or the outer pick's).
+    await tx.execute(sql`select pg_advisory_xact_lock(${input.userId}, ${cardModelId})`);
+    const [held] = await tx
+      .select({ id: userCards.id, quantity: userCards.quantity })
+      .from(userCards)
+      .where(
+        and(
+          eq(userCards.userId, input.userId),
+          eq(userCards.cardModelId, cardModelId),
+          input.photoId ? eq(userCards.photoId, input.photoId) : isNull(userCards.photoId),
+        ),
+      )
+      .limit(1);
+    if (held) {
+      if (held.quantity < MAX_QUANTITY) {
+        await tx
+          .update(userCards)
+          .set({ quantity: held.quantity + 1 })
+          .where(eq(userCards.id, held.id));
+      }
+      return held.id;
     }
-    return held.id;
-  }
-  const [row] = await ctx.db
-    .insert(userCards)
-    .values({ userId: input.userId, cardModelId, photoId: input.photoId ?? null, notes: input.notes ?? null })
-    .returning({ id: userCards.id });
-  return row!.id;
+    const [row] = await tx
+      .insert(userCards)
+      .values({ userId: input.userId, cardModelId, photoId: input.photoId ?? null, notes: input.notes ?? null })
+      .returning({ id: userCards.id });
+    return row!.id;
+  });
 }

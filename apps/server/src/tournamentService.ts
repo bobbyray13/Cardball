@@ -17,7 +17,7 @@
  * with its draft and its games without any cross-service hooks.
  */
 
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   DRAFT_LIMITS,
   TOURNAMENT_LIMITS,
@@ -47,14 +47,16 @@ import type {
 } from '@cardball/shared';
 import { autoPlay, createGame, cryptoRng } from '@cardball/engine';
 import type { TeamSetup } from '@cardball/engine';
-import { cardModels, draftParticipants, drafts, gameEvents, games, teamCards, teams, tournaments, userCards, users } from '@cardball/db';
-import type { GameRow, TournamentRow } from '@cardball/db';
+import { cardModels, draftParticipants, drafts, gameEvents, games, teamCards, teams, tournaments, userCards } from '@cardball/db';
+import type { TournamentRow } from '@cardball/db';
 import type { StoredGame } from './gameService.js';
 import { toView as gameView } from './gameService.js';
 import { recordCardLines } from './cardStats.js';
 import { autoLineup } from './autoLineup.js';
 import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
+import { withKeyLock } from './lock.js';
+import { namesFor } from './names.js';
 import { createDraft, joinDraft, startDraft } from './draftService.js';
 import type { CreateDraftInput } from './draftService.js';
 import { badRequest, forbidden, notFound } from './http.js';
@@ -77,10 +79,7 @@ const configOf = (row: TournamentRow) => row.config as TournamentConfig;
 // can't deal two drafts.
 const locks = new Map<number, Promise<unknown>>();
 function withLock<T>(tournamentId: number, fn: () => Promise<T>): Promise<T> {
-  const prev = locks.get(tournamentId) ?? Promise.resolve();
-  const next = prev.then(fn, fn);
-  locks.set(tournamentId, next.catch(() => undefined));
-  return next;
+  return withKeyLock(locks, tournamentId, fn);
 }
 
 // ---------------------------------------------------------------------------
@@ -93,9 +92,9 @@ async function loadRow(ctx: Ctx, tournamentId: number): Promise<TournamentRow> {
   return row;
 }
 
-async function nameMap(ctx: Ctx): Promise<Map<number, string>> {
-  const rows = await ctx.db.select({ id: users.id, name: users.displayName }).from(users);
-  return new Map(rows.map((r) => [r.id, r.name]));
+/** Display names for exactly the people seated in this tournament. */
+function seatedNames(ctx: Ctx, seats: { userId: number }[], hostUserId: number): Promise<Map<number, string>> {
+  return namesFor(ctx, [hostUserId, ...seats.map((s) => s.userId)]);
 }
 
 /** The seated managers, in seat order: seats are the draft room's seats. */
@@ -108,24 +107,43 @@ async function seatRows(ctx: Ctx, draftId: number | null): Promise<{ userId: num
     .orderBy(draftParticipants.seat);
 }
 
-/** A game's final line, straight from the engine state. */
-function scoreOf(row: GameRow | undefined): MatchScore | null {
-  if (!row) return null;
-  const engine = (row.state as StoredGame).engine;
-  if (!engine || engine.winner === null) return null;
-  return { home: engine.home.score, away: engine.away.score, winner: engine.winner };
+/** Every listed draft's seats in one query, keyed by draft id. */
+async function seatsByDraft(ctx: Ctx, draftIds: number[]): Promise<Map<number, { userId: number; seat: number }[]>> {
+  if (draftIds.length === 0) return new Map();
+  const rows = await ctx.db
+    .select({ draftId: draftParticipants.draftId, userId: draftParticipants.userId, seat: draftParticipants.seat })
+    .from(draftParticipants)
+    .where(inArray(draftParticipants.draftId, draftIds))
+    .orderBy(asc(draftParticipants.seat));
+  const byDraft = new Map<number, { userId: number; seat: number }[]>();
+  for (const row of rows) {
+    const list = byDraft.get(row.draftId) ?? [];
+    list.push({ userId: row.userId, seat: row.seat });
+    byDraft.set(row.draftId, list);
+  }
+  return byDraft;
 }
 
-/** The final line of every listed game, in one query, keyed by game id. */
+/** The final line of every listed game, in one query, keyed by game id. Only
+ * the score leaves the database — not each game's whole engine state. */
 async function loadScores(ctx: Ctx, matches: TournamentMatch[]): Promise<Map<number, MatchScore>> {
   const ids = [...new Set(matches.map((m) => m.gameId).filter((id): id is number => id !== null))];
   if (ids.length === 0) return new Map();
-  const rows = await ctx.db.select().from(games).where(inArray(games.id, ids));
-  return new Map(
-    rows
-      .map((row) => [row.id, scoreOf(row)] as const)
-      .filter((entry): entry is [number, MatchScore] => entry[1] !== null),
-  );
+  const rows = await ctx.db
+    .select({
+      id: games.id,
+      home: sql<number>`(${games.state}->'engine'->'home'->>'score')::int`,
+      away: sql<number>`(${games.state}->'engine'->'away'->>'score')::int`,
+      winner: sql<string | null>`${games.state}->'engine'->>'winner'`,
+    })
+    .from(games)
+    .where(inArray(games.id, ids));
+  const out = new Map<number, MatchScore>();
+  for (const row of rows) {
+    if (row.winner !== 'home' && row.winner !== 'away') continue;
+    out.set(row.id, { home: row.home, away: row.away, winner: row.winner });
+  }
+  return out;
 }
 
 /** Decided matches' final lines, keyed by match id, for standings and views. */
@@ -153,7 +171,7 @@ async function toView(ctx: Ctx, row: TournamentRow): Promise<TournamentView> {
   const state = stored(row);
   const config = configOf(row);
   const seats = await seatRows(ctx, state.draftId);
-  const names = await nameMap(ctx);
+  const names = await seatedNames(ctx, seats, row.hostUserId);
   const scores = await matchScores(ctx, state.matches);
   const table = standingsFrom(config.seats, state.matches, (id) => scores[id] ?? null);
 
@@ -292,19 +310,26 @@ export async function createTournament(ctx: Ctx, user: AuthUser, input: CreateTo
   };
   const [row] = await ctx.db
     .insert(tournaments)
-    .values({ hostUserId: user.id, name: input.name.trim(), status: 'lobby', config, state })
+    .values({ hostUserId: user.id, name: input.name.trim(), status: 'lobby', config, state, draftId: draft.id })
     .returning();
   return toView(ctx, row!);
 }
 
 export async function listTournaments(ctx: Ctx, user: AuthUser): Promise<TournamentListItem[]> {
   const rows = await ctx.db.select().from(tournaments).orderBy(desc(tournaments.updatedAt)).limit(50);
-  const names = await nameMap(ctx);
+  // Every draft's seats in one query, keyed by draft id.
+  const draftIds = [...new Set(rows.map((r) => stored(r).draftId).filter((id): id is number => id !== null))];
+  const seatLists = await seatsByDraft(ctx, draftIds);
+  const seatsOf = (draftId: number | null) => (draftId === null ? [] : seatLists.get(draftId) ?? []);
+  const names = await namesFor(
+    ctx,
+    rows.flatMap((r) => [r.hostUserId, ...seatsOf(stored(r).draftId).map((s) => s.userId)]),
+  );
   const items: TournamentListItem[] = [];
   for (const row of rows) {
     const state = stored(row);
     const config = configOf(row);
-    const seats = await seatRows(ctx, state.draftId);
+    const seats = seatsOf(state.draftId);
     const champion = state.championSeat === null ? null : seats.find((s) => s.seat === state.championSeat);
     items.push({
       id: row.id,
@@ -417,7 +442,7 @@ async function sync(ctx: Ctx, row: TournamentRow): Promise<TournamentRow> {
   const config = configOf(current);
   const state = stored(current);
   const seated = await seatRows(ctx, state.draftId);
-  const names = await nameMap(ctx);
+  const names = await seatedNames(ctx, seated, current.hostUserId);
   const label = (seat: number | null) => {
     if (seat === null) return 'nobody';
     const holder = seated.find((s) => s.seat === seat);
@@ -438,11 +463,13 @@ async function sync(ctx: Ctx, row: TournamentRow): Promise<TournamentRow> {
   // 2. Record the games that have finished since we looked.
   const decided = new Map(state.matches.map((m) => [m.id, m] as const));
   const recordResults = async (): Promise<boolean> => {
+    // One narrowed query for every undecided match — no whole engine states.
+    const pending = state.matches.filter((m) => m.winnerSeat === null && m.gameId !== null);
+    if (pending.length === 0) return false;
+    const byGame = await loadScores(ctx, pending);
     let recorded = false;
-    for (const match of state.matches) {
-      if (match.winnerSeat !== null || match.gameId === null) continue;
-      const [game] = await ctx.db.select().from(games).where(eq(games.id, match.gameId)).limit(1);
-      const score = scoreOf(game);
+    for (const match of pending) {
+      const score = byGame.get(match.gameId!);
       if (!score) continue;
       match.winnerSeat = score.winner === 'home' ? match.homeSeat : match.awaySeat;
       match.loserSeat = score.winner === 'home' ? match.awaySeat : match.homeSeat;
@@ -742,7 +769,7 @@ async function playMatch(ctx: Ctx, gameId: number): Promise<boolean> {
 async function save(ctx: Ctx, row: TournamentRow, state: TournamentState, status: string): Promise<TournamentRow> {
   const [updated] = await ctx.db
     .update(tournaments)
-    .set({ state, status, updatedAt: new Date() })
+    .set({ state, status, draftId: state.draftId, updatedAt: new Date() })
     .where(eq(tournaments.id, row.id))
     .returning();
   ctx.io?.to(`tournament:${row.id}`).emit('tournament:update', { tournamentId: row.id, status });

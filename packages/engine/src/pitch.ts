@@ -416,19 +416,20 @@ export function applyDpDecision(state: GameState, attempt: boolean, rng: Rng): G
     return events;
   }
 
-  // Factors: (defense − contact) + fielding of involved defenders + batter SB + d20
+  // Factors: (defense − contact) + fielding of involved defenders − batter SB + d20.
+  // Batter speed works against the defense: a burner is harder to double up.
   const diff = (ctx.defenseRoll ?? 0) - ctx.contactRoll;
   const involved = dpInvolvedDefenders(state, defender);
   const fieldingSum = involved.reduce((sum, p) => sum + fieldingRating(p, p.fieldPosition ?? 'C'), 0);
   const batterSeason = seasonForPlayer(state, batter);
   const bSb = sbMod(batterSeason.sb, rulesOf(state).sbBands);
   const dpRoll = rng.d20();
-  const total = diff + fieldingSum + bSb + dpRoll;
+  const total = diff + fieldingSum - bSb + dpRoll;
 
   const rolls = [
     roll('Contact vs defense gap', 20, 0, diff, 'difference'),
     roll(`${involved.map((p) => p.name).join(' + ')} fielding`, 6, 0, fieldingSum, 'defense ratings'),
-    roll(`${batter.name} speed`, 6, 0, bSb, `${batterSeason.sb} SB`),
+    roll(`${batter.name} speed`, 6, 0, -bSb, `${batterSeason.sb} SB`),
     roll('Double play roll', 20, dpRoll, 0),
   ];
 

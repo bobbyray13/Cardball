@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
+import { motion } from 'framer-motion';
 import type { ChatMessage, GameAction, TeamSummary } from '@cardball/shared';
 import { MATCH_LIMITS, matchEraLabel, matchIsOpen } from '@cardball/shared';
 import { sidesFor, waitingOn } from '@cardball/engine';
@@ -16,6 +17,7 @@ import { DecisionControls } from '../components/DecisionControls.js';
 import { ErrorBoundary } from '../components/ErrorBoundary.js';
 import { Field } from '../components/Field.js';
 import type { ZoomPlayer } from '../components/Field.js';
+import { LatestPlay } from '../components/LatestPlay.js';
 import { zoomForPlayer } from '../components/gameZoom.js';
 import { LineScore } from '../components/LineScore.js';
 import { PlayByPlay } from '../components/PlayByPlay.js';
@@ -48,9 +50,18 @@ export function GamePage() {
   const appendEvents = useCallback((incoming: GameEvent[]) => {
     if (incoming.length === 0) return;
     setEvents((current) => {
-      const bySeq = new Map(current.map((e) => [e.seq, e]));
-      for (const event of incoming) bySeq.set(event.seq, event);
-      return [...bySeq.values()].sort((a, b) => a.seq - b.seq);
+      const seen = new Set(current.map((e) => e.seq));
+      const fresh = incoming.filter((e) => !seen.has(e.seq)).sort((a, b) => a.seq - b.seq);
+      if (fresh.length === 0) return current;
+      // The ledger is kept sorted, so each new event splices into place
+      // instead of re-sorting the whole game on every pitch.
+      const merged = [...current];
+      for (const event of fresh) {
+        let i = merged.length;
+        while (i > 0 && (merged[i - 1]?.seq ?? 0) > event.seq) i--;
+        merged.splice(i, 0, event);
+      }
+      return merged;
     });
   }, []);
 
@@ -110,6 +121,10 @@ export function GamePage() {
     [gameId],
   );
 
+  // One stable handler for the decision panel, so it only re-renders when the
+  // game state does — not on every chat message or presence ping.
+  const dispatchAction = useCallback((action: GameAction) => void runAction(action), [runAction]);
+
   const setDiscord = useCallback(
     async (url: string | null) => {
       const { game: updated } = await api.setDiscord(gameId, url);
@@ -140,8 +155,28 @@ export function GamePage() {
       />
     );
   }
-  if (initial.error && !game) return <ErrorNote error={initial.error} />;
-  if (!game) return <EmptyState title="Game not found" />;
+  if (initial.error && !game) {
+    return (
+      <EmptyState title="This game would not load">
+        <p className="mb-3">{initial.error instanceof Error ? initial.error.message : String(initial.error)}</p>
+        <div className="flex justify-center gap-2">
+          <Button onClick={() => initial.reload()}>Try again</Button>
+          <Link to="/">
+            <Button>Back to the lobby</Button>
+          </Link>
+        </div>
+      </EmptyState>
+    );
+  }
+  if (!game) {
+    return (
+      <EmptyState title="Game not found">
+        <Link to="/" className="text-gold underline">
+          Back to the lobby
+        </Link>
+      </EmptyState>
+    );
+  }
 
   const waiting = state ? waitingOn(state) : null;
 
@@ -159,6 +194,8 @@ export function GamePage() {
                 {game.status === 'lobby' ? <LobbyPanel game={game} state={state} mySides={mySides} onAction={runAction} busy={busy} /> : null}
 
                 <Panel title="The mat" subtitle={state.phase === 'finished' ? 'Final' : `${state.half === 'top' ? 'Top' : 'Bottom'} ${state.inning} · ${state.outs} out${state.outs === 1 ? '' : 's'}`}>
+                  {/* The call on the air: each play unfolds here, one beat at a time. */}
+                  <LatestPlay events={events} />
                   <ErrorBoundary label="The field">
                     <Field state={state} photos={game.photos} onZoom={zoomPlayer} />
                   </ErrorBoundary>
@@ -167,7 +204,7 @@ export function GamePage() {
                 <Panel title={mySides.length > 0 ? 'Your move' : 'In the stands'} subtitle={waiting && mySides.includes(waiting.side) ? waiting.prompt : undefined}>
                   <ErrorNote error={error} />
                   <ErrorBoundary label="The decision panel">
-                    <DecisionControls state={state} mySides={mySides} onAction={(a) => void runAction(a)} busy={busy} />
+                    <DecisionControls state={state} mySides={mySides} onAction={dispatchAction} busy={busy} />
                   </ErrorBoundary>
                   {mySides.length > 0 && state.phase === 'live' ? (
                     <div className="mt-4 border-t border-white/10 pt-3">
@@ -268,6 +305,24 @@ function PasswordGate({ gameId, message, onUnlocked }: { gameId: number; message
   );
 }
 
+/**
+ * A scoreboard number: it pops when it changes, the way a real one flips.
+ * Keying by the value remounts it on every run.
+ */
+function Score({ value }: { value: number }) {
+  return (
+    <motion.span
+      key={value}
+      initial={{ scale: 1.55 }}
+      animate={{ scale: 1 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 16 }}
+      className="inline-block font-mono text-2xl font-bold tabular-nums text-gold"
+    >
+      {value}
+    </motion.span>
+  );
+}
+
 function GameHeader({
   game,
   state,
@@ -288,9 +343,9 @@ function GameHeader({
       {state ? (
         <div className="flex flex-wrap items-baseline gap-3">
           <span className="font-display text-xl font-bold text-chalk">{state.away.name}</span>
-          <span className="font-mono text-2xl font-bold tabular-nums text-gold">{state.away.score}</span>
+          <Score value={state.away.score} />
           <span className="text-chalk/40">at</span>
-          <span className="font-mono text-2xl font-bold tabular-nums text-gold">{state.home.score}</span>
+          <Score value={state.home.score} />
           <span className="font-display text-xl font-bold text-chalk">{state.home.name}</span>
           {state.phase === 'finished' ? (
             <span className="rounded-full bg-gold/20 px-3 py-1 text-xs font-semibold text-gold">
@@ -414,6 +469,7 @@ function LobbyPanel({
 /** An open seat: the host waits, a visitor picks a team to join with. */
 function OpenSeat({ game, onJoined }: { game: GameRoom; onJoined: (game: GameRoom) => void }) {
   const { user } = useSession();
+  const navigate = useNavigate();
   const teams = useLoad(() => api.teams(), []);
   const [teamId, setTeamId] = useState<number | ''>('');
   const [busy, setBusy] = useState(false);
@@ -422,16 +478,25 @@ function OpenSeat({ game, onJoined }: { game: GameRoom; onJoined: (game: GameRoo
   const isMine = game.hostUserId === user?.id;
   const myTeams: TeamSummary[] = teams.data?.teams ?? [];
 
+  const cancel = useAction(async () => {
+    await api.deleteGame(game.id);
+    navigate('/');
+  });
+
   if (isMine) {
     return (
       <Panel title="Your game is posted" subtitle="It is listed in the lobby with an open seat.">
         <p className="text-sm text-chalk/60">
           Send your friend to the Lobby and they can join with one of their teams. The dice decide who is home once both of you press play.
         </p>
+        <ErrorNote error={cancel.error} />
         <div className="mt-4 flex gap-2">
           <Link to="/">
             <Button>Back to the lobby</Button>
           </Link>
+          <Button variant="danger" disabled={cancel.busy} onClick={() => void cancel.execute()}>
+            {cancel.busy ? 'Taking it down…' : 'Take this game down'}
+          </Button>
         </div>
       </Panel>
     );

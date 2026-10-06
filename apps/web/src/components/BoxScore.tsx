@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { EnginePlayer, GameState, Side } from '@cardball/engine';
 import { inningsLabel } from '@cardball/shared';
 import type { ZoomPlayer } from './Field.js';
@@ -7,7 +8,7 @@ import type { ZoomPlayer } from './Field.js';
  * lineup order with substitutes under the man they replaced, then pitchers
  * in the order they took the mound.
  */
-export function BoxScore({ state, onZoom }: { state: GameState; onZoom?: ZoomPlayer }) {
+export const BoxScore = memo(function BoxScore({ state, onZoom }: { state: GameState; onZoom?: ZoomPlayer }) {
   if (!state.box) {
     return <p className="text-sm text-chalk/50">This game was played before box scores were kept.</p>;
   }
@@ -18,7 +19,7 @@ export function BoxScore({ state, onZoom }: { state: GameState; onZoom?: ZoomPla
       ))}
     </div>
   );
-}
+});
 
 function TeamBoxScore({ state, side, onZoom }: { state: GameState; side: Side; onZoom?: ZoomPlayer | undefined }) {
   const team = state[side];

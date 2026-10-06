@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { GameEvent, GameState } from '@cardball/engine';
 import { formatIp } from '@cardball/engine';
 
@@ -8,7 +9,7 @@ import { formatIp } from '@cardball/engine';
  * from the `run` events, and hits from the `hit` events. Top halves belong to the
  * away team.
  */
-export function LineScore({ state, events }: { state: GameState; events: GameEvent[] }) {
+export const LineScore = memo(function LineScore({ state, events }: { state: GameState; events: GameEvent[] }) {
   const innings = Math.max(state.inning, state.config.regulationInnings);
   const away = new Array<number>(innings).fill(0);
   const home = new Array<number>(innings).fill(0);
@@ -88,4 +89,4 @@ export function LineScore({ state, events }: { state: GameState; events: GameEve
       </div>
     </div>
   );
-}
+});

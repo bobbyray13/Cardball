@@ -7,7 +7,8 @@
  */
 
 import { useSyncExternalStore } from 'react';
-import { AnimatePresence, MotionConfig, motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { RARITY_LABEL, rarityRank } from '@cardball/shared';
 import type { DraftRarity } from '@cardball/shared';
 
@@ -82,63 +83,61 @@ export function CardToaster() {
   const live = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   return (
-    <MotionConfig reducedMotion="user">
-      <div
-        aria-live="polite"
-        aria-atomic="false"
-        className="pointer-events-none fixed inset-x-4 bottom-4 z-[60] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-80"
-      >
-        <AnimatePresence initial={false}>
-          {live.map((toast) => (
-            <motion.div
-              key={toast.id}
-              layout
-              initial={{ opacity: 0, x: 40, scale: 0.96 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: 24, scale: 0.96 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 26 }}
-              className={`panel pointer-events-auto flex w-full items-center gap-3 px-3 py-2.5 ${
-                rarityRank(toast.rarity) >= rarityRank('rare') ? 'ring-1 ring-gold/35' : ''
-              }`}
+    <div
+      aria-live="polite"
+      aria-atomic="false"
+      className="pointer-events-none fixed inset-x-4 bottom-4 z-[60] flex flex-col items-end gap-2 sm:inset-x-auto sm:right-5 sm:bottom-5 sm:w-80"
+    >
+      <AnimatePresence initial={false}>
+        {live.map((toast) => (
+          <motion.div
+            key={toast.id}
+            layout
+            initial={{ opacity: 0, x: 40, scale: 0.96 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: 24, scale: 0.96 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+            className={`panel pointer-events-auto flex w-full items-center gap-3 px-3 py-2.5 ${
+              rarityRank(toast.rarity) >= rarityRank('rare') ? 'ring-1 ring-gold/35' : ''
+            }`}
+          >
+            <motion.span
+              initial={{ rotate: -14, y: 6 }}
+              animate={{ rotate: 0, y: 0 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 20 }}
+              className="shrink-0"
             >
-              <motion.span
-                initial={{ rotate: -14, y: 6 }}
-                animate={{ rotate: 0, y: 0 }}
-                transition={{ type: 'spring', stiffness: 340, damping: 20 }}
-                className="shrink-0"
-              >
-                <MiniCard toast={toast} />
-              </motion.span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate font-display text-sm font-semibold text-chalk">
-                  {toast.title}
-                  {toast.year ? <span className="ml-1 font-mono text-xs font-normal text-chalk/50">{toast.year}</span> : null}
-                </span>
-                <span className="block truncate text-xs text-chalk/60">{toast.detail}</span>
-                <span className="mt-0.5 flex items-center gap-1.5">
-                  <span className="rounded-full bg-white/10 px-1.5 py-px text-[10px] font-bold tracking-wider text-chalk/75 uppercase">
-                    {RARITY_LABEL[toast.rarity]}
-                  </span>
-                  <span className="truncate font-mono text-[11px] text-chalk/50">{toast.headline}</span>
-                </span>
-                {toast.href ? (
-                  <a href={toast.href} className="mt-1 inline-block text-[11px] text-gold underline">
-                    Open collection
-                  </a>
-                ) : null}
+              <MiniCard toast={toast} />
+            </motion.span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate font-display text-sm font-semibold text-chalk">
+                {toast.title}
+                {toast.year ? <span className="ml-1 font-mono text-xs font-normal text-chalk/50">{toast.year}</span> : null}
               </span>
-              <button
-                type="button"
-                aria-label="Dismiss"
-                className="self-start rounded-full px-1.5 text-chalk/40 transition-colors hover:text-chalk"
-                onClick={() => dismissCardToast(toast.id)}
-              >
-                ×
-              </button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-    </MotionConfig>
+              <span className="block truncate text-xs text-chalk/60">{toast.detail}</span>
+              <span className="mt-0.5 flex items-center gap-1.5">
+                <span className="rounded-full bg-white/10 px-1.5 py-px text-[10px] font-bold tracking-wider text-chalk/75 uppercase">
+                  {RARITY_LABEL[toast.rarity]}
+                </span>
+                <span className="truncate font-mono text-[11px] text-chalk/50">{toast.headline}</span>
+              </span>
+              {toast.href ? (
+                <Link to={toast.href} className="mt-1 inline-block text-[11px] text-gold underline">
+                  Open collection
+                </Link>
+              ) : null}
+            </span>
+            <button
+              type="button"
+              aria-label="Dismiss"
+              className="self-start rounded-full px-1.5 text-chalk/40 transition-colors hover:text-chalk"
+              onClick={() => dismissCardToast(toast.id)}
+            >
+              ×
+            </button>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
   );
 }

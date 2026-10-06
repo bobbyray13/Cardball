@@ -359,7 +359,7 @@ function PackCardButton({
       </span>
       <span className="mt-0.5 block text-xs text-chalk/55">{card.teamLabel}</span>
       <span className="mt-1 block font-mono text-xs text-chalk/75">{card.headline}</span>
-      {capped ? <span className="mt-1 block text-xs text-ember">At your {card.rarity} cap for this draft</span> : null}
+      {capped ? <span className="mt-1 block text-xs text-crimson">At your {card.rarity} cap for this draft</span> : null}
     </button>
   );
 }

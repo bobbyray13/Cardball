@@ -11,6 +11,8 @@ import { recordCardLines } from './cardStats.js';
 import type { Ctx } from './context.js';
 import { env } from './env.js';
 import { HttpError, badRequest, forbidden, notFound } from './http.js';
+import { withKeyLock } from './lock.js';
+import { namesFor } from './names.js';
 import { loadTeam, photoMap, rosterMatchCards, teamSetupFor } from './roster.js';
 import type { LoadedTeam } from './roster.js';
 
@@ -36,10 +38,7 @@ const MAX_BOT_ACTIONS = 500;
 // One action at a time per game (single server process).
 const locks = new Map<number, Promise<unknown>>();
 function withLock<T>(gameId: number, fn: () => Promise<T>): Promise<T> {
-  const prev = locks.get(gameId) ?? Promise.resolve();
-  const next = prev.then(fn, fn);
-  locks.set(gameId, next.catch(() => undefined));
-  return next;
+  return withKeyLock(locks, gameId, fn);
 }
 
 const stored = (row: GameRow) => row.state as StoredGame;
@@ -366,7 +365,8 @@ export async function unlockGame(ctx: Ctx, user: AuthUser, gameId: number, passw
 /** The lobby: every game in the league, newest first. */
 export async function listGames(ctx: Ctx, user: AuthUser) {
   const rows = await ctx.db.select().from(games).orderBy(desc(games.updatedAt)).limit(100);
-  const names = new Map((await ctx.db.select({ id: users.id, name: users.displayName }).from(users)).map((u) => [u.id, u.name]));
+  // Names for exactly the managers with a game on the board — not the whole league.
+  const names = await namesFor(ctx, rows.flatMap((r) => [stored(r).hostUserId, stored(r).guestUserId]));
   return rows
     .map((r) => {
       const v = toView(r);

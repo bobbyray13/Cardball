@@ -1,6 +1,7 @@
+import { memo, useRef } from 'react';
+import { motion } from 'framer-motion';
 import type { EnginePlayer, GameState, Side } from '@cardball/engine';
-import type { SeasonStats } from '@cardball/shared';
-import type { HouseRules } from '@cardball/shared';
+import type { HouseRules, SeasonStats } from '@cardball/shared';
 import { formatBattingLine, formatPitchingLine } from '@cardball/shared';
 import {
   batterDue,
@@ -50,43 +51,71 @@ const NEUTRAL_SEASON: SeasonStats = {
   positionsPlayed: [],
 };
 
-/** Where each fielder stands on the mat, as a percentage of the container. */
-const FIELDER_SPOTS: Record<string, { x: number; y: number }> = {
-  C: { x: 50, y: 93 },
-  '1B': { x: 82, y: 68 },
-  '2B': { x: 63, y: 50 },
-  '3B': { x: 19, y: 68 },
-  SS: { x: 37, y: 50 },
-  LF: { x: 13, y: 30 },
-  CF: { x: 50, y: 15 },
-  RF: { x: 87, y: 30 },
-  P: { x: 50, y: 63 },
+/**
+ * Where everyone stands on the mat, as a percentage of the container. These
+ * are the same coordinates the painted diamond is drawn in (a 100×75 viewBox
+ * on a 4:3 box), so chips sit on the bases and grass they belong to.
+ */
+const HOME_PLATE = { x: 50, y: 70 };
+const BASE_SPOTS: Record<1 | 2 | 3, { x: number; y: number }> = {
+  1: { x: 76, y: 58 },
+  2: { x: 50, y: 47 },
+  3: { x: 24, y: 58 },
 };
 
-const BASE_SPOTS: Record<1 | 2 | 3, { x: number; y: number }> = {
-  1: { x: 76, y: 70 },
-  2: { x: 50, y: 52 },
-  3: { x: 24, y: 70 },
+const FIELDER_SPOTS: Record<string, { x: number; y: number }> = {
+  C: { x: 55, y: 74 },
+  '1B': { x: 68, y: 57 },
+  '2B': { x: 59, y: 50 },
+  '3B': { x: 32, y: 57 },
+  SS: { x: 41, y: 50 },
+  LF: { x: 16, y: 28 },
+  CF: { x: 50, y: 22 },
+  RF: { x: 84, y: 28 },
+  P: { x: 50, y: 55 },
 };
+
+/** Where the batter waits, in the left-hand batter's box. */
+const BATTER_BOX = { x: 43, y: 71 };
 
 export type ZoomPlayer = (side: Side, player: EnginePlayer) => void;
 
-export function Field({ state, photos, onZoom }: { state: GameState; photos: Record<string, number>; onZoom?: ZoomPlayer }) {
+/**
+ * The mat. Runners slide along the basepaths between bases as the plays
+ * resolve, the batter stands in the box, and occupied bases glow.
+ */
+export const Field = memo(function Field({ state, photos, onZoom }: { state: GameState; photos: Record<string, number>; onZoom?: ZoomPlayer }) {
   const defense = getDefense(state);
   const offense = getOffense(state);
   const defenseColors = teamColors(defense.name);
   const offenseColors = teamColors(offense.name);
+  // After the first paint, a runner reaching base runs in from the plate;
+  // on the first paint everyone is already where they belong.
+  const firstPaint = useRef(true);
+  if (firstPaint.current) {
+    queueMicrotask(() => {
+      firstPaint.current = false;
+    });
+  }
 
   const fielders = defense.players.filter(
     (p): p is EnginePlayer & { fieldPosition: string } => p.status === 'active' && !!p.fieldPosition && p.fieldPosition !== 'DH',
   );
   const pitcher = defense.players.find((p) => p.id === defense.activePitcherId) ?? null;
   const onBase = runnersOn(offense);
+  const occupied = onBase
+    .map((r) => r.base)
+    .filter((b): b is 1 | 2 | 3 => b === 1 || b === 2 || b === 3);
+  const batter = state.currentPa
+    ? offense.players.find((p) => p.id === state.currentPa!.batterId) ?? batterDue(state)
+    : state.phase === 'live'
+      ? batterDue(state)
+      : null;
 
   return (
     <div className="space-y-3">
       <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl ring-1 ring-black/40">
-        <FieldArt />
+        <FieldArt occupied={occupied} />
 
         {/* defense */}
         {fielders.map((fielder) => {
@@ -106,7 +135,22 @@ export function Field({ state, photos, onZoom }: { state: GameState; photos: Rec
           );
         })}
 
-        {/* runners */}
+        {/* the batter, standing in */}
+        {batter ? (
+          <Chip
+            key={`at-bat-${batter.id}`}
+            x={BATTER_BOX.x}
+            y={BATTER_BOX.y}
+            color={offenseColors.primary}
+            title={`At bat · ${batter.name}`}
+            photoId={photos[batter.id]}
+            onClick={onZoom ? () => onZoom(offense.side, batter) : undefined}
+            lines={['AB', shortName(batter.name)]}
+            ring
+          />
+        ) : null}
+
+        {/* runners, sliding between bases as plays resolve */}
         {onBase.map((runner) => {
           const spot = BASE_SPOTS[runner.base as 1 | 2 | 3];
           if (!spot) return null;
@@ -115,8 +159,8 @@ export function Field({ state, photos, onZoom }: { state: GameState; photos: Rec
               key={runner.id}
               x={spot.x}
               y={spot.y}
+              from={firstPaint.current ? undefined : HOME_PLATE}
               color={offenseColors.primary}
-              ring
               title={`${runner.name} on ${runner.base === 1 ? 'first' : runner.base === 2 ? 'second' : 'third'}`}
               photoId={photos[runner.id]}
               onClick={onZoom ? () => onZoom(offense.side, runner) : undefined}
@@ -127,21 +171,17 @@ export function Field({ state, photos, onZoom }: { state: GameState; photos: Rec
             />
           );
         })}
-
-        {/* home plate marker */}
-        <div className="absolute -translate-x-1/2 -translate-y-1/2 text-[10px] font-bold tracking-widest text-chalk/45" style={{ left: '50%', top: '82%' }}>
-          HOME
-        </div>
       </div>
 
       <MatchupStrip state={state} pitcher={pitcher} photos={photos} onZoom={onZoom} />
     </div>
   );
-}
+});
 
 function Chip({
   x,
   y,
+  from,
   color,
   lines,
   title,
@@ -151,6 +191,8 @@ function Chip({
 }: {
   x: number;
   y: number;
+  /** where a runner springs in from (home plate); omit to appear in place */
+  from?: { x: number; y: number };
   color: string;
   lines: string[];
   title: string;
@@ -158,17 +200,8 @@ function Chip({
   ring?: boolean;
   onClick?: (() => void) | undefined;
 }) {
-  return (
-    <button
-      type="button"
-      disabled={!onClick}
-      onClick={onClick}
-      className={`absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left shadow-lg ring-1 ring-black/40 enabled:cursor-zoom-in enabled:hover:brightness-125 ${
-        ring ? 'ring-2 ring-gold/70' : ''
-      }`}
-      style={{ left: `${x}%`, top: `${y}%`, background: color }}
-      title={title}
-    >
+  const label = (
+    <>
       {photoId ? (
         <img src={`/api/photos/${photoId}`} alt="" className="h-6 w-4 rounded object-cover" />
       ) : (
@@ -178,7 +211,45 @@ function Chip({
         <span className="text-[10px] font-semibold text-chalk">{lines[1]}</span>
         {lines[2] ? <span className="font-mono text-[9px] text-chalk/70">{lines[2]}</span> : null}
       </span>
-    </button>
+    </>
+  );
+
+  if (from) {
+    return (
+      <motion.button
+        type="button"
+        disabled={!onClick}
+        onClick={onClick}
+        className={`absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left shadow-lg ring-1 ring-black/40 enabled:cursor-zoom-in enabled:hover:brightness-125 ${
+          ring ? 'ring-2 ring-gold/70' : ''
+        }`}
+        style={{ background: color }}
+        title={title}
+        aria-label={title}
+        initial={{ left: `${from.x}%`, top: `${from.y}%`, opacity: 0, scale: 0.6 }}
+        animate={{ left: `${x}%`, top: `${y}%`, opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 180, damping: 22 }}
+      >
+        {label}
+      </motion.button>
+    );
+  }
+
+  return (
+    <motion.button
+      type="button"
+      disabled={!onClick}
+      onClick={onClick}
+      className={`absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left shadow-lg ring-1 ring-black/40 enabled:cursor-zoom-in enabled:hover:brightness-125 ${
+        ring ? 'ring-2 ring-gold/70' : ''
+      }`}
+      style={{ background: color, left: `${x}%`, top: `${y}%` }}
+      title={title}
+      aria-label={title}
+      initial={false}
+    >
+      {label}
+    </motion.button>
   );
 }
 
@@ -326,8 +397,12 @@ const shortName = (name: string) => {
   return parts.length > 1 ? (parts[parts.length - 1] ?? name) : name;
 };
 
-/** The mat itself: mown grass, a dirt infield, chalk lines, and the bases. */
-function FieldArt() {  return (
+/**
+ * The mat itself: mown grass, a dirt infield, chalk lines, and the bases.
+ * Occupied bases glow so a glance answers "who's on?".
+ */
+function FieldArt({ occupied }: { occupied: (1 | 2 | 3)[] }) {
+  return (
     <svg viewBox="0 0 100 75" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
       <defs>
         <linearGradient id="mat-grass" x1="0" y1="0" x2="0" y2="1">
@@ -359,13 +434,20 @@ function FieldArt() {  return (
       <path d="M50 70 L24 58" stroke="#f6f2e6" strokeOpacity="0.5" strokeWidth="0.3" />
 
       {/* bases */}
-      {[
-        [76, 58],
-        [50, 47],
-        [24, 58],
-      ].map(([x, y], i) => (
-        <rect key={i} x={x! - 1.6} y={y! - 1.6} width="3.2" height="3.2" fill="#f6f2e6" transform={`rotate(45 ${x} ${y})`} />
+      {(
+        [
+          [76, 58],
+          [50, 47],
+          [24, 58],
+        ] as const
+      ).map(([x, y], i) => (
+        <rect key={i} x={x - 1.6} y={y - 1.6} width="3.2" height="3.2" fill="#f6f2e6" transform={`rotate(45 ${x} ${y})`} />
       ))}
+      {/* occupied bases glow */}
+      {occupied.map((base) => {
+        const spot = BASE_SPOTS[base];
+        return <circle key={base} cx={spot.x} cy={spot.y} r="3.4" fill="none" stroke="#d8a83c" strokeWidth="0.7" opacity="0.9" />;
+      })}
       {/* home plate */}
       <path d="M48.6 68.6 L51.4 68.6 L51.4 70.6 L50 71.6 L48.6 70.6 Z" fill="#f6f2e6" />
       {/* mound */}

@@ -1,11 +1,12 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { DRAFT_LIMITS, PACK_THEMES, packTheme, packThemesForYears } from '@cardball/shared';
+import { DRAFT_LIMITS, packTheme } from '@cardball/shared';
 import type { DraftListItem, PackThemeId } from '@cardball/shared';
 import { api } from '../api.js';
-import { ERAS, THIS_YEAR, eraById } from '../eras.js';
+import { eraById } from '../eras.js';
 import { PackArt } from '../components/PackArt.js';
-import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { EraRangePicker, PackThemePicker, RarityCapFields, RoundSizeFields, chosenThemes } from '../components/RoomConfig.js';
+import { Button, EmptyState, ErrorNote, Panel, Spinner, useAction, useLoad } from '../components/ui.js';
 
 const PHASE_LABEL: Record<DraftListItem['phase'], string> = {
   lobby: 'Taking seats',
@@ -26,10 +27,7 @@ export function DraftsPage() {
   const [maxRare, setMaxRare] = useState(0);
   const [maxChase, setMaxChase] = useState(0);
 
-  const offered = useMemo(() => packThemesForYears(yearFrom, yearTo), [yearFrom, yearTo]);
-  const offeredIds = useMemo(() => new Set(offered.map((t) => t.id)), [offered]);
-  // A theme can fall out of the era when the years change; don't offer it then.
-  const chosen = themes.filter((t) => offeredIds.has(t));
+  const chosen = chosenThemes(themes, yearFrom, yearTo);
 
   const pickEra = (id: string) => {
     setEra(id);
@@ -37,12 +35,16 @@ export function DraftsPage() {
     if (preset) {
       setYearFrom(preset.from);
       setYearTo(preset.to);
-      setThemes((prev) => prev.filter((t) => packThemesForYears(preset.from, preset.to).some((x) => x.id === t)));
+      setThemes((prev) => chosenThemes(prev, preset.from, preset.to));
     }
   };
 
-  const toggleTheme = (id: PackThemeId) =>
-    setThemes((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
+  // Editing either year means the range is custom, not one of the presets.
+  const setYears = (next: { yearFrom: number; yearTo: number }) => {
+    setYearFrom(next.yearFrom);
+    setYearTo(next.yearTo);
+    setEra('custom');
+  };
 
   const create = useAction(async () => {
     const { draft } = await api.createDraft({
@@ -139,108 +141,37 @@ export function DraftsPage() {
               void create.execute();
             }}
           >
-            <Field label="Era">
-              <select name="era" className={inputClass} value={era} onChange={(e) => pickEra(e.target.value)}>
-                {ERAS.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.label} · {e.from}–{e.to}
-                  </option>
-                ))}
-                <option value="custom">Custom range</option>
-              </select>
-            </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Card years from">
-                <input
-                  name="yearFrom"
-                  type="number"
-                  className={inputClass}
-                  min={DRAFT_LIMITS.minYear}
-                  max={DRAFT_LIMITS.maxYear}
-                  value={yearFrom}
-                  onChange={(e) => {
-                    setYearFrom(Number(e.target.value));
-                    setEra('custom');
-                  }}
-                  required
-                />
-              </Field>
-              <Field label="through">
-                <input
-                  name="yearTo"
-                  type="number"
-                  className={inputClass}
-                  min={DRAFT_LIMITS.minYear}
-                  max={DRAFT_LIMITS.maxYear}
-                  value={yearTo}
-                  onChange={(e) => {
-                    setYearTo(Number(e.target.value));
-                    setEra('custom');
-                  }}
-                  required
-                />
-              </Field>
-            </div>
+            <EraRangePicker
+              era={era}
+              onEraChange={pickEra}
+              yearFrom={yearFrom}
+              yearTo={yearTo}
+              onYearsChange={setYears}
+              minYear={DRAFT_LIMITS.minYear}
+              maxYear={DRAFT_LIMITS.maxYear}
+              yearsRequired
+            />
 
-            <div>
-              <p className="mb-1.5 text-xs font-medium tracking-wide text-chalk/60 uppercase">Packs in the rotation</p>
-              <ul className="grid gap-1.5 sm:grid-cols-2">
-                {PACK_THEMES.map((t) => {
-                  const live = offeredIds.has(t.id);
-                  const on = chosen.includes(t.id);
-                  return (
-                    <li key={t.id}>
-                      <button
-                        type="button"
-                        name={`theme-${t.id}`}
-                        disabled={!live}
-                        onClick={() => toggleTheme(t.id)}
-                        className={`flex w-full items-center gap-2 rounded-lg border px-2 py-1.5 text-left transition-colors ${
-                          on ? 'border-gold bg-gold/10' : 'border-white/10 bg-black/20 hover:border-white/30'
-                        } ${live ? '' : 'cursor-not-allowed opacity-40'}`}
-                      >
-                        <PackArt theme={t} size="xs" className="shrink-0" />
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm text-chalk">{t.name}</span>
-                          <span className="block truncate text-[10px] text-chalk/50">{live ? t.hold : `not dealt in this era`}</span>
-                        </span>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-              {chosen.length === 0 ? <p className="mt-1 text-xs text-chalk/50">No packs chosen — a mixed pack is dealt instead.</p> : null}
-            </div>
+            <PackThemePicker themes={themes} yearFrom={yearFrom} yearTo={yearTo} onChange={setThemes} />
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Packs each">
-                <select name="rounds" className={inputClass} value={rounds} onChange={(e) => setRounds(Number(e.target.value))}>
-                  {Array.from({ length: DRAFT_LIMITS.maxRounds }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Cards per pack">
-                <select name="packSize" className={inputClass} value={packSize} onChange={(e) => setPackSize(Number(e.target.value))}>
-                  {Array.from({ length: DRAFT_LIMITS.maxPackSize - DRAFT_LIMITS.minPackSize + 1 }, (_, i) => i + DRAFT_LIMITS.minPackSize).map((n) => (
-                    <option key={n} value={n}>
-                      {n}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
+            <RoundSizeFields
+              rounds={rounds}
+              packSize={packSize}
+              onRoundsChange={setRounds}
+              onPackSizeChange={setPackSize}
+              maxRounds={DRAFT_LIMITS.maxRounds}
+              minPackSize={DRAFT_LIMITS.minPackSize}
+              maxPackSize={DRAFT_LIMITS.maxPackSize}
+            />
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Most rare each (0 = no cap)">
-                <input name="maxRare" type="number" className={inputClass} min={0} max={DRAFT_LIMITS.maxRare} value={maxRare} onChange={(e) => setMaxRare(Number(e.target.value))} />
-              </Field>
-              <Field label="Most chase each (0 = no cap)">
-                <input name="maxChase" type="number" className={inputClass} min={0} max={DRAFT_LIMITS.maxChase} value={maxChase} onChange={(e) => setMaxChase(Number(e.target.value))} />
-              </Field>
-            </div>
+            <RarityCapFields
+              rare={maxRare}
+              chase={maxChase}
+              onRareChange={setMaxRare}
+              onChaseChange={setMaxChase}
+              maxRare={DRAFT_LIMITS.maxRare}
+              maxChase={DRAFT_LIMITS.maxChase}
+            />
 
             <p className="text-xs text-chalk/50">
               Each manager ends with {rounds * packSize} cards. Rooms seat {DRAFT_LIMITS.minSeats}–{DRAFT_LIMITS.maxSeats} managers.

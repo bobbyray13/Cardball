@@ -1,16 +1,19 @@
 import { randomUUID } from 'node:crypto';
-import { and, asc, between, desc, eq, gt, inArray, sql } from 'drizzle-orm';
+import { and, asc, between, desc, eq, gt, inArray, isNotNull, sql } from 'drizzle-orm';
 import type { DraftCard, DraftConfig, DraftListItem, DraftParticipant, DraftRarity, DraftView, PackThemeId } from '@cardball/shared';
 import { DRAFT_LIMITS, PACK_THEME_IDS, activeHouseRules, packTheme, packThemesForYears, rateCard, themeForRound } from '@cardball/shared';
 import type { PackTheme } from '@cardball/shared';
-import { draftParticipants, drafts, people, seasons, tournaments, users } from '@cardball/db';
+import { draftParticipants, drafts, people, seasons, tournaments } from '@cardball/db';
 import type { DraftRow, PersonRow, SeasonRow } from '@cardball/db';
 import { fileCardIntoCollection } from './cardFiling.js';
 import { buildCard, windowRange } from './cards.js';
 import type { CardSnapshot } from './cards.js';
 import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
-import { badRequest, forbidden, notFound } from './http.js';
+import { badRequest, forbidden, notFound, HttpError } from './http.js';
+import { withKeyLock } from './lock.js';
+import { namesFor } from './names.js';
+import type { Executor } from './context.js';
 
 /**
  * Pass-the-pack drafts.
@@ -66,10 +69,7 @@ function capBlocks(caps: DraftConfig['rarityCaps'], picks: DraftCard[], card: Dr
 // Commands on one draft run one at a time, so a double-clicked pick can't take two cards.
 const locks = new Map<number, Promise<unknown>>();
 function withLock<T>(draftId: number, fn: () => Promise<T>): Promise<T> {
-  const prev = locks.get(draftId) ?? Promise.resolve();
-  const next = prev.then(fn, fn);
-  locks.set(draftId, next.catch(() => undefined));
-  return next;
+  return withKeyLock(locks, draftId, fn);
 }
 
 // ---------------------------------------------------------------------------
@@ -250,11 +250,6 @@ function toView(row: DraftRow, seatOfUser: number | null, participants: DraftPar
   };
 }
 
-async function loadNames(ctx: Ctx): Promise<Map<number, string>> {
-  const rows = await ctx.db.select({ id: users.id, name: users.displayName }).from(users);
-  return new Map(rows.map((r) => [r.id, r.name]));
-}
-
 async function loadParticipants(ctx: Ctx, draftId: number) {
   return ctx.db
     .select({ userId: draftParticipants.userId, seat: draftParticipants.seat })
@@ -269,13 +264,27 @@ async function loadRow(ctx: Ctx, draftId: number): Promise<DraftRow> {
   return row;
 }
 
+/** Persist a new draft state with an optimistic version check, as games are saved. */
+async function saveDraft(ctx: Ctx, row: DraftRow, state: DraftState, status: string = row.status): Promise<DraftRow> {
+  const [updated] = await ctx.db
+    .update(drafts)
+    .set({ state, status, version: row.version + 1, updatedAt: new Date() })
+    .where(and(eq(drafts.id, row.id), eq(drafts.version, row.version)))
+    .returning();
+  if (!updated) throw new HttpError(409, 'The draft moved on — refresh and try again');
+  broadcast(ctx, updated);
+  return updated;
+}
+
 async function viewOf(ctx: Ctx, row: DraftRow, userId: number): Promise<DraftView> {
-  const participants = participantsOf(await loadParticipants(ctx, row.id), row.hostUserId, await loadNames(ctx));
+  const seatRows = await loadParticipants(ctx, row.id);
+  const names = await namesFor(ctx, [row.hostUserId, ...seatRows.map((s) => s.userId)]);
+  const participants = participantsOf(seatRows, row.hostUserId, names);
   const mine = participants.find((p) => p.userId === userId);
   const [owner] = await ctx.db
     .select({ id: tournaments.id })
     .from(tournaments)
-    .where(sql`${tournaments.state}->>'draftId' = ${String(row.id)}`)
+    .where(eq(tournaments.draftId, row.id))
     .limit(1);
   return { ...toView(row, mine?.seat ?? null, participants, parseState(row)), tournamentId: owner?.id ?? null };
 }
@@ -366,11 +375,14 @@ export async function listDrafts(ctx: Ctx, user: AuthUser): Promise<DraftListIte
   // A tournament owns its draft room: seats come through the tournament, so
   // the room stays off the public list.
   const owned = new Set(
-    (await ctx.db.select({ state: tournaments.state }).from(tournaments))
-      .map((t) => (t.state as { draftId: number | null }).draftId)
+    (await ctx.db
+      .select({ draftId: tournaments.draftId })
+      .from(tournaments)
+      .where(isNotNull(tournaments.draftId)))
+      .map((t) => t.draftId)
       .filter((id): id is number => id !== null),
   );
-  const names = await loadNames(ctx);
+  const names = await namesFor(ctx, rows.map((r) => r.hostUserId));
   const items: DraftListItem[] = [];
   for (const row of rows) {
     if (owned.has(row.id)) continue;
@@ -421,9 +433,8 @@ async function joinUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise<
   await ctx.db.insert(draftParticipants).values({ draftId, userId: user.id, seat: seats.length });
   const state = parseState(row);
   state.log.push({ seq: state.log.length + 1, text: `${user.displayName} took seat ${seats.length + 1}.` });
-  const [updated] = await ctx.db.update(drafts).set({ state, updatedAt: new Date() }).where(eq(drafts.id, draftId)).returning();
-  broadcast(ctx, updated!);
-  return viewOf(ctx, updated!, user.id);
+  const updated = await saveDraft(ctx, row, state);
+  return viewOf(ctx, updated, user.id);
 }
 
 async function startUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
@@ -450,13 +461,8 @@ async function startUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise
     seq: state.log.length + 1,
     text: `Pack 1 of ${config.rounds} is on the table — ${first.name.toLowerCase()}, ${config.packSize} cards each. Tear yours open, take one, then pass ${passDirection(1)}.`,
   });
-  const [updated] = await ctx.db
-    .update(drafts)
-    .set({ status: 'active', state, updatedAt: new Date() })
-    .where(eq(drafts.id, draftId))
-    .returning();
-  broadcast(ctx, updated!);
-  return viewOf(ctx, updated!, user.id);
+  const updated = await saveDraft(ctx, row, state, 'active');
+  return viewOf(ctx, updated, user.id);
 }
 
 export function openPack(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
@@ -476,14 +482,13 @@ async function openUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise<
   if (state.opened.includes(me.seat)) return viewOf(ctx, row, user.id);
 
   state.opened.push(me.seat);
-  const [updated] = await ctx.db.update(drafts).set({ state, updatedAt: new Date() }).where(eq(drafts.id, draftId)).returning();
-  broadcast(ctx, updated!);
-  return viewOf(ctx, updated!, user.id);
+  const updated = await saveDraft(ctx, row, state);
+  return viewOf(ctx, updated, user.id);
 }
 
 /** Move the drafted card into the manager's collection. */
-async function filePickedCard(ctx: Ctx, userId: number, card: DraftCard): Promise<void> {
-  await fileCardIntoCollection(ctx, {
+async function filePickedCard(db: Executor, userId: number, card: DraftCard): Promise<void> {
+  await fileCardIntoCollection(db, {
     userId,
     personId: card.personId,
     cardYear: card.cardYear,
@@ -515,7 +520,6 @@ async function pickUnlocked(ctx: Ctx, user: AuthUser, draftId: number, cardId: s
 
   const [card] = pack.splice(index, 1);
   state.picks[key] = [...(state.picks[key] ?? []), card!];
-  await filePickedCard(ctx, user.id, card!);
 
   const seatCount = seats.length;
   const log = (text: string) => state.log.push({ seq: state.log.length + 1, text });
@@ -558,13 +562,20 @@ async function pickUnlocked(ctx: Ctx, user: AuthUser, draftId: number, cardId: s
     }
   }
 
-  const [updated] = await ctx.db
-    .update(drafts)
-    .set({ state, status, updatedAt: new Date() })
-    .where(eq(drafts.id, draftId))
-    .returning();
-  broadcast(ctx, updated!);
-  return viewOf(ctx, updated!, user.id);
+  // File the card and save the pick in one transaction: a failure between the
+  // two can no longer leave the card in the collection and still in the pack.
+  const updated = await ctx.db.transaction(async (tx) => {
+    await filePickedCard(tx, user.id, card!);
+    const [saved] = await tx
+      .update(drafts)
+      .set({ state, status, version: row.version + 1, updatedAt: new Date() })
+      .where(and(eq(drafts.id, row.id), eq(drafts.version, row.version)))
+      .returning();
+    if (!saved) throw new HttpError(409, 'The draft moved on — refresh and try again');
+    return saved;
+  });
+  broadcast(ctx, updated);
+  return viewOf(ctx, updated, user.id);
 }
 
 export async function deleteDraft(ctx: Ctx, user: AuthUser, draftId: number): Promise<void> {

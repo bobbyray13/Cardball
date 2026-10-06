@@ -87,6 +87,10 @@ export function validateTeamSetup(
   // The 9th hitter is the DH.
   const dh = lineup.filter((id) => !fielders.has(id));
   if (dh.length !== 1) throw new GameError(`${teamName}: exactly one DH is required`);
+  const dhPlayer = byId.get(dh[0]!);
+  if (dhPlayer && !cardCanBat(dhPlayer, rules)) {
+    throw new GameError(`${teamName}: ${dhPlayer.name}'s card is not game-eligible (needs a ${rules.fullGameAb} AB season)`);
+  }
 
   // Starting pitcher: SP class, eligible, not in the batting lineup.
   const pitcher = byId.get(startingPitcherId);

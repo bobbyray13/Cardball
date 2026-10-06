@@ -6,7 +6,7 @@ import { GameError } from '../src/errors.js';
 import { OUT_OF_POSITION_RATING, fieldingRating } from '../src/queries.js';
 import { scriptedRng } from '../src/rng.js';
 import type { GameState } from '../src/types.js';
-import { neutralTeam } from './fixtures.js';
+import { neutralTeam, seasons } from './fixtures.js';
 
 const ME = { userId: 1 };
 
@@ -75,6 +75,14 @@ describe('game setup', () => {
     expect(() =>
       createGame({ id: 'g', mode: 'hotseat', regulationInnings: 7, teams: [neutralTeam('a'), neutralTeam('b')] }, scriptedRng([6, 1])),
     ).toThrow(GameError);
+  });
+
+  it('rejects a DH whose card cannot bat', () => {
+    const team = neutralTeam('a');
+    team.players.find((p) => p.id === 'adh')!.seasons = seasons({ ab: 20 });
+    expect(() =>
+      createGame({ id: 'g', mode: 'hotseat', regulationInnings: 9, teams: [team, neutralTeam('b')] }, scriptedRng([6, 1])),
+    ).toThrow(/adh's card is not game-eligible/);
   });
 });
 
@@ -153,7 +161,7 @@ describe('double play', () => {
     // grounder (contact 4) to SS on direction 3, defense 15
     state = pitch(state, [6, 1, 3, 4, 15]);
     expect(state.pendingDecision?.kind).toBe('dp-attempt');
-    // diff 11 + fielding 0 + speed 0 + d20 10 = 21 > 20
+    // diff 11 + fielding 0 − speed 0 + d20 10 = 21 > 20
     state = act(state, { type: 'dp-attempt', attempt: true }, [10]);
     expect(state.outs).toBe(2);
     expect(state.away.players.every((p) => p.base === null)).toBe(true);
@@ -163,6 +171,26 @@ describe('double play', () => {
     let state = pitch(liveGame(), [6, 1, 3, 12, 2]);
     state = pitch(state, [6, 1, 3, 4, 5]);
     state = act(state, { type: 'dp-attempt', attempt: true }, [1]);
+    expect(state.outs).toBe(1);
+    expect(state.away.players.find((p) => p.id === 'b1')?.base).toBe(1);
+    expect(state.away.players.find((p) => p.id === 'b0')?.base).toBeNull();
+  });
+
+  it('batter speed works against the defense', () => {
+    // A 70-SB burner at the plate: the same dice that turn two on a neutral
+    // batter (21 > 20) now total 21 − 3 = 18.
+    const away = neutralTeam('b');
+    away.players.find((p) => p.id === 'b1')!.seasons = seasons({ sb: 70 });
+    const { state: created } = createGame(
+      { id: 'g1', mode: 'hotseat', regulationInnings: 9, teams: [neutralTeam('a'), away] },
+      scriptedRng([6, 1]),
+    );
+    let state = act(created, { type: 'start-game' }, [1, 1]);
+    state = pitch(state, [6, 1, 3, 12, 2]); // b0 singles
+    state = pitch(state, [6, 1, 3, 4, 15]); // burner b1 grounds to SS
+    expect(state.pendingDecision?.kind).toBe('dp-attempt');
+    // diff 11 + fielding 0 − speed 3 + d20 10 = 18 ≤ 20 → safe at first
+    state = act(state, { type: 'dp-attempt', attempt: true }, [10]);
     expect(state.outs).toBe(1);
     expect(state.away.players.find((p) => p.id === 'b1')?.base).toBe(1);
     expect(state.away.players.find((p) => p.id === 'b0')?.base).toBeNull();

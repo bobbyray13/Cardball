@@ -111,7 +111,7 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
     }
     if (body.photoId) await assertOwnPhoto(ctx, user.id, body.photoId);
 
-    const cardId = await fileCardIntoCollection(ctx, { ...body, userId: user.id });
+    const cardId = await fileCardIntoCollection(ctx.db, { ...body, userId: user.id });
     const [card] = await loadUserCards(ctx, user.id, [cardId]);
     return { card };
   });

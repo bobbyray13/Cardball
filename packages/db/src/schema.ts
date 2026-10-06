@@ -243,7 +243,13 @@ export const games = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
-  (t) => [index('games_status_idx').on(t.status), index('games_home_user_idx').on(t.homeUserId), index('games_away_user_idx').on(t.awayUserId)],
+  (t) => [
+    index('games_status_idx').on(t.status),
+    index('games_home_user_idx').on(t.homeUserId),
+    index('games_away_user_idx').on(t.awayUserId),
+    // The lobby lists games newest first.
+    index('games_updated_idx').on(t.updatedAt),
+  ],
 );
 
 export const gameEvents = pgTable(
@@ -320,17 +326,23 @@ export const cardGameLines = pgTable(
 // Drafts (M3) — pass-the-pack draft sessions
 // ---------------------------------------------------------------------------
 
-export const drafts = pgTable('drafts', {
-  id: serial('id').primaryKey(),
-  hostUserId: integer('host_user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  status: text('status').notNull().default('lobby'), // lobby | active | finished
-  config: jsonb('config').notNull(),
-  state: jsonb('state').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+export const drafts = pgTable(
+  'drafts',
+  {
+    id: serial('id').primaryKey(),
+    hostUserId: integer('host_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    status: text('status').notNull().default('lobby'), // lobby | active | finished
+    config: jsonb('config').notNull(),
+    state: jsonb('state').notNull(),
+    /** optimistic-concurrency counter, bumped on every state change */
+    version: integer('version').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [index('drafts_updated_idx').on(t.updatedAt)],
+);
 
 export const draftParticipants = pgTable(
   'draft_participants',
@@ -368,20 +380,26 @@ export const settings = pgTable('settings', {
  * tournament owns its draft room, and the cards each manager drafts become
  * their tournament team.
  */
-export const tournaments = pgTable('tournaments', {
-  id: serial('id').primaryKey(),
-  hostUserId: integer('host_user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' }),
-  name: text('name').notNull(),
-  status: text('status').notNull().default('lobby'), // lobby | drafting | playing | finished
-  /** format, seats, innings, auto-simulate, and the draft's settings */
-  config: jsonb('config').notNull(),
-  /** the draft room, the schedule, the teams, and the log */
-  state: jsonb('state').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at').notNull().defaultNow(),
-});
+export const tournaments = pgTable(
+  'tournaments',
+  {
+    id: serial('id').primaryKey(),
+    hostUserId: integer('host_user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    status: text('status').notNull().default('lobby'), // lobby | drafting | playing | finished
+    /** format, seats, innings, auto-simulate, and the draft's settings */
+    config: jsonb('config').notNull(),
+    /** the draft room, the schedule, the teams, and the log */
+    state: jsonb('state').notNull(),
+    /** the draft room this tournament owns, so lookups don't scan state JSONB */
+    draftId: integer('draft_id'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at').notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex('tournaments_draft_idx').on(t.draftId), index('tournaments_updated_idx').on(t.updatedAt)],
+);
 
 // ---------------------------------------------------------------------------
 // Row mappers

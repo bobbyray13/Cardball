@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { OUT_OF_POSITION_RATING } from '@cardball/engine';
 import { faceLabel, rateCard } from '@cardball/shared';
 import type { CollectionCard, RosterEntryView, SavedLineup, TeamView } from '@cardball/shared';
@@ -21,6 +21,7 @@ const FIELD: readonly { pos: string; label: string }[] = [
 
 export function TeamPage() {
   const teamId = Number(useParams().id);
+  const navigate = useNavigate();
   const team = useLoad(() => api.team(teamId), [teamId]);
   const collection = useLoad(() => api.collection(), []);
   const [view, setView] = useState<TeamView | null>(null);
@@ -46,7 +47,7 @@ export function TeamPage() {
 
   const remove = useAction(async () => {
     await api.deleteTeam(teamId);
-    window.location.assign('/teams');
+    navigate('/teams');
   });
 
   if (team.loading && !view) return <Spinner label="Fetching the team…" />;

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { formatLabel, recordLabel, tournamentEraLabel } from '@cardball/shared';
@@ -18,6 +18,7 @@ const STATUS_LABEL: Record<TournamentView['status'], string> = {
 export function TournamentPage() {
   const id = Number(useParams().id);
   const { user } = useSession();
+  const navigate = useNavigate();
   const room = useLoad(() => api.tournament(id), [id]);
 
   const start = useAction(async () => {
@@ -34,7 +35,7 @@ export function TournamentPage() {
   });
   const close = useAction(async () => {
     await api.deleteTournament(id);
-    window.location.assign('/tournaments');
+    navigate('/tournaments');
   });
 
   // Live updates: the tournament room nudges, and while the draft is running so

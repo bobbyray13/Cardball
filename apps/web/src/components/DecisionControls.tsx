@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import type { EnginePlayer, GameState, Side } from '@cardball/engine';
 import {
   availablePitchers,
@@ -21,7 +22,7 @@ import { Button, Notice } from './ui.js';
  * choosing a new pitcher, replacing an injured player). When it is not paused,
  * the offense throws the next pitch and may send a runner.
  */
-export function DecisionControls({
+export const DecisionControls = memo(function DecisionControls({
   state,
   mySides,
   onAction,
@@ -73,7 +74,7 @@ export function DecisionControls({
   }
 
   return <Notice>Waiting for the next play…</Notice>;
-}
+});
 
 function Waiting({ name, prompt }: { name: string; prompt: string }) {
   return (
@@ -102,8 +103,8 @@ function ForcedDecision({ state, onAction, busy }: { state: GameState; onAction:
         <div className="space-y-2">
           {pending.detail?.dpFactors ? (
             <p className="font-mono text-xs text-chalk/50">
-              grounder {fmtMod(pending.detail.dpFactors.diff)} · fielding {fmtMod(pending.detail.dpFactors.fielding)} · runner speed −
-              {pending.detail.dpFactors.batterSb} · needs better than 20
+              grounder {fmtMod(pending.detail.dpFactors.diff)} · fielding {fmtMod(pending.detail.dpFactors.fielding)} · batter speed −
+              {pending.detail.dpFactors.batterSb} · needs better than {state.config.rules.dpTarget}
             </p>
           ) : null}
           <div className="flex flex-wrap gap-2">

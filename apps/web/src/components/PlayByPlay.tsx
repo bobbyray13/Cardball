@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import type { GameEvent } from '@cardball/engine';
 import { DiceRow } from './Dice.js';
 
@@ -22,16 +22,19 @@ const KIND_STYLE: Record<string, string> = {
 };
 
 /** Scorer's-book play by play. Newest at the bottom, and it follows along. */
-export function PlayByPlay({ events, className = '' }: { events: GameEvent[]; className?: string }) {
-  const end = useRef<HTMLDivElement>(null);
+export const PlayByPlay = memo(function PlayByPlay({ events, className = '' }: { events: GameEvent[]; className?: string }) {
+  const scroller = useRef<HTMLDivElement>(null);
   const lastSeq = events.at(-1)?.seq ?? 0;
 
   useEffect(() => {
-    end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    // Scroll the ledger itself — scrolling a trailing node would yank the
+    // whole page along on mobile.
+    const el = scroller.current;
+    if (el) el.scrollTop = el.scrollHeight;
   }, [lastSeq]);
 
   return (
-    <div className={`max-h-[28rem] space-y-1.5 overflow-y-auto pr-1 ${className}`}>
+    <div ref={scroller} className={`max-h-[28rem] space-y-1.5 overflow-y-auto pr-1 ${className}`}>
       {events.length === 0 ? <p className="py-6 text-center text-sm text-chalk/45">The first pitch is coming up.</p> : null}
       {events.map((event) => (
         <article
@@ -54,7 +57,6 @@ export function PlayByPlay({ events, className = '' }: { events: GameEvent[]; cl
           ) : null}
         </article>
       ))}
-      <div ref={end} />
     </div>
   );
-}
+});
