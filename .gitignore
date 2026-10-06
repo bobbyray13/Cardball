@@ -24,7 +24,9 @@ uploads/
 
 # test / coverage
 coverage/
+apps/server/.test-uploads/
 
 # os / editor cruft
 .DS_Store
 Thumbs.db
+tools/import-stats/.cache/

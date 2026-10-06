@@ -6,12 +6,14 @@ services:
     image: postgres:17-alpine
     container_name: cardball-postgres
     restart: unless-stopped
+    # Default bridge: avoids creating a project network (some dev machines run out of address pools).
+    network_mode: bridge
     environment:
       POSTGRES_USER: cardball
       POSTGRES_PASSWORD: cardball
       POSTGRES_DB: cardball
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - cardball_pgdata:/var/lib/postgresql/data
     healthcheck:

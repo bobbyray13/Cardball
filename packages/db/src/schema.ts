@@ -174,6 +174,12 @@ export const userCards = pgTable(
 // Teams
 // ---------------------------------------------------------------------------
 
+export interface SavedLineup {
+  lineup: string[];
+  fieldPositions: Partial<Record<Position, string>>;
+  startingPitcherId: string;
+}
+
 export const teams = pgTable(
   'teams',
   {
@@ -183,6 +189,8 @@ export const teams = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
     primaryColor: text('primary_color'),
+    /** saved default lineup, keyed by team_cards.id (as strings) */
+    lineup: jsonb('lineup').$type<SavedLineup | null>(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [index('teams_user_idx').on(t.userId)],

@@ -6,7 +6,7 @@ export default defineConfig({
   schema: './src/schema.ts',
   out: './drizzle',
   dbCredentials: {
-    url: process.env.DATABASE_URL ?? 'postgres://cardball:cardball@localhost:5432/cardball',
+    url: process.env.DATABASE_URL ?? 'postgres://cardball:cardball@localhost:5433/cardball',
   },
   verbose: true,
   strict: true,
