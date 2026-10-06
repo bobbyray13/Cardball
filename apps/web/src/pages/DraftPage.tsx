@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
-import type { CardSnapshot, DraftCard, DraftView } from '@cardball/shared';
+import { OUT_OF_POSITION_RATING } from '@cardball/engine';
+import type { CardSnapshot, DraftCard, DraftView, Position } from '@cardball/shared';
 import { packTheme } from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
@@ -242,13 +243,23 @@ export function DraftPage() {
 
       {draft.phase === 'finished' ? (
         <Panel title="Draft complete">
-          <p className="text-sm text-chalk/70">
-            Your {draft.myPicks.length} picks are in your{' '}
-            <Link to="/collection" className="text-gold underline">
-              collection
-            </Link>
-            . Build a team with them next.
-          </p>
+          {draft.tournamentId !== null ? (
+            <p className="text-sm text-chalk/70">
+              Your {draft.myPicks.length} picks are your tournament team.{' '}
+              <Link to={`/tournaments/${draft.tournamentId}`} className="text-gold underline">
+                Back to the tournament
+              </Link>
+              .
+            </p>
+          ) : (
+            <p className="text-sm text-chalk/70">
+              Your {draft.myPicks.length} picks are in your{' '}
+              <Link to="/collection" className="text-gold underline">
+                collection
+              </Link>
+              . Build a team with them next.
+            </p>
+          )}
         </Panel>
       ) : null}
 
@@ -262,6 +273,7 @@ export function DraftPage() {
                 : undefined
             }
           >
+            {draft.tournamentId !== null && draft.phase === 'active' ? <RosterNeeds picks={draft.myPicks} /> : null}
             {draft.myPicks.length === 0 ? (
               <p className="text-sm text-chalk/55">Nothing yet.</p>
             ) : (
@@ -352,6 +364,36 @@ function PackCardButton({
 }
 
 /** Would taking this card break the draft's rarity cap? */
+const FIELD: readonly Position[] = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'];
+
+/**
+ * A tournament roster is only what its manager drafts, so the room keeps a
+ * running list of what the picks still can't cover.
+ */
+function RosterNeeds({ picks }: { picks: DraftCard[] }) {
+  const covered = new Set(picks.flatMap((c) => c.positions ?? []));
+  const missing = FIELD.filter((pos) => !covered.has(pos));
+  const hitters = new Set(picks.filter((c) => (c.positions ?? []).length > 0).map((c) => c.personId)).size;
+  const hasStarter = picks.some((c) => c.starter);
+  const needs: string[] = [];
+  if (missing.length) {
+    needs.push(`Nobody for ${missing.join(', ')} yet. Someone will play there out of position (fielding ${OUT_OF_POSITION_RATING}).`);
+  }
+  if (hitters < 9) needs.push(`${hitters} of the 9 hitters you need.`);
+  if (!hasStarter) needs.push('No starting pitcher yet. Without one, your team forfeits.');
+
+  if (needs.length === 0) {
+    return <p className="mb-3 text-sm text-gold/90">Every position covered, nine bats, and a starter on the staff.</p>;
+  }
+  return (
+    <div className="mb-3">
+      <Notice>
+        <span className="font-semibold">Your tournament roster is only what you draft.</span> {needs.join(' ')}
+      </Notice>
+    </div>
+  );
+}
+
 function overCap(draft: DraftView, card: DraftCard): boolean {
   const caps = draft.config.rarityCaps;
   if (!caps) return false;

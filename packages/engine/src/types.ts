@@ -143,9 +143,9 @@ export interface GameConfig {
    */
   rules: HouseRules;
   /**
-   * What cards this match allows, snapshotted with the house rules. The engine
-   * does not read it — the server checks both rosters against it before the
-   * first pitch — but it rides in the state so the room can print the terms.
+   * What cards this match allows, snapshotted with the house rules. The server
+   * checks both rosters against the era and caps before the first pitch; the
+   * engine reads only `outOfPosition`, when it validates lineups.
    */
   match?: MatchRules;
 }

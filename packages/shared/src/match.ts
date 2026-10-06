@@ -19,6 +19,12 @@ export interface MatchRules {
   yearTo: number;
   /** most rare and chase cards one roster may carry, or null for no limit */
   rarityCaps: { rare: number; chase: number } | null;
+  /**
+   * Starters may field a position their card doesn't list, at the
+   * out-of-position rating. Only tournaments set this: a drafted roster can't
+   * go shopping for a center fielder. Not in matchRulesSchema on purpose.
+   */
+  outOfPosition?: boolean;
 }
 
 /** Match-rule limits, shared so the client and server agree on them. */

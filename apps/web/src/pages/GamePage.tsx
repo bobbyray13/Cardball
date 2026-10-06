@@ -138,7 +138,7 @@ export function GamePage() {
                   </ErrorBoundary>
                 </Panel>
 
-                <Panel title="Your move" subtitle={waiting && mySides.includes(waiting.side) ? waiting.prompt : undefined}>
+                <Panel title={mySides.length > 0 ? 'Your move' : 'In the stands'} subtitle={waiting && mySides.includes(waiting.side) ? waiting.prompt : undefined}>
                   <ErrorNote error={error} />
                   <ErrorBoundary label="The decision panel">
                     <DecisionControls state={state} mySides={mySides} onAction={(a) => void runAction(a)} busy={busy} />

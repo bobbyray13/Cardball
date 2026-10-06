@@ -36,6 +36,9 @@ export function AppShell() {
             <NavLink to="/drafts" className={link}>
               Drafts
             </NavLink>
+            <NavLink to="/tournaments" className={link}>
+              Tournaments
+            </NavLink>
             {user?.isAdmin ? (
               <NavLink to="/admin" className={link}>
                 Commissioner

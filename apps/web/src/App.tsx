@@ -10,6 +10,8 @@ import { LoginPage } from './pages/LoginPage.js';
 import { SearchPage } from './pages/SearchPage.js';
 import { TeamPage } from './pages/TeamPage.js';
 import { TeamsPage } from './pages/TeamsPage.js';
+import { TournamentPage } from './pages/TournamentPage.js';
+import { TournamentsPage } from './pages/TournamentsPage.js';
 import { useSession } from './session.js';
 
 export default function App() {
@@ -35,6 +37,8 @@ export default function App() {
         <Route path="/games/:id" element={<GamePage />} />
         <Route path="/drafts" element={<DraftsPage />} />
         <Route path="/drafts/:id" element={<DraftPage />} />
+        <Route path="/tournaments" element={<TournamentsPage />} />
+        <Route path="/tournaments/:id" element={<TournamentPage />} />
         <Route path="/admin" element={user?.isAdmin ? <AdminPage /> : <Navigate to="/" replace />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

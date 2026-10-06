@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   index,
 } from 'drizzle-orm/pg-core';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import type { Position, SavedLineup, SeasonStats } from '@cardball/shared';
 
 // ---------------------------------------------------------------------------
@@ -188,6 +189,11 @@ export const teams = pgTable(
     primaryColor: text('primary_color'),
     /** saved default lineup, keyed by team_cards.id (as strings) */
     lineup: jsonb('lineup').$type<SavedLineup | null>(),
+    /**
+     * Set on a team built from a tournament draft. Its lineup may start a
+     * fielder out of position, since its manager couldn't pick the roster.
+     */
+    tournamentId: integer('tournament_id').references((): AnyPgColumn => tournaments.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [index('teams_user_idx').on(t.userId)],
@@ -230,6 +236,8 @@ export const games = pgTable(
     version: integer('version').notNull().default(0),
     state: jsonb('state').notNull(),
     discordInviteUrl: text('discord_invite_url'),
+    /** set when a tournament scheduled this game, so its other managers can watch */
+    tournamentId: integer('tournament_id').references((): AnyPgColumn => tournaments.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -315,12 +323,31 @@ export const settings = pgTable('settings', {
   updatedByUserId: integer('updated_by_user_id').references(() => users.id, { onDelete: 'set null' }),
 });
 
+/**
+ * A tournament: three or four managers draft once, then play it off. The
+ * tournament owns its draft room, and the cards each manager drafts become
+ * their tournament team.
+ */
+export const tournaments = pgTable('tournaments', {
+  id: serial('id').primaryKey(),
+  hostUserId: integer('host_user_id')
+    .notNull()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  status: text('status').notNull().default('lobby'), // lobby | drafting | playing | finished
+  /** format, seats, innings, auto-simulate, and the draft's settings */
+  config: jsonb('config').notNull(),
+  /** the draft room, the schedule, the teams, and the log */
+  state: jsonb('state').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at').notNull().defaultNow(),
+});
+
 // ---------------------------------------------------------------------------
 // Row mappers
 // ---------------------------------------------------------------------------
 
-export type PersonRow = typeof people.$inferSelect;
-export type SeasonRow = typeof seasons.$inferSelect;
+export type PersonRow = typeof people.$inferSelect;export type SeasonRow = typeof seasons.$inferSelect;
 export type CardModelRow = typeof cardModels.$inferSelect;
 export type UserCardRow = typeof userCards.$inferSelect;
 export type GameRow = typeof games.$inferSelect;
@@ -330,6 +357,7 @@ export type TeamRow = typeof teams.$inferSelect;
 export type DraftRow = typeof drafts.$inferSelect;
 export type DraftParticipantRow = typeof draftParticipants.$inferSelect;
 export type SettingsRow = typeof settings.$inferSelect;
+export type TournamentRow = typeof tournaments.$inferSelect;
 
 /** DB row → engine-facing SeasonStats. */
 export function seasonRowToStats(row: SeasonRow): SeasonStats {

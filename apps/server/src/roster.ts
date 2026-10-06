@@ -81,12 +81,24 @@ function prefixLineup(lineup: SavedLineup, prefix: string): Pick<TeamSetup, 'lin
   };
 }
 
-/** Validate a saved lineup against the roster; returns the problem or null. */
-export function lineupProblem(loaded: LoadedTeam, lineup: SavedLineup | null, rules: HouseRules = activeHouseRules()): string | null {
+/** A team built from a tournament draft may start fielders out of position. */
+export const playsOutOfPosition = (loaded: LoadedTeam): boolean => loaded.team.tournamentId !== null;
+
+/**
+ * Validate a saved lineup against the roster; returns the problem or null.
+ * Out-of-position starters are allowed for tournament teams unless the caller
+ * says otherwise (an ordinary game holds every team to its cards).
+ */
+export function lineupProblem(
+  loaded: LoadedTeam,
+  lineup: SavedLineup | null,
+  rules: HouseRules = activeHouseRules(),
+  outOfPosition = playsOutOfPosition(loaded),
+): string | null {
   if (!lineup) return 'No lineup set';
   const players = loaded.roster.filter((r) => r.entry.card.playable).map((r) => toPlayerSetup(r, ''));
   try {
-    validateTeamSetup(players, prefixLineup(lineup, ''), loaded.team.name, rules);
+    validateTeamSetup(players, prefixLineup(lineup, ''), loaded.team.name, rules, { outOfPosition });
     return null;
   } catch (err) {
     return err instanceof Error ? err.message : String(err);
@@ -97,11 +109,16 @@ export function lineupProblem(loaded: LoadedTeam, lineup: SavedLineup | null, ru
  * Engine team setup for a game. Uses the saved lineup when it's legal,
  * otherwise an automatic one. Throws a readable error if neither works.
  */
-export function teamSetupFor(loaded: LoadedTeam, idPrefix: string, opts: { userId: number | null; isBot: boolean }): TeamSetup {
+export function teamSetupFor(
+  loaded: LoadedTeam,
+  idPrefix: string,
+  opts: { userId: number | null; isBot: boolean; outOfPosition?: boolean },
+): TeamSetup {
   const rules = activeHouseRules();
+  const outOfPosition = opts.outOfPosition === true;
   let lineup = loaded.team.lineup;
-  if (lineupProblem(loaded, lineup, rules)) {
-    const auto = autoLineup(rosterCards(loaded.roster), rules);
+  if (lineupProblem(loaded, lineup, rules, outOfPosition)) {
+    const auto = autoLineup(rosterCards(loaded.roster), rules, { outOfPosition });
     if ('error' in auto) throw new Error(`${loaded.team.name}: ${auto.error}`);
     lineup = auto.lineup;
   }

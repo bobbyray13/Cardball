@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { OUT_OF_POSITION_RATING } from '@cardball/engine';
 import { faceLabel, rateCard } from '@cardball/shared';
 import type { CollectionCard, RosterEntryView, SavedLineup, TeamView } from '@cardball/shared';
 import { api } from '../api.js';
@@ -227,6 +228,7 @@ function LineupEditor({ team, onSaved }: { team: TeamView; onSaved: (team: TeamV
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {FIELD.map(({ pos, label }) => {
           const eligible = hitters.filter((r) => r.card.positions.includes(pos as never));
+          const offCard = team.outOfPosition ? hitters.filter((r) => !r.card.positions.includes(pos as never)) : [];
           const value = (current.fieldPositions[pos as keyof typeof current.fieldPositions] as string | undefined) ?? '';
           return (
             <Field key={pos} label={`${pos} · ${label}`}>
@@ -237,6 +239,15 @@ function LineupEditor({ team, onSaved }: { team: TeamView; onSaved: (team: TeamV
                     {playerLabel(r)}
                   </option>
                 ))}
+                {offCard.length ? (
+                  <optgroup label={`Out of position (fielding ${OUT_OF_POSITION_RATING})`}>
+                    {offCard.map((r) => (
+                      <option key={r.id} value={String(r.teamCardId)}>
+                        {playerLabel(r)}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : null}
               </select>
             </Field>
           );

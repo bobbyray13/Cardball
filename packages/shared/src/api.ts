@@ -80,6 +80,8 @@ export interface TeamView {
   lineup: SavedLineup | null;
   /** why the saved lineup is not legal, or null when it is */
   lineupProblem: string | null;
+  /** a tournament team: starters may field positions their cards don't list */
+  outOfPosition: boolean;
   roster: RosterEntryView[];
 }
 
@@ -215,6 +217,10 @@ export interface DraftCard {
   headline: string;
   /** true when the card can bat or pitch in a game */
   playable: boolean;
+  /** where the card can field, empty when it can't bat (missing on old drafts) */
+  positions?: Position[];
+  /** a starting pitcher (missing on old drafts) */
+  starter?: boolean;
 }
 
 export interface DraftParticipant {
@@ -255,6 +261,8 @@ export interface DraftView {
   pickCounts: Record<string, number>;
   /** newest-last draft log */
   log: { seq: number; text: string }[];
+  /** the tournament this room drafts for, if any: picks become its roster */
+  tournamentId: number | null;
   updatedAt: string;
 }
 

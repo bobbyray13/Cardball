@@ -14,6 +14,7 @@ import { cardRoutes } from './routes/cards.js';
 import { draftRoutes } from './routes/drafts.js';
 import { gameRoutes } from './routes/games.js';
 import { teamRoutes } from './routes/teams.js';
+import { tournamentRoutes } from './routes/tournaments.js';
 
 export async function buildApp(ctx: Ctx, opts: { logger?: boolean } = {}) {
   const app = Fastify({ logger: opts.logger ?? true, trustProxy: true, bodyLimit: 1024 * 1024 });
@@ -43,6 +44,7 @@ export async function buildApp(ctx: Ctx, opts: { logger?: boolean } = {}) {
   gameRoutes(app, ctx);
   draftRoutes(app, ctx);
   adminRoutes(app, ctx);
+  tournamentRoutes(app, ctx);
 
   // Production: serve the built web app, falling back to index.html for client routes.
   if (env.webDist && existsSync(join(env.webDist, 'index.html'))) {

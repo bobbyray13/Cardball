@@ -3,7 +3,7 @@ import { and, asc, between, desc, eq, gt, inArray, sql } from 'drizzle-orm';
 import type { DraftCard, DraftConfig, DraftListItem, DraftParticipant, DraftRarity, DraftView, PackThemeId } from '@cardball/shared';
 import { DRAFT_LIMITS, PACK_THEME_IDS, activeHouseRules, packTheme, packThemesForYears, rateCard, themeForRound } from '@cardball/shared';
 import type { PackTheme } from '@cardball/shared';
-import { draftParticipants, drafts, people, seasons, users } from '@cardball/db';
+import { draftParticipants, drafts, people, seasons, tournaments, users } from '@cardball/db';
 import type { DraftRow, PersonRow, SeasonRow } from '@cardball/db';
 import { fileCardIntoCollection } from './cardFiling.js';
 import { buildCard, windowRange } from './cards.js';
@@ -131,6 +131,8 @@ async function dealPackAtYear(ctx: Ctx, cardYear: number, count: number, theme: 
       rarity: rating.rarity,
       headline: rating.headline,
       playable: card.playable,
+      positions: card.canBat ? card.positions : [],
+      starter: card.pitcherClass === 'SP',
     });
   }
 
@@ -217,7 +219,7 @@ function participantsOf(rows: { userId: number; seat: number }[], hostUserId: nu
     .map((r) => ({ userId: r.userId, seat: r.seat, name: names.get(r.userId) ?? '?', isHost: r.userId === hostUserId }));
 }
 
-function toView(row: DraftRow, seatOfUser: number | null, participants: DraftParticipant[], state: DraftState): DraftView {
+function toView(row: DraftRow, seatOfUser: number | null, participants: DraftParticipant[], state: DraftState): Omit<DraftView, 'tournamentId'> {
   const seats = participants.length;
   const myKey = seatOfUser === null ? null : String(seatOfUser);
   const pickCounts: Record<string, number> = {};
@@ -270,7 +272,12 @@ async function loadRow(ctx: Ctx, draftId: number): Promise<DraftRow> {
 async function viewOf(ctx: Ctx, row: DraftRow, userId: number): Promise<DraftView> {
   const participants = participantsOf(await loadParticipants(ctx, row.id), row.hostUserId, await loadNames(ctx));
   const mine = participants.find((p) => p.userId === userId);
-  return toView(row, mine?.seat ?? null, participants, parseState(row));
+  const [owner] = await ctx.db
+    .select({ id: tournaments.id })
+    .from(tournaments)
+    .where(sql`${tournaments.state}->>'draftId' = ${String(row.id)}`)
+    .limit(1);
+  return { ...toView(row, mine?.seat ?? null, participants, parseState(row)), tournamentId: owner?.id ?? null };
 }
 
 // ---------------------------------------------------------------------------
@@ -356,9 +363,17 @@ export async function createDraft(ctx: Ctx, user: AuthUser, input: CreateDraftIn
 
 export async function listDrafts(ctx: Ctx, user: AuthUser): Promise<DraftListItem[]> {
   const rows = await ctx.db.select().from(drafts).orderBy(desc(drafts.updatedAt)).limit(50);
+  // A tournament owns its draft room: seats come through the tournament, so
+  // the room stays off the public list.
+  const owned = new Set(
+    (await ctx.db.select({ state: tournaments.state }).from(tournaments))
+      .map((t) => (t.state as { draftId: number | null }).draftId)
+      .filter((id): id is number => id !== null),
+  );
   const names = await loadNames(ctx);
   const items: DraftListItem[] = [];
   for (const row of rows) {
+    if (owned.has(row.id)) continue;
     const seats = await loadParticipants(ctx, row.id);
     const config = parseConfig(row);
     items.push({

@@ -7,4 +7,5 @@ export * from './api.js';
 export * from './rarity.js';
 export * from './packs.js';
 export * from './match.js';
+export * from './tournament.js';
 export * from './rules.js';

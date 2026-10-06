@@ -4,7 +4,7 @@ import { pushEvent, roll } from './events.js';
 import { GameError } from './errors.js';
 import type { Rng } from './rng.js';
 import type { EnginePlayer, GameEvent, GameSetup, GameState, PlayerSetup, Side, TeamSetup } from './types.js';
-import { cardSeasons, rulesOf } from './queries.js';
+import { OUT_OF_POSITION_RATING, cardSeasons, rulesOf } from './queries.js';
 import { startHalfInning } from './flow.js';
 
 const FIELD_POSITIONS: readonly Position[] = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'];
@@ -33,8 +33,19 @@ export interface LineupData {
   startingPitcherId: string;
 }
 
+export interface LineupOptions {
+  /** starters may field a position their card doesn't list (tournaments) */
+  outOfPosition?: boolean;
+}
+
 /** Validate a team's lineup the way the rules require. Throws GameError. */
-export function validateTeamSetup(players: PlayerSetup[], lineupData: LineupData, teamName: string, rules: HouseRules): void {
+export function validateTeamSetup(
+  players: PlayerSetup[],
+  lineupData: LineupData,
+  teamName: string,
+  rules: HouseRules,
+  options: LineupOptions = {},
+): void {
   const byId = new Map(players.map((p) => [p.id, p]));
 
   if (players.length === 0) throw new GameError(`${teamName}: roster is empty`);
@@ -60,7 +71,7 @@ export function validateTeamSetup(players: PlayerSetup[], lineupData: LineupData
     const player = byId.get(id);
     if (!player) throw new GameError(`${teamName}: ${id} is not on the roster`);
     if (!lineupSet.has(id)) throw new GameError(`${teamName}: ${player.name} fields ${pos} but is not in the lineup`);
-    if (!player.positions.includes(pos)) {
+    if (!player.positions.includes(pos) && !options.outOfPosition) {
       throw new GameError(`${teamName}: ${player.name} is not eligible to field ${pos}`);
     }
     if (!cardCanBat(player, rules)) {
@@ -127,8 +138,8 @@ function buildPlayer(
   };
 }
 
-function buildTeam(setup: TeamSetup, side: Side, rules: HouseRules): GameState['home'] {
-  validateTeamSetup(setup.players, setup, setup.name, rules);
+function buildTeam(setup: TeamSetup, side: Side, rules: HouseRules, options: LineupOptions): GameState['home'] {
+  validateTeamSetup(setup.players, setup, setup.name, rules, options);
   const players = setup.players.map((p) => buildPlayer(p, setup.lineup, setup.fieldPositions, p.id === setup.startingPitcherId));
   return {
     side,
@@ -165,7 +176,11 @@ export function createGame(setup: GameSetup, rng: Rng): { state: GameState; even
   const homeIdx = rollA > rollB ? 0 : 1;
   const awayIdx = homeIdx === 0 ? 1 : 0;
 
-  const [teamHome, teamAway] = [buildTeam(setup.teams[homeIdx]!, 'home', rules), buildTeam(setup.teams[awayIdx]!, 'away', rules)];
+  const options: LineupOptions = { outOfPosition: setup.match?.outOfPosition === true };
+  const [teamHome, teamAway] = [
+    buildTeam(setup.teams[homeIdx]!, 'home', rules, options),
+    buildTeam(setup.teams[awayIdx]!, 'away', rules, options),
+  ];
 
   const state: GameState = {
     id: setup.id,
@@ -204,8 +219,22 @@ export function createGame(setup: GameSetup, rng: Rng): { state: GameState; even
       refs: { side: 'home' },
     }),
   );
+  for (const team of [teamAway, teamHome]) events.push(...outOfPositionNotes(state, team));
 
   return { state, events };
+}
+
+/** One line per starter fielding a position his card doesn't list. */
+function outOfPositionNotes(state: GameState, team: GameState['home']): GameEvent[] {
+  return team.players
+    .filter((p) => p.fieldPosition !== null && !p.positions.includes(p.fieldPosition))
+    .map((p) =>
+      pushEvent(state, {
+        kind: 'info',
+        text: `${p.name} starts out of position at ${p.fieldPosition} for ${team.name} (fielding ${OUT_OF_POSITION_RATING}).`,
+        refs: { playerId: p.id, side: team.side },
+      }),
+    );
 }
 
 /** Lobby action: rewrite a team's lineup wholesale. */
@@ -226,7 +255,9 @@ export function applySetLineup(state: GameState, side: Side, lineup: string[], f
     fielding: p.fielding,
     pitcherClass: p.pitcherClass,
   }));
-  validateTeamSetup(setups, { lineup, fieldPositions, startingPitcherId }, team.name, rulesOf(state));
+  validateTeamSetup(setups, { lineup, fieldPositions, startingPitcherId }, team.name, rulesOf(state), {
+    outOfPosition: state.config.match?.outOfPosition === true,
+  });
 
   team.players = setups.map((p) => buildPlayer(p, lineup, fieldPositions, p.id === startingPitcherId));
   team.lineup = [...lineup];
@@ -239,6 +270,7 @@ export function applySetLineup(state: GameState, side: Side, lineup: string[], f
       text: `${team.name} set their lineup and hand the ball to ${team.players.find((p) => p.id === startingPitcherId)?.name ?? 'their starter'}.`,
       refs: { side },
     }),
+    ...outOfPositionNotes(state, team),
   ];
 }
 

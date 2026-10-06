@@ -5,8 +5,10 @@ export { createGame, validateTeamSetup, cardCanBat, cardCanPitch } from './creat
 export { applyAction, controlsSide, sidesFor, requiredSide, waitingOn } from './apply.js';
 export type { ApplyResult } from './apply.js';
 export { botAction } from './bot.js';
+export { autoPlay } from './sim.js';
 export { canSteal } from './steal.js';
 export {
+  OUT_OF_POSITION_RATING,
   activePitcher,
   activeSeason,
   availablePitchers,

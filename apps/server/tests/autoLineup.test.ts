@@ -111,4 +111,29 @@ describe('autoLineup', () => {
     expect(result.lineup.lineup).toContain('slug');
     expect(Object.values(result.lineup.fieldPositions)).not.toContain('slug');
   });
+
+  describe('out of position (tournament rosters)', () => {
+    it('fills the uncovered spot last, with the best bat left over, and keeps the starter on the mound', () => {
+      // Nobody can play RF; of the bats left over, the best one gets it.
+      const roster = [
+        ...fullRoster().filter((r) => !r.card.positions.includes('RF')),
+        card('spare1', [], { avg: 0.25 }),
+        card('spare2', [], { avg: 0.33 }),
+      ];
+      const result = autoLineup(roster, undefined, { outOfPosition: true });
+      expect('lineup' in result).toBe(true);
+      if (!('lineup' in result)) return;
+      expect(result.lineup.fieldPositions.RF).toBe('spare2');
+      expect(result.lineup.startingPitcherId).toBe('sp');
+      expect(Object.keys(result.lineup.fieldPositions)).toHaveLength(8);
+      expect(new Set(result.lineup.lineup).size).toBe(9);
+    });
+
+    it('still needs nine hitters and a starter', () => {
+      const short = fullRoster().filter((r) => !r.card.positions.includes('RF') && r.id !== 'dh');
+      expect(autoLineup(short, undefined, { outOfPosition: true })).toMatchObject({ error: expect.stringMatching(/short of nine hitters|9th hitter/) });
+      const noStarter = fullRoster().filter((r) => r.card.pitcherClass !== 'SP');
+      expect(autoLineup(noStarter, undefined, { outOfPosition: true })).toMatchObject({ error: expect.stringMatching(/starting pitcher/) });
+    });
+  });
 });

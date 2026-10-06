@@ -9,7 +9,7 @@ import { autoLineup } from '../autoLineup.js';
 import type { Ctx } from '../context.js';
 import { env } from '../env.js';
 import { badRequest, idParam, parse } from '../http.js';
-import { lineupProblem, loadTeam, rosterCards } from '../roster.js';
+import { lineupProblem, loadTeam, playsOutOfPosition, rosterCards } from '../roster.js';
 import type { LoadedTeam } from '../roster.js';
 
 const colorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color must look like #1a2b3c');
@@ -34,6 +34,7 @@ function teamView(loaded: LoadedTeam): TeamView {
     primaryColor: loaded.team.primaryColor,
     lineup: loaded.team.lineup,
     lineupProblem: lineupProblem(loaded, loaded.team.lineup),
+    outOfPosition: playsOutOfPosition(loaded),
     roster: loaded.roster.map((r) => ({ teamCardId: r.teamCardId, ...r.entry })),
   };
 }
@@ -123,7 +124,7 @@ export function teamRoutes(app: FastifyInstance, ctx: Ctx): void {
     const user = requireUser(request);
     const id = idParam(request.params);
     const loaded = await loadTeam(ctx, id, user.id);
-    const result = autoLineup(rosterCards(loaded.roster));
+    const result = autoLineup(rosterCards(loaded.roster), undefined, { outOfPosition: playsOutOfPosition(loaded) });
     if ('error' in result) throw badRequest(result.error);
     await ctx.db.update(teams).set({ lineup: result.lineup }).where(eq(teams.id, id));
     return { team: teamView(await loadTeam(ctx, id, user.id)) };

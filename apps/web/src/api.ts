@@ -24,6 +24,8 @@ import type {
   SessionUser,
   TeamSummary,
   TeamView,
+  TournamentListItem,
+  TournamentView,
 } from '@cardball/shared';
 import type { GameState } from '@cardball/engine';
 
@@ -36,6 +38,23 @@ export interface NewDraft {
   playableOnly: boolean;
   themes: PackThemeId[];
   rarityCaps: { rare: number; chase: number } | null;
+}
+
+/** What the host fills in to open a tournament. */
+export interface NewTournament {
+  name: string;
+  format: 'round-robin' | 'semis';
+  seats: number;
+  regulationInnings: number;
+  autoSimulate: boolean;
+  draft: {
+    rounds: number;
+    packSize: number;
+    yearFrom: number;
+    yearTo: number;
+    themes: PackThemeId[];
+    rarityCaps: { rare: number; chase: number } | null;
+  };
 }
 
 export class ApiError extends Error {
@@ -157,6 +176,15 @@ export const api = {
   openDraftPack: (id: number) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/open`),
   pickDraftCard: (id: number, cardId: string) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/pick`, { cardId }),
   deleteDraft: (id: number) => request<{ ok: true }>('DELETE', `/api/drafts/${id}`),
+
+  // ---- tournaments ----
+  tournaments: () => request<{ tournaments: TournamentListItem[] }>('GET', '/api/tournaments'),
+  createTournament: (input: NewTournament) => request<{ tournament: TournamentView }>('POST', '/api/tournaments', input),
+  tournament: (id: number) => request<{ tournament: TournamentView }>('GET', `/api/tournaments/${id}`),
+  joinTournament: (id: number) => request<{ tournament: TournamentView }>('POST', `/api/tournaments/${id}/join`),
+  startTournament: (id: number) => request<{ tournament: TournamentView }>('POST', `/api/tournaments/${id}/start`),
+  simulateTournament: (id: number) => request<{ tournament: TournamentView }>('POST', `/api/tournaments/${id}/simulate`),
+  deleteTournament: (id: number) => request<{ ok: true }>('DELETE', `/api/tournaments/${id}`),
 
   // ---- league settings ----
   houseRules: () => request<{ rules: HouseRules }>('GET', '/api/settings/rules'),

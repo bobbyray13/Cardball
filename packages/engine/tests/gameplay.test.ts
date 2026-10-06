@@ -3,6 +3,7 @@ import type { GameAction } from '@cardball/shared';
 import { applyAction } from '../src/apply.js';
 import { createGame } from '../src/create.js';
 import { GameError } from '../src/errors.js';
+import { OUT_OF_POSITION_RATING, fieldingRating } from '../src/queries.js';
 import { scriptedRng } from '../src/rng.js';
 import type { GameState } from '../src/types.js';
 import { neutralTeam } from './fixtures.js';
@@ -53,6 +54,21 @@ describe('game setup', () => {
     expect(() =>
       createGame({ id: 'g', mode: 'hotseat', regulationInnings: 9, teams: [team, neutralTeam('b')] }, scriptedRng([6, 1])),
     ).toThrow(/not a starting pitcher/);
+  });
+
+  it('holds fielders to their cards, unless the match allows out of position', () => {
+    // The DH (a first baseman) takes center; the center fielder bats DH.
+    const team = neutralTeam('a');
+    team.fieldPositions.CF = 'adh';
+    const setup = { id: 'g', mode: 'hotseat' as const, regulationInnings: 9, teams: [team, neutralTeam('b')] as [typeof team, typeof team] };
+    expect(() => createGame(setup, scriptedRng([6, 1]))).toThrow(/not eligible to field CF/);
+
+    const match = { yearFrom: 1872, yearTo: 2100, rarityCaps: null, outOfPosition: true };
+    const { state, events } = createGame({ ...setup, match }, scriptedRng([6, 1]));
+    const cf = state.home.players.find((p) => p.id === 'adh')!;
+    expect(cf.fieldPosition).toBe('CF');
+    expect(fieldingRating(cf, 'CF')).toBe(OUT_OF_POSITION_RATING);
+    expect(events.some((e) => /starts out of position at CF/.test(e.text))).toBe(true);
   });
 
   it('only 3, 6, or 9 inning games', () => {

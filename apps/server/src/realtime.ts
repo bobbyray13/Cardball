@@ -7,6 +7,7 @@ import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
 import { getDraft } from './draftService.js';
 import { getGame, performAction, postChat } from './gameService.js';
+import { getTournament } from './tournamentService.js';
 import { HttpError } from './http.js';
 
 type Ack = (response: { ok: true; data?: unknown } | { ok: false; error: string }) => void;
@@ -82,6 +83,22 @@ export function attachRealtime(httpServer: HttpServer, ctx: Ctx): Server {
       const draftId = gameIdSchema.safeParse(rawId);
       if (!draftId.success) return;
       void Promise.resolve(socket.leave(`draft:${draftId.data}`));
+    });
+
+    // Tournament rooms work the same way: a nudge, then a REST re-fetch.
+    socket.on('tournament:join', (rawId: unknown, ack?: Ack) =>
+      run(ack, async () => {
+        const tournamentId = gameIdSchema.parse(rawId);
+        const tournament = await getTournament(ctx, user, tournamentId);
+        await socket.join(`tournament:${tournamentId}`);
+        return tournament;
+      }),
+    );
+
+    socket.on('tournament:leave', (rawId: unknown) => {
+      const tournamentId = gameIdSchema.safeParse(rawId);
+      if (!tournamentId.success) return;
+      void Promise.resolve(socket.leave(`tournament:${tournamentId.data}`));
     });
 
     socket.on('game:action', (payload: unknown, ack?: Ack) =>

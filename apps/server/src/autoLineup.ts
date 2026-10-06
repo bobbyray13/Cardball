@@ -29,8 +29,16 @@ const bestEra = (c: CardSnapshot) =>
  *
  * DH is the best remaining bat; the order is by batting modifier. Returns an
  * error when the roster cannot field a legal team.
+ *
+ * With `outOfPosition` (tournament rosters), a spot nobody can cover goes to
+ * the best bat left over once every coverable spot is filled, and that player
+ * fields at the out-of-position rating.
  */
-export function autoLineup(roster: RosterCard[], rules: HouseRules = activeHouseRules()): { lineup: SavedLineup } | { error: string } {
+export function autoLineup(
+  roster: RosterCard[],
+  rules: HouseRules = activeHouseRules(),
+  options: { outOfPosition?: boolean } = {},
+): { lineup: SavedLineup } | { error: string } {
   const hitters = roster.filter((r) => r.card.playable && r.card.canBat);
   const used = new Set<string>();
   const fieldPositions: Partial<Record<Position, string>> = {};
@@ -43,11 +51,26 @@ export function autoLineup(roster: RosterCard[], rules: HouseRules = activeHouse
     return count !== 0 ? count : FIELD.indexOf(a) - FIELD.indexOf(b);
   });
 
+  const uncovered: Position[] = [];
   for (const pos of order) {
     const candidates = candidatesFor(pos);
-    if (candidates.length === 0) return { error: `Nobody on the roster can play ${pos}` };
-    const open = order.filter((p) => p !== pos && !fieldPositions[p]);
+    if (candidates.length === 0) {
+      if (!options.outOfPosition) return { error: `Nobody on the roster can play ${pos}` };
+      uncovered.push(pos);
+      continue;
+    }
+    const open = order.filter((p) => p !== pos && !fieldPositions[p] && !uncovered.includes(p));
     const pick = candidates.sort((a, b) => score(b, pos, open, rules) - score(a, pos, open, rules))[0]!;
+    fieldPositions[pos] = pick.id;
+    used.add(pick.id);
+  }
+
+  for (const pos of uncovered) {
+    // Keep starting pitchers for the mound when there is any other bat.
+    const left = hitters.filter((r) => !used.has(r.id));
+    const pool = left.some((r) => r.card.pitcherClass !== 'SP') ? left.filter((r) => r.card.pitcherClass !== 'SP') : left;
+    const pick = pool.sort((a, b) => bestAvg(b.card, rules) - bestAvg(a.card, rules))[0];
+    if (!pick) return { error: `Nobody is left to play ${pos} — the roster is short of nine hitters` };
     fieldPositions[pos] = pick.id;
     used.add(pick.id);
   }

@@ -3,7 +3,7 @@ import { GameError, applyAction, botAction, createGame, cryptoRng, sidesFor, wai
 import type { GameEvent, GameMode, GameState, Side } from '@cardball/engine';
 import { activeHouseRules, MATCH_LIMITS, matchProblem, openMatch } from '@cardball/shared';
 import type { ChatMessage, GameAction, GameStatus, GameView, MatchRules } from '@cardball/shared';
-import { chatMessages, gameEvents, games, users } from '@cardball/db';
+import { chatMessages, draftParticipants, gameEvents, games, tournaments, users } from '@cardball/db';
 import type { GameRow } from '@cardball/db';
 import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
@@ -51,6 +51,27 @@ export function canView(row: GameRow, userId: number): boolean {
   return s.hostUserId === userId || s.guestUserId === userId || statusOf(s) === 'open';
 }
 
+/** canView, plus everyone seated at the tournament that scheduled the game. */
+async function canWatch(ctx: Ctx, row: GameRow, userId: number): Promise<boolean> {
+  if (canView(row, userId)) return true;
+  if (row.tournamentId === null) return false;
+  const [tournament] = await ctx.db
+    .select({ hostUserId: tournaments.hostUserId, state: tournaments.state })
+    .from(tournaments)
+    .where(eq(tournaments.id, row.tournamentId))
+    .limit(1);
+  if (!tournament) return false;
+  if (tournament.hostUserId === userId) return true;
+  const draftId = (tournament.state as { draftId: number | null }).draftId;
+  if (draftId === null) return false;
+  const [seat] = await ctx.db
+    .select({ id: draftParticipants.id })
+    .from(draftParticipants)
+    .where(and(eq(draftParticipants.draftId, draftId), eq(draftParticipants.userId, userId)))
+    .limit(1);
+  return seat !== undefined;
+}
+
 export function toView(row: GameRow): GameRoomView {
   const s = stored(row);
   return {
@@ -83,6 +104,10 @@ async function loadRow(ctx: Ctx, gameId: number): Promise<GameRow> {
 
 function broadcast(ctx: Ctx, row: GameRow, events: GameEvent[]): void {
   ctx.io?.to(`game:${row.id}`).emit('game:update', { game: toView(row), events });
+  // A tournament catches up on its next read; nudge its open pages to read.
+  if (row.tournamentId !== null && stored(row).engine?.phase === 'finished') {
+    ctx.io?.to(`tournament:${row.tournamentId}`).emit('tournament:update', { tournamentId: row.tournamentId, status: 'playing' });
+  }
 }
 
 /** Persist a new stored state (+ events) with an optimistic version check. */
@@ -315,7 +340,7 @@ export async function deleteOpenGame(ctx: Ctx, user: AuthUser, gameId: number): 
 
 export async function getGame(ctx: Ctx, user: AuthUser, gameId: number) {
   const row = await loadRow(ctx, gameId);
-  if (!canView(row, user.id)) throw forbidden('This game is private to its managers');
+  if (!(await canWatch(ctx, row, user.id))) throw forbidden('This game is private to its managers');
   const events = await ctx.db.select({ data: gameEvents.data }).from(gameEvents).where(eq(gameEvents.gameId, gameId)).orderBy(asc(gameEvents.seq));
   return { game: toView(row), events: events.map((e) => e.data as GameEvent), chat: await loadChat(ctx, gameId) };
 }
@@ -370,7 +395,7 @@ export async function postChat(ctx: Ctx, user: AuthUser, gameId: number, body: s
   const text = body.trim().slice(0, 500);
   if (!text) throw badRequest('Say something!');
   const row = await loadRow(ctx, gameId);
-  if (!canView(row, user.id)) throw forbidden();
+  if (!(await canWatch(ctx, row, user.id))) throw forbidden();
   const [msg] = await ctx.db.insert(chatMessages).values({ gameId, userId: user.id, body: text }).returning();
   const view: ChatMessage = { id: msg!.id, userId: user.id, name: user.displayName, body: text, createdAt: msg!.createdAt.toISOString() };
   ctx.io?.to(`game:${gameId}`).emit('chat:message', { gameId, message: view });
