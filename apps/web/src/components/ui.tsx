@@ -1,0 +1,149 @@
+import { useCallback, useEffect, useState } from 'react';
+import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import { ApiError } from '../api.js';
+
+/** A framed section with an optional title and header actions. */
+export function Panel({
+  title,
+  subtitle,
+  actions,
+  children,
+  className = '',
+}: {
+  title?: ReactNode;
+  subtitle?: ReactNode;
+  actions?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={`panel p-4 sm:p-5 ${className}`}>
+      {title || actions ? (
+        <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            {title ? <h2 className="font-display text-xl font-semibold text-chalk">{title}</h2> : null}
+            {subtitle ? <p className="mt-1 text-sm text-chalk/60">{subtitle}</p> : null}
+          </div>
+          {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+        </header>
+      ) : null}
+      {children}
+    </section>
+  );
+}
+
+type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  variant?: 'primary' | 'secondary' | 'ghost' | 'danger';
+  size?: 'sm' | 'md';
+};
+
+export function Button({ variant = 'secondary', size = 'md', className = '', ...rest }: ButtonProps) {
+  const base = 'inline-flex items-center justify-center gap-2 rounded-full font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-45';
+  const sizes = { sm: 'px-3 py-1.5 text-sm', md: 'px-4 py-2 text-sm' } as const;
+  const variants = {
+    primary: 'bg-gold text-ink hover:bg-gold/85 font-semibold',
+    secondary: 'border border-white/20 text-chalk hover:bg-white/10',
+    ghost: 'text-chalk/70 hover:bg-white/10 hover:text-chalk',
+    danger: 'border border-crimson/60 text-crimson hover:bg-crimson/15',
+  } as const;
+  return <button className={`${base} ${sizes[size]} ${variants[variant]} ${className}`} {...rest} />;
+}
+
+export function Field({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-xs font-semibold tracking-wide text-chalk/60 uppercase">{label}</span>
+      {children}
+      {hint ? <span className="mt-1 block text-xs text-chalk/45">{hint}</span> : null}
+    </label>
+  );
+}
+
+export const inputClass =
+  'w-full rounded-lg border border-white/15 bg-black/25 px-3 py-2 text-sm text-chalk placeholder:text-chalk/35 focus:border-gold/70 focus:outline-none';
+
+/** Shows an error from the API in the server's own words. */
+export function ErrorNote({ error }: { error: unknown }) {
+  if (!error) return null;
+  const message = error instanceof ApiError ? error.message : error instanceof Error ? error.message : String(error);
+  return (
+    <p role="alert" className="rounded-lg border border-crimson/50 bg-crimson/10 px-3 py-2 text-sm text-crimson">
+      {message}
+    </p>
+  );
+}
+
+export function Notice({ children }: { children: ReactNode }) {
+  return <p className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-gold">{children}</p>;
+}
+
+export function Spinner({ label = 'Loading…' }: { label?: string }) {
+  return <p className="animate-pulse py-6 text-center text-sm text-chalk/50">{label}</p>;
+}
+
+export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <div className="rounded-xl border border-dashed border-white/15 px-4 py-8 text-center">
+      <p className="font-display text-lg text-chalk/80">{title}</p>
+      {children ? <div className="mt-2 text-sm text-chalk/55">{children}</div> : null}
+    </div>
+  );
+}
+
+/** Load data once (and on demand), with loading and error state. */
+export function useLoad<T>(load: () => Promise<T>, deps: unknown[] = []) {
+  const [data, setData] = useState<T | null>(null);
+  const [error, setError] = useState<unknown>(null);
+  const [loading, setLoading] = useState(true);
+  const [nonce, setNonce] = useState(0);
+
+  const reload = useCallback(() => setNonce((n) => n + 1), []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    load()
+      .then((value) => {
+        if (!cancelled) {
+          setData(value);
+          setError(null);
+        }
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setError(err);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [...deps, nonce]);
+
+  return { data, error, loading, reload, setData };
+}
+
+/** Runs an action, tracking a busy flag and surfacing the error. */
+export function useAction<A extends unknown[], R>(run: (...args: A) => Promise<R>) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<unknown>(null);
+
+  const execute = useCallback(
+    async (...args: A): Promise<R | undefined> => {
+      setBusy(true);
+      setError(null);
+      try {
+        return await run(...args);
+      } catch (err) {
+        setError(err);
+        return undefined;
+      } finally {
+        setBusy(false);
+      }
+    },
+    [run],
+  );
+
+  return { execute, busy, error, setError };
+}
