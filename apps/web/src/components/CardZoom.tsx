@@ -23,8 +23,9 @@ export interface ZoomTarget {
 
 /**
  * A card, big enough to read. Sized off the viewport so the back's stat
- * table is legible on a laptop; phones also get the seasons as a plain table,
- * since a card that fits a phone is still too small for its own fine print.
+ * table is legible on a laptop; the seasons also print as a plain table beside
+ * the card at every size, since a card that fits a screen can still be too
+ * small for its own fine print.
  */
 export function CardZoom({ target, onClose }: { target: ZoomTarget | null; onClose: () => void }) {
   const [face, setFace] = useState<CardFace>('front');
@@ -71,7 +72,7 @@ export function CardZoom({ target, onClose }: { target: ZoomTarget | null; onClo
               transition={{ type: 'spring', stiffness: 300, damping: 28 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="mx-auto w-[min(92vw,calc(84vh*5/7),34rem)]">
+              <div className="mx-auto w-[min(92vw,calc(84vh*5/7),38rem)]">
                 <button
                   type="button"
                   className="block w-full cursor-pointer"
@@ -109,9 +110,7 @@ export function CardZoom({ target, onClose }: { target: ZoomTarget | null; onClo
                 </div>
                 {target.details}
                 {target.userCardId ? <CareerSummary userCardId={target.userCardId} /> : null}
-                <div className="md:hidden">
-                  <SeasonTable card={target.card} />
-                </div>
+                <SeasonTable card={target.card} />
               </div>
             </motion.div>
           </div>
