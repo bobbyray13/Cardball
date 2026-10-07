@@ -19,6 +19,7 @@ import type {
   InviteSummary,
   MatchRules,
   PackThemeId,
+  PackView,
   PersonDetail,
   PersonSummary,
   SavedLineup,
@@ -131,6 +132,10 @@ export const api = {
     request<{ card: CollectionCard }>('PATCH', `/api/collection/${id}`, input),
   deleteCard: (id: number) => request<{ ok: true }>('DELETE', `/api/collection/${id}`),
   cardCareer: (id: number) => request<{ career: CardCareer }>('GET', `/api/collection/${id}/career`),
+
+  // ---- pack shelf ----
+  packs: () => request<{ packs: PackView[] }>('GET', '/api/packs'),
+  openPack: (id: number) => request<{ pack: PackView; cards: CollectionCard[] }>('POST', `/api/packs/${id}/open`),
 
   /** Uploads a card photo and returns its id. */
   uploadPhoto: async (file: File, size: { width: number; height: number }): Promise<{ photoId: number }> => {

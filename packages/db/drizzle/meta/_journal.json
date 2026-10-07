@@ -57,6 +57,13 @@
       "when": 1791282307083,
       "tag": "0007_living_lockjaw",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791397605517,
+      "tag": "0008_sleepy_the_executioner",
+      "breakpoints": true
     }
   ]
 }

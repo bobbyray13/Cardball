@@ -7,6 +7,7 @@ import type { CardRating, CollectionCard, DraftRarity } from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
 import { CardZoom, CareerSummary } from '../components/CardZoom.js';
+import { PackShelf } from '../components/PackShelf.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { PhotoUploader } from '../components/PhotoUploader.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
@@ -114,6 +115,8 @@ export function CollectionPage() {
           <Button variant="primary">Add cards</Button>
         </Link>
       </div>
+
+      <PackShelf onCardsFiled={collection.reload} />
 
       {highlights.length > 0 && !filtering ? (
         <Showcase cards={highlights} ratingOf={ratingOf} onSelect={setSelected} />

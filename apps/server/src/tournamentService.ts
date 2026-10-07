@@ -59,6 +59,7 @@ import { withKeyLock } from './lock.js';
 import { namesFor } from './names.js';
 import { createDraft, joinDraft, startDraft } from './draftService.js';
 import type { CreateDraftInput } from './draftService.js';
+import { rewardTournamentWin } from './packs.js';
 import { badRequest, forbidden, notFound } from './http.js';
 import { loadTeam, photoMap, rosterCards, teamSetupFor } from './roster.js';
 
@@ -551,6 +552,9 @@ async function sync(ctx: Ctx, row: TournamentRow): Promise<TournamentRow> {
     if (state.championSeat === null && champion !== null) {
       state.championSeat = champion;
       state.log.push({ seq: state.log.length + 1, text: `${label(champion)} wins the tournament.` });
+      // The champion's packs, granted once: the reward key is the tournament.
+      const champ = seated.find((s) => s.seat === champion);
+      if (champ) await rewardTournamentWin(ctx.db, { id: current.id, name: current.name }, champ.userId);
       dirty = true;
     }
     if (current.status !== 'finished') return save(ctx, current, state, 'finished');

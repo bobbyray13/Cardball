@@ -7,7 +7,7 @@
  * of any engine import.
  */
 import type { MatchRules } from './match.js';
-import type { PackThemeId } from './packs.js';
+import type { DrawnCard, PackShape, PackSource, PackThemeId } from './packs.js';
 import type { Position } from './positions.js';
 import type { SeasonStats } from './stats.js';
 
@@ -57,6 +57,25 @@ export interface CollectionCard {
   notes: string | null;
   addedAt: string;
   card: CardSnapshot;
+}
+
+/** A pack on a manager's shelf: sealed, or torn open with its cards filed. */
+export interface PackView {
+  id: number;
+  themeId: PackThemeId;
+  shape: PackShape;
+  /** how many cards it holds */
+  size: number;
+  source: PackSource;
+  /** where it came from, e.g. "Beat the Bot Nine" */
+  label: string | null;
+  /** the card years the deal draws from */
+  era: { from: number; to: number };
+  createdAt: string;
+  /** null while it is still sealed */
+  openedAt: string | null;
+  /** what it dealt, once opened */
+  drawn: DrawnCard[] | null;
 }
 
 /** A card on a team, tagged with its roster slot. */

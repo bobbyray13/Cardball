@@ -16,6 +16,7 @@ import {
 } from '../auth.js';
 import type { Ctx } from '../context.js';
 import { HttpError, badRequest, parse } from '../http.js';
+import { grantStarterPacks } from '../packs.js';
 
 const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -69,6 +70,9 @@ export function authRoutes(app: FastifyInstance, ctx: Ctx): void {
           .set({ usedByUserId: created!.id })
           .where(and(eq(invites.code, inviteCode), isNull(invites.usedByUserId)));
       }
+      // A new manager starts with starter packs on the shelf, so there is
+      // something to tear open before the first draft night.
+      await grantStarterPacks(tx, created!.id);
       return created!;
     });
 
