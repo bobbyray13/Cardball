@@ -7,10 +7,20 @@ import type { Ctx } from './context.js';
 
 export type { CardSnapshot };
 
-/** Card years we accept for a player: the year after his debut through the year after his last season. */
-export function validCardYears(person: Pick<PersonRow, 'debutYear' | 'finalYear'>): { min: number; max: number } | null {
-  if (!person.debutYear || !person.finalYear) return null;
-  return { min: person.debutYear + 1, max: person.finalYear + 1 };
+/**
+ * Card years we accept for a player: the year after his debut through the year
+ * after his last known season. An active player has no `finalYear` in the
+ * people table (his final game hasn't happened), so his seasons decide — pass
+ * them and his newest season's card can be printed the year after it, which
+ * keeps current players collectable without waiting for the next data import.
+ */
+export function validCardYears(
+  person: Pick<PersonRow, 'debutYear' | 'finalYear'>,
+  seasons: { year: number }[] = [],
+): { min: number; max: number } | null {
+  const last = person.finalYear ?? (seasons.length > 0 ? Math.max(...seasons.map((s) => s.year)) : null);
+  if (!person.debutYear || last === null) return null;
+  return { min: person.debutYear + 1, max: last + 1 };
 }
 
 export function windowRange(cardYear: number, rules: HouseRules = activeHouseRules()): { from: number; to: number } {

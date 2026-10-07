@@ -140,6 +140,37 @@ batte02,batte01,Eddie,Batter,,L,R,,`;
   });
 });
 
+describe('buildDataset with an active player', () => {
+  // The 2025 release leaves `finalGame` (and sometimes `debut`) blank for
+  // anyone still playing, which used to leave current players without card
+  // years — and so without cards.
+  const active = files();
+  active['People.csv'] = `${PEOPLE}
+active01,active01,Al,Active,,R,R,,`;
+  active['Batting.csv'] = `${BATTING}
+active01,2019,1,HOU,AL,140,520,80,150,20,3,30,95,5,2,60,100,,,,2,0
+active01,2025,1,HOU,AL,150,540,90,160,25,4,35,110,3,1,65,110,,,,1,1`;
+  active['Appearances.csv'] = `${APPEARANCES}
+active01,2019,140
+active01,2025,150`;
+
+  const dataset = buildDataset(active);
+
+  it('backfills the career span from the seasons he played', () => {
+    const person = dataset.people.find((row) => row.bbrefId === 'active01');
+    expect(person?.debutYear).toBe(2019);
+    expect(person?.finalYear).toBe(2025);
+  });
+
+  it('keeps a stated final year when it is later than his last season row', () => {
+    expect(dataset.people.find((row) => row.bbrefId === 'batte01')?.finalYear).toBe(1956);
+  });
+
+  it('still builds both of his seasons', () => {
+    expect(dataset.seasons.filter((row) => row.bbrefId === 'active01').map((row) => row.year)).toEqual([2019, 2025]);
+  });
+});
+
 describe('buildDataset with modern outfield splits', () => {
   // 1954+ Fielding.csv still says "OF"; the LF/CF/RF breakdown only exists in
   // FieldingOFsplit.csv.

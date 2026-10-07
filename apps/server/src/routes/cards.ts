@@ -68,8 +68,13 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
       })
       .from(people)
       .where(and(...conditions))
-      // Longer careers first: the famous player usually beats the cup-of-coffee namesake.
-      .orderBy(sql`coalesce(${people.finalYear} - ${people.debutYear}, 0) desc`, asc(people.nameLast))
+      // Longer careers first: the famous player usually beats the cup-of-coffee
+      // namesake. An active player has no final year yet, so his newest season
+      // stands in for it in the ranking.
+      .orderBy(
+        sql`coalesce(${people.finalYear}, (select max(${seasons.year}) from ${seasons} where ${seasons.personId} = ${people.id}), 0) - coalesce(${people.debutYear}, 0) desc`,
+        asc(people.nameLast),
+      )
       .limit(q.limit);
     return { people: rows };
   });
@@ -78,7 +83,7 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
     requireUser(request);
     const person = await loadPerson(ctx, idParam(request.params));
     const rows = await ctx.db.select().from(seasons).where(eq(seasons.personId, person.id)).orderBy(seasons.year);
-    return { person, seasons: rows.map(seasonRowToStats), cardYears: validCardYears(person) };
+    return { person, seasons: rows.map(seasonRowToStats), cardYears: validCardYears(person, rows) };
   });
 
   app.get('/api/cards/preview', async (request) => {
@@ -105,7 +110,8 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
     const user = requireUser(request);
     const body = parse(addCardSchema, request.body);
     const person = await loadPerson(ctx, body.personId);
-    const years = validCardYears(person);
+    const seasonYears = await ctx.db.select({ year: seasons.year }).from(seasons).where(eq(seasons.personId, person.id));
+    const years = validCardYears(person, seasonYears);
     if (!years || body.cardYear < years.min || body.cardYear > years.max) {
       throw badRequest(years ? `Card year must be ${years.min}–${years.max} for this player` : 'No career data for this player');
     }
