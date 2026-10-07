@@ -201,15 +201,15 @@ function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: str
         className="flex items-baseline justify-between px-[4cqw] pt-[3cqw] pb-[2cqw] text-chalk"
         style={{ background: `linear-gradient(100deg, ${colors.primary}, ${colors.secondary})` }}
       >
-        <span className="truncate font-display text-[4.4cqw] font-semibold">{card.name}</span>
-        <span className="shrink-0 pl-[2cqw] font-mono text-[3.2cqw] opacity-90">{card.cardYear}</span>
+        <span className="truncate font-display text-[clamp(13px,4.4cqw,22px)] font-semibold">{card.name}</span>
+        <span className="shrink-0 pl-[2cqw] font-mono text-[clamp(11px,3.2cqw,16px)] opacity-90">{card.cardYear}</span>
       </header>
 
       <div className="min-h-0 flex-1 overflow-hidden px-[2.6cqw] py-[2.4cqw]">
         {rows.length === 0 ? (
-          <p className="px-[1cqw] text-[3cqw] text-ink-soft">No seasons on this card back.</p>
+          <p className="px-[1cqw] text-[clamp(11px,3cqw,16px)] text-ink-soft">No seasons on this card back.</p>
         ) : (
-          <table className="w-full border-collapse font-mono text-[2.55cqw] tabular-nums">
+          <table className="w-full border-collapse font-mono text-[clamp(12px,2.9cqw,17px)] tabular-nums">
             <thead>
               <tr className="text-ink-soft">
                 <th className="text-left font-sans font-semibold">YR</th>
@@ -255,7 +255,7 @@ function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: str
           </table>
         )}
 
-        <div className="mt-[2cqw] grid grid-cols-2 gap-x-[2cqw] gap-y-[0.6cqw] font-mono text-[2.4cqw] text-ink-soft">
+        <div className="mt-[2cqw] grid grid-cols-2 gap-x-[2cqw] gap-y-[0.6cqw] font-mono text-[clamp(10px,2.7cqw,14px)] text-ink-soft">
           {rows
             .filter((s) => s.pitching && s.pitching.ipOuts > 0)
             .slice(-1)
@@ -276,7 +276,7 @@ function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: str
         </div>
       </div>
 
-      <footer className="border-t border-ink/10 px-[4cqw] py-[2cqw] font-mono text-[2.4cqw] text-ink-soft">
+      <footer className="border-t border-ink/10 px-[4cqw] py-[2cqw] font-mono text-[clamp(10px,2.6cqw,13px)] text-ink-soft">
         HIT from AVG · PIT from ERA · SB from steals
       </footer>
     </div>

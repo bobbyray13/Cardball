@@ -12,7 +12,7 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 import type { AnyPgColumn } from 'drizzle-orm/pg-core';
-import type { BattingLine, PitchingLine, Position, SavedLineup, SeasonStats } from '@cardball/shared';
+import type { BattingLine, DrawnCard, PackShape, PackSource, PitchingLine, Position, SavedLineup, SeasonStats } from '@cardball/shared';
 
 // ---------------------------------------------------------------------------
 // Stats database (imported from the Baseball Databank)
@@ -169,6 +169,46 @@ export const userCards = pgTable(
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [index('user_cards_user_idx').on(t.userId), index('user_cards_model_idx').on(t.cardModelId)],
+);
+
+// ---------------------------------------------------------------------------
+// Packs — sealed rewards a manager tears open into their collection
+// ---------------------------------------------------------------------------
+
+/**
+ * A pack sitting on a manager's shelf. Starter packs arrive with the account;
+ * the rest are earned by winning games and tournaments, and by completing a
+ * historic collection. Tearing it open deals `size` cards into the collection
+ * and writes them to `drawn`, so an opened pack still shows what it held.
+ */
+export const userPacks = pgTable(
+  'user_packs',
+  {
+    id: serial('id').primaryKey(),
+    userId: integer('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** wrapper theme id, from @cardball/shared packs */
+    themeId: text('theme_id').notNull().default('mixed'),
+    /** how the cards are dealt: random, or a starter shape that guarantees a fieldable team */
+    shape: text('shape').$type<PackShape>().notNull().default('random'),
+    size: integer('size').notNull().default(5),
+    /** the card years the deal draws from */
+    yearFrom: integer('year_from').notNull().default(1993),
+    yearTo: integer('year_to').notNull().default(2026),
+    source: text('source').$type<PackSource>().notNull().default('grant'),
+    /** where it came from, for the shelf label ("Beat the Bot Nine") */
+    label: text('label'),
+    /** idempotency for rewards: the same win can never be paid twice, e.g. "game:42#0" */
+    rewardKey: text('reward_key'),
+    openedAt: timestamp('opened_at'),
+    drawn: jsonb('drawn').$type<DrawnCard[]>(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('user_packs_reward_idx').on(t.userId, t.rewardKey),
+    index('user_packs_user_idx').on(t.userId, t.openedAt),
+  ],
 );
 
 // ---------------------------------------------------------------------------
@@ -408,6 +448,7 @@ export const tournaments = pgTable(
 export type PersonRow = typeof people.$inferSelect;export type SeasonRow = typeof seasons.$inferSelect;
 export type CardModelRow = typeof cardModels.$inferSelect;
 export type UserCardRow = typeof userCards.$inferSelect;
+export type UserPackRow = typeof userPacks.$inferSelect;
 export type GameRow = typeof games.$inferSelect;
 export type GameEventRow = typeof gameEvents.$inferSelect;
 export type ChatMessageRow = typeof chatMessages.$inferSelect;

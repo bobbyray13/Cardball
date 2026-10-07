@@ -7,7 +7,7 @@
  * of any engine import.
  */
 import type { MatchRules } from './match.js';
-import type { PackThemeId } from './packs.js';
+import type { DrawnCard, PackShape, PackSource, PackThemeId } from './packs.js';
 import type { Position } from './positions.js';
 import type { SeasonStats } from './stats.js';
 
@@ -57,6 +57,60 @@ export interface CollectionCard {
   notes: string | null;
   addedAt: string;
   card: CardSnapshot;
+}
+
+/** A pack on a manager's shelf: sealed, or torn open with its cards filed. */
+export interface PackView {
+  id: number;
+  themeId: PackThemeId;
+  shape: PackShape;
+  /** how many cards it holds */
+  size: number;
+  source: PackSource;
+  /** where it came from, e.g. "Beat the Bot Nine" */
+  label: string | null;
+  /** the card years the deal draws from */
+  era: { from: number; to: number };
+  createdAt: string;
+  /** null while it is still sealed */
+  openedAt: string | null;
+  /** what it dealt, once opened */
+  drawn: DrawnCard[] | null;
+}
+
+// ---------------------------------------------------------------------------
+// Historic team collections
+// ---------------------------------------------------------------------------
+
+/** One lineup slot of a historic team, and the card that fills it. */
+export interface ChallengePlayerView {
+  bbrefId: string;
+  name: string;
+  position: string;
+  /** true when the manager owns a card covering the season */
+  have: boolean;
+  /** the owned card that fills the slot, when there is one */
+  cardYear: number | null;
+  /** the collection entry filling the slot, when there is one */
+  userCardId: number | null;
+}
+
+/** A historic team collection, with this manager's progress through its lineup. */
+export interface ChallengeView {
+  id: string;
+  year: number;
+  name: string;
+  franchise: string;
+  tagline: string;
+  players: ChallengePlayerView[];
+  owned: number;
+  total: number;
+  /** every slot filled by an owned card */
+  complete: boolean;
+  /** the reward packs have been claimed */
+  rewardClaimed: boolean;
+  /** packs waiting once the collection completes */
+  rewardPacks: number;
 }
 
 /** A card on a team, tagged with its roster slot. */

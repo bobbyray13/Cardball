@@ -11,6 +11,7 @@
  * so an old-timers draft and a modern draft draw from different shelves.
  */
 
+import type { DraftRarity } from './api.js';
 import type { CardRating } from './rarity.js';
 
 export type PackThemeId = 'mixed' | 'sluggers' | 'aces' | 'speedsters' | 'contact' | 'deadball' | 'liveball';
@@ -118,3 +119,51 @@ export function themeForRound(themes: PackThemeId[], round: number, seat: number
   const list: PackThemeId[] = themes.length > 0 ? themes : ['mixed'];
   return list[(round - 1 + seat) % list.length]!;
 }
+
+// ---------------------------------------------------------------------------
+// Collection packs
+// ---------------------------------------------------------------------------
+
+/**
+ * Packs that live in a manager's inventory, separate from the draft room.
+ * A starter pack comes with the account; the rest are earned — by winning
+ * games and tournaments, and by finishing a historic collection.
+ */
+export type PackSource = 'starter' | 'game-win' | 'tournament-win' | 'challenge' | 'grant';
+
+/** How the cards inside a pack are dealt. */
+export type PackShape = 'random' | 'lineup' | 'mound';
+
+export const PACK_SOURCE_LABEL: Record<PackSource, string> = {
+  starter: 'Starter pack',
+  'game-win': 'Won a game',
+  'tournament-win': 'Won a tournament',
+  challenge: 'Collection complete',
+  grant: 'Commissioner grant',
+};
+
+/** Cards in a collection pack, and the deal limits both sides agree on. */
+export const PACK_LIMITS = { minSize: 3, maxSize: 12 } as const;
+
+/** One card dealt out of a collection pack, kept so a torn-open pack still shows what it held. */
+export interface DrawnCard {
+  /** user_cards.id — the card as it sits in the collection */
+  userCardId: number;
+  personId: number;
+  cardYear: number;
+  name: string;
+  teamLabel: string;
+  rarity: DraftRarity;
+  /** one-line scouting note, e.g. "41 HR, .328 AVG" */
+  headline: string;
+}
+
+/** Rewards for finishing things, shared by the server and the shelf UI. */
+export const REWARDS = {
+  /** packs for winning a single game (any mode) */
+  perGameWin: 1,
+  /** packs for winning a tournament */
+  perTournamentWin: 3,
+  /** packs for completing a historic collection challenge */
+  perChallenge: 2,
+} as const;

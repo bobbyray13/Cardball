@@ -10,3 +10,4 @@ export * from './match.js';
 export * from './tournament.js';
 export * from './rules.js';
 export * from './boxScore.js';
+export * from './historicTeams.js';

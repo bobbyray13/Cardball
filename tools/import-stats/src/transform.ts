@@ -493,6 +493,28 @@ export function buildDataset(files: Record<string, string>, options: BuildOption
     a.bbrefId === b.bbrefId ? a.year - b.year : a.bbrefId < b.bbrefId ? -1 : 1,
   );
 
+  // An active player's final game hasn't happened yet, so People.csv leaves
+  // `finalGame` blank (and sometimes `debut` too). The merged seasons know the
+  // years he actually played, so backfill the career span from them: the app
+  // builds card years from it, and without a final year a current player
+  // cannot have a card at all.
+  const spanByBbref = new Map<string, { min: number; max: number }>();
+  for (const season of seasonSeeds) {
+    const span = spanByBbref.get(season.bbrefId);
+    if (span === undefined) spanByBbref.set(season.bbrefId, { min: season.year, max: season.year });
+    else {
+      if (season.year < span.min) span.min = season.year;
+      if (season.year > span.max) span.max = season.year;
+    }
+  }
+  for (const person of people) {
+    const span = spanByBbref.get(person.bbrefId);
+    if (span === undefined) continue;
+    if (person.debutYear === null) person.debutYear = span.min;
+    // `finalYear < span.max` also heals rows written by an older, shorter dataset.
+    if (person.finalYear === null || person.finalYear < span.max) person.finalYear = span.max;
+  }
+
   return { people, seasons: seasonSeeds };
 }
 

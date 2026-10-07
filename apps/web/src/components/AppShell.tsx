@@ -27,6 +27,9 @@ export function AppShell() {
             <NavLink to="/collection" className={link}>
               Collection
             </NavLink>
+            <NavLink to="/challenges" className={link}>
+              Challenges
+            </NavLink>
             <NavLink to="/search" className={link}>
               Card search
             </NavLink>

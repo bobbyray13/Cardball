@@ -1,13 +1,10 @@
-import { randomUUID } from 'node:crypto';
-import { and, asc, between, desc, eq, gt, inArray, isNotNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull } from 'drizzle-orm';
 import type { DraftCard, DraftConfig, DraftListItem, DraftParticipant, DraftRarity, DraftView, PackThemeId } from '@cardball/shared';
-import { DRAFT_LIMITS, PACK_THEME_IDS, activeHouseRules, packTheme, packThemesForYears, rateCard, themeForRound } from '@cardball/shared';
-import type { PackTheme } from '@cardball/shared';
-import { draftParticipants, drafts, people, seasons, tournaments } from '@cardball/db';
-import type { DraftRow, PersonRow, SeasonRow } from '@cardball/db';
+import { DRAFT_LIMITS, PACK_THEME_IDS, packTheme, packThemesForYears, themeForRound } from '@cardball/shared';
+import { draftParticipants, drafts, tournaments } from '@cardball/db';
+import type { DraftRow } from '@cardball/db';
 import { fileCardIntoCollection } from './cardFiling.js';
-import { buildCard, windowRange } from './cards.js';
-import type { CardSnapshot } from './cards.js';
+import { dealPack } from './packDeal.js';
 import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
 import { badRequest, forbidden, notFound, HttpError } from './http.js';
@@ -75,93 +72,7 @@ function withLock<T>(draftId: number, fn: () => Promise<T>): Promise<T> {
 // ---------------------------------------------------------------------------
 // The card pool
 // ---------------------------------------------------------------------------
-
-/**
- * Deal a themed pack: `count` random players whose card, built on `cardYear`,
- * fits the wrapper's label. Over-fetches, because some candidates turn out to
- * have no usable card or fall outside the theme.
- */
-async function dealPackAtYear(ctx: Ctx, cardYear: number, count: number, theme: PackTheme, playableOnly: boolean): Promise<DraftCard[]> {
-  const rules = activeHouseRules();
-  const { from, to } = windowRange(cardYear, rules);
-
-  const candidates = await ctx.db
-    .select({ id: seasons.personId })
-    .from(seasons)
-    .where(and(between(seasons.year, from, to), gt(seasons.games, 0)))
-    .groupBy(seasons.personId)
-    .orderBy(sql`random()`)
-    // A themed pack throws most of these away — only a fraction of the players
-    // in any six-year window had a 30-homer or a 30-steal season — so the
-    // sample has to be much wider than the pack.
-    .limit(count * 15 + 150);
-
-  if (candidates.length === 0) return [];
-
-  const ids = candidates.map((c) => c.id);
-  const personRows = await ctx.db.select().from(people).where(inArray(people.id, ids));
-  const seasonRows = await ctx.db
-    .select()
-    .from(seasons)
-    .where(and(inArray(seasons.personId, ids), between(seasons.year, from, to)));
-
-  const seasonsByPerson = new Map<number, SeasonRow[]>();
-  for (const row of seasonRows) {
-    const list = seasonsByPerson.get(row.personId) ?? [];
-    list.push(row);
-    seasonsByPerson.set(row.personId, list);
-  }
-
-  const pack: DraftCard[] = [];
-  const personById = new Map((personRows as PersonRow[]).map((p) => [p.id, p]));
-  for (const id of ids) {
-    if (pack.length >= count) break;
-    const person = personById.get(id);
-    if (!person) continue;
-    const card = buildCard(person, seasonsByPerson.get(person.id) ?? [], cardYear);
-    if (!card.playable && playableOnly) continue;
-    const rating = rateCard(card);
-    if (!theme.matches(rating)) continue;
-    pack.push({
-      id: randomUUID(),
-      personId: card.personId,
-      cardYear: card.cardYear,
-      name: card.name,
-      teamLabel: card.teamLabel,
-      rarity: rating.rarity,
-      headline: rating.headline,
-      playable: card.playable,
-      positions: card.canBat ? card.positions : [],
-      starter: card.pitcherClass === 'SP',
-    });
-  }
-
-  return pack;
-}
-
-/** How many card years a pack will try before giving up on filling itself. */
-const PACK_YEAR_TRIES = 10;
-
-/**
- * Deal one pack. A pack is built on a single card year drawn from the draft's
- * era, so the whole wrapper is coherent ("a 1973 pack"); the theme decides
- * which of that year's cards are eligible.
- */
-async function dealPack(ctx: Ctx, config: DraftConfig, count: number, themeId: PackThemeId): Promise<DraftCard[]> {
-  const theme = packTheme(themeId);
-  const span = config.yearTo - config.yearFrom + 1;
-  let best: DraftCard[] = [];
-  for (let attempt = 0; attempt < PACK_YEAR_TRIES; attempt++) {
-    const cardYear = config.yearFrom + Math.floor(Math.random() * span);
-    const pack = await dealPackAtYear(ctx, cardYear, count, theme, config.playableOnly);
-    if (pack.length >= count) return pack;
-    if (pack.length > best.length) best = pack;
-  }
-  if (best.length > 0) return best;
-  throw badRequest(
-    `No ${theme.name.toLowerCase()} cards to deal from ${config.yearFrom}–${config.yearTo} — widen the era or drop that pack`,
-  );
-}
+// Dealing is shared with the pack shelf: see packDeal.ts.
 
 async function dealAllPacks(ctx: Ctx, config: DraftConfig, seats: number, round: number): Promise<Record<string, DraftCard[]>> {
   const packs: Record<string, DraftCard[]> = {};

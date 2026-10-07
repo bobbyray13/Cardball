@@ -13,6 +13,7 @@ import { env } from './env.js';
 import { HttpError, badRequest, forbidden, notFound } from './http.js';
 import { withKeyLock } from './lock.js';
 import { namesFor } from './names.js';
+import { rewardGameWin } from './packs.js';
 import { loadTeam, photoMap, rosterMatchCards, teamSetupFor } from './roster.js';
 import type { LoadedTeam } from './roster.js';
 
@@ -138,7 +139,12 @@ async function save(ctx: Ctx, row: GameRow, next: StoredGame, events: GameEvent[
         events.map((e) => ({ gameId: row.id, seq: e.seq, inning: e.inning, half: e.half, kind: e.kind, text: e.text, data: e })),
       );
     }
-    if (engine?.phase === 'finished' && stored(row).engine?.phase !== 'finished') await recordCardLines(tx, row.id, engine);
+    // The final save is the one moment a game becomes a win: the cards get
+    // their box-score lines, and the winning manager earns a pack on the shelf.
+    if (engine?.phase === 'finished' && stored(row).engine?.phase !== 'finished') {
+      await recordCardLines(tx, row.id, engine);
+      await rewardGameWin(tx, { id: row.id, mode: row.mode }, engine);
+    }
     return result;
   });
   return updated!;
