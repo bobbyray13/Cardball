@@ -15,6 +15,7 @@ function page<T extends { [k: string]: unknown }>(name: keyof T & string, load: 
 // The lobby and login are the first thing anyone sees, so they ship in the
 // entry bundle; every other screen is fetched on first visit.
 const CollectionPage = page('CollectionPage', () => import('./pages/CollectionPage.js'));
+const ChallengesPage = page('ChallengesPage', () => import('./pages/ChallengesPage.js'));
 const SearchPage = page('SearchPage', () => import('./pages/SearchPage.js'));
 const TeamsPage = page('TeamsPage', () => import('./pages/TeamsPage.js'));
 const TeamPage = page('TeamPage', () => import('./pages/TeamPage.js'));
@@ -43,6 +44,7 @@ export default function App() {
         <Route element={user ? <AppShell /> : <Navigate to="/login" replace />}>
           <Route path="/" element={<DashboardPage />} />
           <Route path="/collection" element={<CollectionPage />} />
+          <Route path="/challenges" element={<ChallengesPage />} />
           <Route path="/search" element={<SearchPage />} />
           <Route path="/teams" element={<TeamsPage />} />
           <Route path="/teams/:id" element={<TeamPage />} />

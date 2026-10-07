@@ -8,6 +8,7 @@
 import type {
   CardCareer,
   CardSnapshot,
+  ChallengeView,
   ChatMessage,
   CollectionCard,
   DraftListItem,
@@ -136,6 +137,10 @@ export const api = {
   // ---- pack shelf ----
   packs: () => request<{ packs: PackView[] }>('GET', '/api/packs'),
   openPack: (id: number) => request<{ pack: PackView; cards: CollectionCard[] }>('POST', `/api/packs/${id}/open`),
+
+  // ---- historic team collections ----
+  challenges: () => request<{ challenges: ChallengeView[] }>('GET', '/api/challenges'),
+  claimChallenge: (id: string) => request<{ challenge: ChallengeView; packs: PackView[] }>('POST', `/api/challenges/${id}/claim`),
 
   /** Uploads a card photo and returns its id. */
   uploadPhoto: async (file: File, size: { width: number; height: number }): Promise<{ photoId: number }> => {

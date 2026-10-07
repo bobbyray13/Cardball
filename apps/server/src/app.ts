@@ -11,6 +11,7 @@ import { HttpError } from './http.js';
 import { adminRoutes } from './routes/admin.js';
 import { authRoutes } from './routes/auth.js';
 import { cardRoutes } from './routes/cards.js';
+import { challengeRoutes } from './routes/challenges.js';
 import { draftRoutes } from './routes/drafts.js';
 import { gameRoutes } from './routes/games.js';
 import { packRoutes } from './routes/packs.js';
@@ -47,6 +48,7 @@ export async function buildApp(ctx: Ctx, opts: { logger?: boolean } = {}) {
   adminRoutes(app, ctx);
   tournamentRoutes(app, ctx);
   packRoutes(app, ctx);
+  challengeRoutes(app, ctx);
 
   // Production: serve the built web app, falling back to index.html for client routes.
   if (env.webDist && existsSync(join(env.webDist, 'index.html'))) {
