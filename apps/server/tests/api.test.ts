@@ -12,7 +12,8 @@ import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { botAction, waitingOn } from '@cardball/engine';
 import type { GameState } from '@cardball/engine';
-import type { Position } from '@cardball/shared';
+import { HISTORIC_TEAMS } from '@cardball/shared';
+import type { ChallengeView, PackView, Position } from '@cardball/shared';
 import { createDb, people, runMigrations, seasons } from '@cardball/db';
 import type { Db } from '@cardball/db';
 import { buildApp } from '../src/app.js';
@@ -135,6 +136,14 @@ async function seedStats(): Promise<void> {
     );
   }
 
+  // A current player: still active, so his people row has no final year and his
+  // newest card year has to come from his seasons.
+  await seedPerson(
+    { bbrefId: 'curreal01', nameFirst: 'Al', nameLast: 'Current', bats: 'R', throws: 'R', debutYear: 2000, finalYear: null },
+    span(2000, 2006),
+    hitterTemplate(1),
+  );
+
   // One starting pitcher: 200 innings a year, so he can take the mound.
   await seedPerson(
     { bbrefId: 'testace01', nameFirst: 'Test', nameLast: 'Ace', bats: 'L', throws: 'R', debutYear: 2000, finalYear: 2006, isStarter: true },
@@ -200,6 +209,11 @@ async function buildRoster(token: string): Promise<{ teamId: number; cardIds: nu
   expect(auto.statusCode).toBe(200);
   expect(body<{ team: { lineupProblem: string | null } }>(auto).team.lineupProblem).toBeNull();
   return { teamId, cardIds };
+}
+
+/** Everything on a manager's pack shelf, sealed first. */
+async function shelfPacks(token: string): Promise<PackView[]> {
+  return body<{ packs: PackView[] }>(await call('GET', '/api/packs', { token })).packs;
 }
 
 // ---------------------------------------------------------------------------
@@ -892,5 +906,250 @@ describe('match rules', () => {
     // The guest can still take the seat with a team that fits.
     const guestTeam = await smallBallTeam(guestToken, 'Small Ball Too');
     expect((await call('POST', `/api/games/${gameId}/join`, { token: guestToken, body: { teamId: guestTeam } })).statusCode).toBe(200);
+  });
+});
+
+describe('current players', () => {
+  it('builds an active player’s card years from his newest season', async () => {
+    const found = body<{ people: { id: number; nameLast: string; finalYear: number | null }[] }>(
+      await call('GET', '/api/people/search?q=Al%20Current', { token: hostToken }),
+    ).people;
+    expect(found.length).toBeGreaterThan(0);
+    const current = found[0]!;
+    expect(current.finalYear).toBeNull(); // still active: no final year in the people table
+
+    const detail = body<{ cardYears: { min: number; max: number } | null }>(await call('GET', `/api/people/${current.id}`, { token: hostToken }));
+    // Debut 2000 → first card 2001; newest season 2006 → newest card 2007.
+    expect(detail.cardYears).toEqual({ min: 2001, max: 2007 });
+
+    const preview = body<{ card: { playable: boolean; seasons: { year: number }[] } }>(
+      await call('GET', `/api/cards/preview?personId=${current.id}&cardYear=2007`, { token: hostToken }),
+    );
+    expect(preview.card.playable).toBe(true);
+    expect(preview.card.seasons.map((s) => s.year)).toEqual([2001, 2002, 2003, 2004, 2005, 2006]);
+
+    const ok = await call('POST', '/api/collection', { token: hostToken, body: { personId: current.id, cardYear: 2007 } });
+    expect(ok.statusCode).toBe(200);
+
+    const pastHisNewest = await call('POST', '/api/collection', { token: hostToken, body: { personId: current.id, cardYear: 2008 } });
+    expect(pastHisNewest.statusCode).toBe(400);
+    expect(body<{ error: string }>(pastHisNewest).error).toMatch(/2001.2007/);
+  });
+});
+
+describe('the pack shelf', () => {
+  let packToken = '';
+  let packs: PackView[] = [];
+
+  it('grants starter packs on sign-up', async () => {
+    const invite = body<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
+    const res = await call('POST', '/api/auth/register', {
+      body: { email: 'packrat@example.com', password: 'hunter2hunter2', displayName: 'Packrat', inviteCode: invite },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    packToken = tokenFrom(res);
+
+    packs = (await shelfPacks(packToken)).filter((p) => p.openedAt === null);
+    expect(packs.map((p) => p.shape).sort()).toEqual(['lineup', 'mound', 'random']);
+    expect(packs.every((p) => p.source === 'starter')).toBe(true);
+    expect(packs.every((p) => p.era.to - p.era.from > 10)).toBe(true); // a modern pool, not one season
+  });
+
+  it('opens the starter packs into a collection that can take the field', async () => {
+    // The lineup pack: one player at every position plus a DH.
+    const lineupPack = packs.find((p) => p.shape === 'lineup')!;
+    const lineup = body<{ pack: { openedAt: string | null }; cards: { id: number; card: { positions: string[]; canBat: boolean } }[] }>(
+      await call('POST', `/api/packs/${lineupPack.id}/open`, { token: packToken }),
+    );
+    expect(lineup.pack.openedAt).not.toBeNull();
+    expect(lineup.cards).toHaveLength(9);
+    expect(lineup.cards.every((c) => c.card.canBat)).toBe(true);
+    const covered = new Set(lineup.cards.flatMap((c) => c.card.positions));
+    for (const pos of FIELD_POSITIONS) expect(covered.has(pos)).toBe(true);
+
+    // The mound pack: pitchers.
+    const moundPack = packs.find((p) => p.shape === 'mound')!;
+    const mound = body<{ cards: { id: number; card: { canPitch: boolean } }[] }>(
+      await call('POST', `/api/packs/${moundPack.id}/open`, { token: packToken }),
+    );
+    expect(mound.cards.length).toBeGreaterThanOrEqual(2);
+    expect(mound.cards.every((c) => c.card.canPitch)).toBe(true);
+
+    // The themed pack: five random cards (this pool has no 25-HR sluggers, so
+    // the wrapper falls back to mixed rather than failing the tear).
+    const themedPack = packs.find((p) => p.shape === 'random')!;
+    const themed = body<{ cards: { id: number }[] }>(await call('POST', `/api/packs/${themedPack.id}/open`, { token: packToken }));
+    expect(themed.cards).toHaveLength(5);
+
+    // The whole starter set fields a legal team straight away.
+    const binder = body<{ cards: { id: number }[] }>(await call('GET', '/api/collection', { token: packToken })).cards;
+    expect(binder.length).toBeGreaterThanOrEqual(16);
+    const team = body<{ team: { id: number } }>(await call('POST', '/api/teams', { token: packToken, body: { name: 'Packrat Nine' } }));
+    const roster = await call('PUT', `/api/teams/${team.team.id}/roster`, { token: packToken, body: { userCardIds: binder.map((c) => c.id) } });
+    expect(roster.statusCode, roster.body).toBe(200);
+    const auto = await call('POST', `/api/teams/${team.team.id}/auto-lineup`, { token: packToken });
+    expect(auto.statusCode, auto.body).toBe(200);
+    expect(body<{ team: { lineupProblem: string | null } }>(auto).team.lineupProblem).toBeNull();
+  });
+
+  it('opens a pack exactly once, and only for its owner', async () => {
+    const lineupPack = packs.find((p) => p.shape === 'lineup')!;
+    const again = await call('POST', `/api/packs/${lineupPack.id}/open`, { token: packToken });
+    expect(again.statusCode).toBe(400);
+    expect(body<{ error: string }>(again).error).toMatch(/already open/i);
+
+    const foreign = await call('POST', `/api/packs/${lineupPack.id}/open`, { token: guestToken });
+    expect(foreign.statusCode).toBe(404);
+    expect((await call('POST', '/api/packs/999999/open', { token: packToken })).statusCode).toBe(404);
+  });
+
+  it('pays one pack to the winner of a game', async () => {
+    const sealed = async (token: string) => (await shelfPacks(token)).filter((p) => p.openedAt === null && p.source === 'game-win').length;
+    const before = { host: await sealed(hostToken), guest: await sealed(guestToken) };
+
+    const created = await call('POST', '/api/games', { token: hostToken, body: { mode: 'remote', regulationInnings: 3, teamId: hostTeamId } });
+    const gameId = body<{ game: { id: number } }>(created).game.id;
+    const joined = await call('POST', `/api/games/${gameId}/join`, { token: guestToken, body: { teamId: guestTeamId } });
+    const guestUserId = body<{ game: { guestUserId: number | null } }>(joined).game.guestUserId;
+    expect(guestUserId).not.toBeNull();
+
+    const state = await playOut(gameId, hostToken, (side, s) => (s[side].userId === guestUserId ? guestToken : hostToken));
+    expect(state.phase).toBe('finished');
+    expect(state.winner).not.toBeNull();
+
+    const winnerWon = state[state.winner!].userId === guestUserId;
+    const after = { host: await sealed(hostToken), guest: await sealed(guestToken) };
+    if (winnerWon) {
+      expect(after.guest).toBe(before.guest + 1);
+      expect(after.host).toBe(before.host);
+    } else {
+      expect(after.host).toBe(before.host + 1);
+      expect(after.guest).toBe(before.guest);
+    }
+  });
+});
+
+describe('historic collections', () => {
+  const yankees = HISTORIC_TEAMS.find((t) => t.id === 'nya-1961')!;
+
+  /** Seed one real Yankee from the catalog, so owned cards can cover 1961. */
+  async function seedYankee(player: (typeof yankees.players)[number]): Promise<number> {
+    const isPitcher = player.position === 'SP' || player.position === 'RP';
+    // The 1961 Yankees have no DH slot, so every field position cast is legal.
+    const position = (isPitcher ? 'P' : player.position) as Position;
+    const [person] = await db
+      .insert(people)
+      .values({
+        bbrefId: player.bbrefId,
+        nameFirst: player.name.split(' ')[0]!,
+        nameLast: player.name.split(' ').slice(1).join(' '),
+        bats: 'R',
+        throws: 'R',
+        debutYear: 1955,
+        finalYear: 1964,
+        isStarter: player.position === 'SP',
+      })
+      .returning({ id: people.id });
+    await db.insert(seasons).values(
+      span(1959, 1961).map((year) => ({
+        personId: person!.id,
+        year,
+        teamLabel: 'New York Yankees',
+        games: isPitcher ? 30 : 150,
+        ab: isPitcher ? 40 : 500,
+        h: isPitcher ? 8 : 140,
+        avg: isPitcher ? 0.2 : 0.28,
+        doubles: 25,
+        triples: 3,
+        homeRuns: 20,
+        rbi: 80,
+        sb: 8,
+        pa: isPitcher ? 45 : 550,
+        ...(isPitcher ? { pitchGames: 30, pitchIpOuts: player.position === 'SP' ? 600 : 180, pitchEra: 3.2, pitchBf: 800 } : {}),
+        primaryPosition: position,
+        positionsPlayed: [{ position, games: isPitcher ? 30 : 140, rating: 0 }],
+      })),
+    );
+    return person!.id;
+  }
+
+  const challengesOf = async (token: string) =>
+    body<{ challenges: ChallengeView[] }>(await call('GET', '/api/challenges', { token })).challenges;
+
+  it('lists one collection for every active franchise, with lineups pre-built', async () => {
+    const challenges = await challengesOf(hostToken);
+    expect(challenges).toHaveLength(30);
+    expect(new Set(challenges.map((c) => c.id)).size).toBe(30);
+    expect(new Set(challenges.map((c) => c.franchise)).size).toBe(30);
+    for (const challenge of challenges) {
+      expect(challenge.total).toBeGreaterThanOrEqual(10);
+      expect(challenge.players.length).toBe(challenge.total);
+      expect(challenge.complete).toBe(challenge.owned === challenge.total);
+      expect(challenge.rewardPacks).toBe(2);
+    }
+    // The user asked for these two by name.
+    expect(challenges.find((c) => c.id === 'sea-1995')?.name).toBe('1995 Seattle Mariners');
+    expect(challenges.find((c) => c.id === 'nya-1961')?.name).toBe('1961 New York Yankees');
+  });
+
+  it('tracks owned cards against the season, and pays out two packs once the lineup is full', async () => {
+    const invite = body<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
+    const res = await call('POST', '/api/auth/register', {
+      body: { email: 'collector@example.com', password: 'hunter2hunter2', displayName: 'Collector', inviteCode: invite },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const token = tokenFrom(res);
+
+    let before = (await challengesOf(token)).find((c) => c.id === 'nya-1961')!;
+    expect(before.owned).toBe(0);
+    expect(before.complete).toBe(false);
+
+    // One real Yankee card: the slot fills, but the collection is far from done.
+    const ids = new Map<string, number>();
+    for (const player of yankees.players) ids.set(player.bbrefId, await seedYankee(player));
+    const first = yankees.players[0]!;
+    await call('POST', '/api/collection', { token, body: { personId: ids.get(first.bbrefId)!, cardYear: 1962, setLabel: 'Topps' } });
+    before = (await challengesOf(token)).find((c) => c.id === 'nya-1961')!;
+    expect(before.owned).toBe(1);
+    expect(before.players.find((p) => p.bbrefId === first.bbrefId)).toMatchObject({ have: true, cardYear: 1962 });
+
+    // A card that does not cover the season does not count — here a 1959 card,
+    // printed before the year in question.
+    const early = await call('POST', '/api/collection', { token, body: { personId: ids.get(yankees.players[1]!.bbrefId)!, cardYear: 1959, setLabel: 'Topps' } });
+    expect(early.statusCode, early.body).toBe(200);
+    before = (await challengesOf(token)).find((c) => c.id === 'nya-1961')!;
+    expect(before.owned).toBe(1);
+    expect(before.players.find((p) => p.bbrefId === yankees.players[1]!.bbrefId)?.have).toBe(false);
+
+    // Too early to claim.
+    const notDone = await call('POST', '/api/challenges/nya-1961/claim', { token });
+    expect(notDone.statusCode).toBe(400);
+    expect(body<{ error: string }>(notDone).error).toMatch(/more player/i);
+
+    // Everyone else, on the right year: the collection completes.
+    for (const player of yankees.players) {
+      if (player.bbrefId === first.bbrefId) continue;
+      const add = await call('POST', '/api/collection', { token, body: { personId: ids.get(player.bbrefId)!, cardYear: 1962, setLabel: 'Topps' } });
+      expect(add.statusCode, add.body).toBe(200);
+    }
+    const complete = (await challengesOf(token)).find((c) => c.id === 'nya-1961')!;
+    expect(complete.owned).toBe(complete.total);
+    expect(complete.complete).toBe(true);
+    expect(complete.rewardClaimed).toBe(false);
+
+    const claimed = await call('POST', '/api/challenges/nya-1961/claim', { token });
+    expect(claimed.statusCode, claimed.body).toBe(200);
+    const claim = body<{ challenge: ChallengeView; packs: { id: number; source: string; themeId: string }[] }>(claimed);
+    expect(claim.packs).toHaveLength(2);
+    expect(claim.packs.every((p) => p.source === 'challenge')).toBe(true);
+    expect(claim.challenge.rewardClaimed).toBe(true);
+
+    // The packs are on the shelf, and the claim pays once.
+    const shelf = await shelfPacks(token);
+    expect(shelf.filter((p) => p.source === 'challenge' && p.openedAt === null)).toHaveLength(2);
+    const again = await call('POST', '/api/challenges/nya-1961/claim', { token });
+    expect(again.statusCode).toBe(400);
+    expect(body<{ error: string }>(again).error).toMatch(/already claimed/i);
+    expect((await call('POST', '/api/challenges/no-such-team/claim', { token })).statusCode).toBe(404);
   });
 });
