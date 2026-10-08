@@ -26,6 +26,13 @@ import { dealSealedPack } from './packDeal.js';
 /** Where the modern packs draw from: everything from the wild-card era on. */
 const MODERN_ERA_FROM = 1993;
 
+/**
+ * The reward key the one-time starter grant is filed under. Accounts that
+ * predate the shelf have no starter packs, so they claim the same three later
+ * through this key — and can never be handed a second set.
+ */
+const STARTER_REWARD_KEY = 'starter';
+
 /** The starter shelf: enough shaped cards to field a legal team on day one. */
 const STARTER_PACKS: readonly { themeId: PackThemeId; shape: PackShape; size: number; label: string }[] = [
   { themeId: 'mixed', shape: 'lineup', size: 9, label: 'The starting nine' },
@@ -94,14 +101,43 @@ export async function grantPacks(db: Executor, userId: number, grants: readonly 
   return inserted;
 }
 
-/** The packs a new account starts with, so the binder is never empty. */
-export async function grantStarterPacks(db: Executor, userId: number): Promise<void> {
+/** How many packs a starter claim hands over. */
+export const STARTER_PACK_COUNT = STARTER_PACKS.length;
+
+/**
+ * The packs a new account starts with, so the binder is never empty. Keyed to
+ * the account, so this can also be called later for an account that never got
+ * them without risking a second set.
+ */
+export async function grantStarterPacks(db: Executor, userId: number): Promise<UserPackRow[]> {
   const era = await modernEra(db);
-  await grantPacks(
+  return grantPacks(
     db,
     userId,
     STARTER_PACKS.map((pack) => ({ ...pack, source: 'starter' as const, era })),
+    STARTER_REWARD_KEY,
   );
+}
+
+/** Whether the one-time starter packs are still waiting to be claimed. */
+export async function starterPacksClaimable(db: Executor, userId: number): Promise<boolean> {
+  const [row] = await db
+    .select({ id: userPacks.id })
+    .from(userPacks)
+    .where(and(eq(userPacks.userId, userId), eq(userPacks.source, 'starter')))
+    .limit(1);
+  return row === undefined;
+}
+
+/**
+ * Claim the starter packs, once per account. This is the door for managers
+ * whose account predates the shelf: the grant is filed under the starter
+ * reward key, so a second claim finds the keys taken and hands back nothing.
+ */
+export async function claimStarterPacks(ctx: Ctx, userId: number): Promise<PackView[]> {
+  const granted = await grantStarterPacks(ctx.db, userId);
+  if (granted.length === 0) throw badRequest('You have already claimed your starter packs');
+  return granted.map(toPackView);
 }
 
 /** A pack for winning a game — any mode, once per game. */

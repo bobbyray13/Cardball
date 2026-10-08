@@ -20,6 +20,7 @@ import type {
   InviteSummary,
   MatchRules,
   PackThemeId,
+  PackShelfView,
   PackView,
   PersonDetail,
   PersonSummary,
@@ -135,8 +136,10 @@ export const api = {
   cardCareer: (id: number) => request<{ career: CardCareer }>('GET', `/api/collection/${id}/career`),
 
   // ---- pack shelf ----
-  packs: () => request<{ packs: PackView[] }>('GET', '/api/packs'),
+  packs: () => request<PackShelfView>('GET', '/api/packs'),
   openPack: (id: number) => request<{ pack: PackView; cards: CollectionCard[] }>('POST', `/api/packs/${id}/open`),
+  /** Claims the one-time starter packs an account that predates the shelf never got. */
+  claimStarterPacks: () => request<{ packs: PackView[] }>('POST', '/api/packs/starter/claim'),
 
   // ---- historic team collections ----
   challenges: () => request<{ challenges: ChallengeView[] }>('GET', '/api/challenges'),

@@ -37,15 +37,41 @@ export function PackShelf({ onCardsFiled }: { onCardsFiled?: () => void }) {
 
   const sealed = (packs.data?.packs ?? []).filter((p) => p.openedAt === null);
   const opened = (packs.data?.packs ?? []).filter((p) => p.openedAt !== null).slice(0, 4);
+  const starter = packs.data?.starter ?? null;
 
-  if (sealed.length === 0 && opened.length === 0) return null;
+  const claim = useAction(async () => {
+    await api.claimStarterPacks();
+    packs.reload();
+  });
+
+  if (sealed.length === 0 && opened.length === 0 && !starter?.claimable) return null;
 
   return (
     <Panel
       title="Pack shelf"
-      subtitle={sealed.length > 0 ? 'Tear one open — the cards land straight in your collection.' : 'Your shelf is empty. Win games and finish collections to earn packs.'}
+      subtitle={
+        starter?.claimable
+          ? 'Claim your starter packs, then tear them open — the cards land straight in your collection.'
+          : sealed.length > 0
+            ? 'Tear one open — the cards land straight in your collection.'
+            : 'Your shelf is empty. Win games and finish collections to earn packs.'
+      }
     >
       <ErrorNote error={packs.error} />
+      {starter?.claimable ? (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gold/40 bg-gold/10 p-4">
+          <div>
+            <p className="font-display text-base font-semibold text-chalk">Your starter packs are waiting</p>
+            <p className="text-sm text-chalk/70">
+              A starting nine, a pitching staff, and a fistful of sluggers — one claim, then they are yours.
+            </p>
+          </div>
+          <Button variant="primary" disabled={claim.busy} onClick={() => void claim.execute()}>
+            {claim.busy ? 'Claiming…' : `Claim ${starter.packs} packs`}
+          </Button>
+        </div>
+      ) : null}
+      <ErrorNote error={claim.error} />
       {sealed.length > 0 ? (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           {sealed.map((pack) => (
@@ -61,7 +87,7 @@ export function PackShelf({ onCardsFiled }: { onCardsFiled?: () => void }) {
             </li>
           ))}
         </ul>
-      ) : (
+      ) : starter?.claimable ? null : (
         <EmptyState title="No sealed packs">
           Win a game, take a tournament, or finish a historic collection to earn more.
         </EmptyState>
