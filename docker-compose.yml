@@ -1,5 +1,5 @@
 # Dev environment: just Postgres. The web app and server run on the host via `pnpm dev`.
-# Production does not use compose at all — see deploy/README.md.
+# Production compose lives in deploy/docker-compose.yml.
 
 services:
   postgres:
