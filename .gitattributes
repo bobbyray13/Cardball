@@ -1,0 +1,8 @@
+# Shell scripts run on Linux, where CRLF endings break the shebang
+# ("bad interpreter: /usr/bin/env bash^M"). Pin them to LF regardless of the
+# machine they were last edited on.
+*.sh text eol=lf
+
+# The service unit and Caddyfile are read by Linux daemons for the same reason.
+deploy/cardball.service text eol=lf
+deploy/Caddyfile text eol=lf

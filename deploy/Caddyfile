@@ -1,0 +1,5 @@
+# Cardball's own hostname. Caddy fetches and renews the Let's Encrypt
+# certificate on its own; the app itself only ever listens on 127.0.0.1:3001.
+cardball.supertoniic.com {
+    reverse_proxy 127.0.0.1:3001
+}
