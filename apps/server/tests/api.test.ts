@@ -9,12 +9,13 @@
 import { mkdirSync, rmSync } from 'node:fs';
 import type { InjectOptions, LightMyRequestResponse } from 'fastify';
 import postgres from 'postgres';
+import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { botAction, waitingOn } from '@cardball/engine';
 import type { GameState } from '@cardball/engine';
 import { HISTORIC_TEAMS } from '@cardball/shared';
-import type { ChallengeView, PackView, Position } from '@cardball/shared';
-import { createDb, people, runMigrations, seasons } from '@cardball/db';
+import type { ChallengeView, PackShelfView, PackView, Position } from '@cardball/shared';
+import { createDb, people, runMigrations, seasons, userPacks } from '@cardball/db';
 import type { Db } from '@cardball/db';
 import { buildApp } from '../src/app.js';
 import { SESSION_COOKIE } from '../src/auth.js';
@@ -211,9 +212,14 @@ async function buildRoster(token: string): Promise<{ teamId: number; cardIds: nu
   return { teamId, cardIds };
 }
 
+/** The whole shelf response: the packs, plus the one-time starter offer. */
+async function shelfView(token: string): Promise<PackShelfView> {
+  return body<PackShelfView>(await call('GET', '/api/packs', { token }));
+}
+
 /** Everything on a manager's pack shelf, sealed first. */
 async function shelfPacks(token: string): Promise<PackView[]> {
-  return body<{ packs: PackView[] }>(await call('GET', '/api/packs', { token })).packs;
+  return (await shelfView(token)).packs;
 }
 
 // ---------------------------------------------------------------------------
@@ -953,6 +959,42 @@ describe('the pack shelf', () => {
     expect(packs.map((p) => p.shape).sort()).toEqual(['lineup', 'mound', 'random']);
     expect(packs.every((p) => p.source === 'starter')).toBe(true);
     expect(packs.every((p) => p.era.to - p.era.from > 10)).toBe(true); // a modern pool, not one season
+    // Signing up hands them over, so there is nothing left to claim.
+    expect((await shelfView(packToken)).starter).toEqual({ claimable: false, packs: 3 });
+  });
+
+  it('lets an account that predates the shelf claim its starter packs exactly once', async () => {
+    const invite = body<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
+    const res = await call('POST', '/api/auth/register', {
+      body: { email: 'latecomer@example.com', password: 'hunter2hunter2', displayName: 'Latecomer', inviteCode: invite },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const token = tokenFrom(res);
+    const userId = body<{ user: { id: number } }>(res).user.id;
+
+    // A manager who signed up before starter packs existed has an empty shelf.
+    await db.delete(userPacks).where(eq(userPacks.userId, userId));
+    expect(await shelfPacks(token)).toHaveLength(0);
+    expect((await shelfView(token)).starter).toEqual({ claimable: true, packs: 3 });
+
+    const claimed = await call('POST', '/api/packs/starter/claim', { token });
+    expect(claimed.statusCode, claimed.body).toBe(200);
+    const granted = body<{ packs: PackView[] }>(claimed).packs;
+    expect(granted).toHaveLength(3);
+    expect(granted.every((p) => p.source === 'starter' && p.openedAt === null)).toBe(true);
+    expect(granted.map((p) => p.shape).sort()).toEqual(['lineup', 'mound', 'random']);
+
+    // The claim is spent: no offer, and a second claim hands over nothing.
+    expect((await shelfView(token)).starter).toEqual({ claimable: false, packs: 3 });
+    const again = await call('POST', '/api/packs/starter/claim', { token });
+    expect(again.statusCode).toBe(400);
+    expect(body<{ error: string }>(again).error).toMatch(/already claimed/i);
+    expect(await shelfPacks(token)).toHaveLength(3);
+
+    // The claimed packs are real ones: they tear open into the collection.
+    const torn = await call('POST', `/api/packs/${granted[0]!.id}/open`, { token });
+    expect(torn.statusCode, torn.body).toBe(200);
+    expect(body<{ cards: { id: number }[] }>(torn).cards.length).toBe(granted[0]!.size);
   });
 
   it('opens the starter packs into a collection that can take the field', async () => {

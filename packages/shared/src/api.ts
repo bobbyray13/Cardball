@@ -78,6 +78,20 @@ export interface PackView {
   drawn: DrawnCard[] | null;
 }
 
+/** The one-time starter packs a manager can still claim. */
+export interface StarterPackOffer {
+  /** false once the account has its starter packs, however it got them */
+  claimable: boolean;
+  /** how many packs arrive when claimed */
+  packs: number;
+}
+
+/** Everything on a manager's pack shelf, plus the starter claim. */
+export interface PackShelfView {
+  packs: PackView[];
+  starter: StarterPackOffer;
+}
+
 // ---------------------------------------------------------------------------
 // Historic team collections
 // ---------------------------------------------------------------------------
