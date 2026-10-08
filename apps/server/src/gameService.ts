@@ -16,6 +16,7 @@ import { namesFor } from './names.js';
 import { rewardGameWin } from './packs.js';
 import { loadTeam, photoMap, rosterMatchCards, teamSetupFor } from './roster.js';
 import type { LoadedTeam } from './roster.js';
+import { stockTeamForGame } from './stockTeams.js';
 
 /** What we keep in games.state: the engine state plus room bookkeeping. */
 export interface StoredGame {
@@ -177,6 +178,8 @@ export interface CreateGameInput {
   regulationInnings: number;
   teamId: number;
   opponentTeamId?: number | undefined;
+  /** a ready-made bot team from the stock catalog, instead of an owned team */
+  opponentStockTeamId?: string | undefined;
   /** what cards this match allows; missing means any card, no caps */
   match?: MatchRules | undefined;
   /** when set, watching or joining takes this password */
@@ -213,16 +216,26 @@ export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameI
   let next = base;
   let events: GameEvent[] = [];
   if (input.mode !== 'remote') {
-    if (!input.opponentTeamId) throw badRequest('Pick an opponent team');
-    const opp = await loadTeam(ctx, input.opponentTeamId, user.id);
-    checkRoster(opp, match);
     const isBot = input.mode === 'bot';
-    const created = buildEngine(`${Date.now()}`, input, match, [
-      () => teamSetupFor(host, 'h', { userId: user.id, isBot: false }),
-      () => teamSetupFor(opp, 'g', { userId: isBot ? null : user.id, isBot }),
-    ]);
-    next = { ...base, engine: created.state, guestUserId: isBot ? null : user.id, photos: { ...base.photos, ...photoMap(opp.roster, 'g') } };
-    events = created.events;
+    if (input.opponentStockTeamId) {
+      // A ready-made bot team: no rows of its own, cards built from the stats
+      // database, and a lineup the same auto-lineup would pick.
+      if (input.opponentTeamId) throw badRequest('Pick one opponent — a team of yours or a stock team, not both');
+      const setup = await stockTeamForGame(ctx, input.opponentStockTeamId, match);
+      const created = buildEngine(`${Date.now()}`, input, match, [() => teamSetupFor(host, 'h', { userId: user.id, isBot: false }), () => setup]);
+      next = { ...base, engine: created.state, guestUserId: null };
+      events = created.events;
+    } else {
+      if (!input.opponentTeamId) throw badRequest('Pick an opponent team');
+      const opp = await loadTeam(ctx, input.opponentTeamId, user.id);
+      checkRoster(opp, match);
+      const created = buildEngine(`${Date.now()}`, input, match, [
+        () => teamSetupFor(host, 'h', { userId: user.id, isBot: false }),
+        () => teamSetupFor(opp, 'g', { userId: isBot ? null : user.id, isBot }),
+      ]);
+      next = { ...base, engine: created.state, guestUserId: isBot ? null : user.id, photos: { ...base.photos, ...photoMap(opp.roster, 'g') } };
+      events = created.events;
+    }
   }
 
   const [row] = await ctx.db
@@ -233,7 +246,8 @@ export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameI
       matchRules: match,
       homeUserId: user.id,
       homeTeamId: host.team.id,
-      awayTeamId: input.opponentTeamId ?? null,
+      // A stock opponent has no team row, so the away seat stays empty.
+      awayTeamId: input.opponentStockTeamId ? null : (input.opponentTeamId ?? null),
       status: statusOf(next),
       state: next,
       passwordHash: input.password ? await hashPassword(input.password) : null,
@@ -259,6 +273,9 @@ function buildEngine(
         id,
         mode: input.mode,
         regulationInnings: input.regulationInnings,
+        // Human-vs-human games pace the pitch roll (the batter sees the
+        // pitcher's die, then rolls); a bot game resolves it at once.
+        pacedPitch: input.mode !== 'bot',
         // Snapshot the commissioner's rules into this game.
         rules: activeHouseRules(),
         match,

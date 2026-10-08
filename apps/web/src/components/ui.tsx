@@ -59,8 +59,15 @@ export function Field({ label, hint, children }: { label: string; hint?: string;
   );
 }
 
+/**
+ * A form control on the dark dugout chrome. The surface is a solid, slightly
+ * lifted dark rather than a translucent black, so a select's closed control
+ * reads clearly against a panel, and it lightens under focus — the state a
+ * dropdown sits in while its list is open. The option list itself is painted
+ * by the OS and is styled in index.css.
+ */
 export const inputClass =
-  'w-full rounded-lg border border-white/15 bg-black/25 px-3 py-2 text-sm text-chalk placeholder:text-chalk/35 focus:border-gold/70 focus:outline-none';
+  'w-full rounded-lg border border-white/25 bg-dugout-light px-3 py-2 text-sm text-chalk placeholder:text-chalk/40 focus:border-gold focus:bg-dugout focus:outline-none';
 
 /** Shows an error from the API in the server's own words. */
 export function ErrorNote({ error }: { error: unknown }) {
@@ -75,6 +82,23 @@ export function ErrorNote({ error }: { error: unknown }) {
 
 export function Notice({ children }: { children: ReactNode }) {
   return <p className="rounded-lg border border-gold/40 bg-gold/10 px-3 py-2 text-sm text-gold">{children}</p>;
+}
+
+/** A small pill button, for a filter or a toggle that is one of a few. */
+export function Chip({ active, disabled, onClick, children }: { active: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      aria-pressed={active}
+      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors disabled:opacity-35 ${
+        active ? 'bg-chalk text-field-deep' : 'border border-white/15 text-chalk/70 hover:bg-white/10'
+      }`}
+    >
+      {children}
+    </button>
+  );
 }
 
 export function Spinner({ label = 'Loading…' }: { label?: string }) {

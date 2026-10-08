@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { motion } from 'framer-motion';
-import type { ChatMessage, GameAction, TeamSummary } from '@cardball/shared';
+import type { ChatMessage, GameAction, PackView, TeamSummary } from '@cardball/shared';
 import { MATCH_LIMITS, matchEraLabel, matchIsOpen } from '@cardball/shared';
 import { sidesFor, waitingOn } from '@cardball/engine';
 import type { GameEvent, GameState, Side } from '@cardball/engine';
@@ -135,6 +135,14 @@ export function GamePage() {
 
   const state = game?.state ?? null;
   const mySides = useMemo<Side[]>(() => (state && user ? sidesFor(state, { userId: user.id }) : []), [state, user]);
+  const finished = state?.phase === 'finished';
+  // Once the final out is recorded, fetch the shelf so the curtain call can
+  // name the packs this game earned.
+  const shelf = useLoad(() => (finished ? api.packs() : Promise.resolve(null)), [finished]);
+  const earned = useMemo(
+    () => (finished && shelf.data ? shelf.data.packs.filter((p) => p.rewardKey?.startsWith(`game:${gameId}#`)) : []),
+    [finished, shelf.data, gameId],
+  );
   const zoomPlayer = useCallback<ZoomPlayer>(
     (side, player) => {
       if (state) setZoom(zoomForPlayer(state, side, player, game?.photos ?? {}, user?.id ?? null));
@@ -192,6 +200,8 @@ export function GamePage() {
             {state ? (
               <>
                 {game.status === 'lobby' ? <LobbyPanel game={game} state={state} mySides={mySides} onAction={runAction} busy={busy} /> : null}
+
+                {state.phase === 'finished' ? <GameOver state={state} earned={earned} userId={user?.id ?? null} /> : null}
 
                 <Panel title="The mat" subtitle={state.phase === 'finished' ? 'Final' : `${state.half === 'top' ? 'Top' : 'Bottom'} ${state.inning} · ${state.outs} out${state.outs === 1 ? '' : 's'}`}>
                   {/* The call on the air: each play unfolds here, one beat at a time. */}
@@ -302,6 +312,44 @@ function PasswordGate({ gameId, message, onUnlocked }: { gameId: number; message
         </form>
       </Panel>
     </div>
+  );
+}
+
+/**
+ * The curtain call: the final line, the packs the win earned, and one obvious
+ * way back to the lobby.
+ */
+function GameOver({ state, earned, userId }: { state: GameState; earned: PackView[]; userId: number | null }) {
+  const navigate = useNavigate();
+  const winner = state.winner ? state[state.winner] : null;
+  const loser = state.winner ? (state.winner === 'home' ? state.away : state.home) : null;
+  const mine = winner !== null && winner.userId !== null && winner.userId === userId;
+  const sealed = earned.filter((p) => p.openedAt === null);
+
+  return (
+    <Panel title="Ballgame!" subtitle={winner && loser ? `${winner.name} defeat ${loser.name}, ${winner.score}–${loser.score}` : undefined}>
+      {mine ? (
+        sealed.length > 0 ? (
+          <p className="text-chalk/75">
+            You earned {sealed.length === 1 ? 'a pack' : `${sealed.length} packs`}
+            {sealed.length === 1 && sealed[0]?.label ? ` — “${sealed[0].label}”` : ''} for this one.{' '}
+            <span className="text-gold">{sealed.length === 1 ? 'It’s' : 'They’re'} sealed on your shelf.</span>
+          </p>
+        ) : (
+          <p className="text-chalk/75">You earned a pack for this one — it’s on your shelf.</p>
+        )
+      ) : (
+        <p className="text-chalk/75">{winner ? 'The other side takes the pack.' : 'Nobody takes it.'}</p>
+      )}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button variant="primary" onClick={() => void navigate('/')}>
+          Back to the lobby
+        </Button>
+        {mine && sealed.length > 0 ? (
+          <Button onClick={() => void navigate('/collection')}>Open your packs</Button>
+        ) : null}
+      </div>
+    </Panel>
   );
 }
 

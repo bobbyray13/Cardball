@@ -14,6 +14,7 @@ export interface AuthUser {
   email: string;
   displayName: string;
   isAdmin: boolean;
+  publicProfile: boolean;
 }
 
 export const hashPassword = (password: string) => hash(password);
@@ -35,7 +36,7 @@ export async function destroySession(ctx: Ctx, token: string): Promise<void> {
 export async function userFromToken(ctx: Ctx, token: string | undefined): Promise<AuthUser | null> {
   if (!token) return null;
   const rows = await ctx.db
-    .select({ id: users.id, email: users.email, displayName: users.displayName, isAdmin: users.isAdmin })
+    .select({ id: users.id, email: users.email, displayName: users.displayName, isAdmin: users.isAdmin, publicProfile: users.publicProfile })
     .from(sessions)
     .innerJoin(users, eq(users.id, sessions.userId))
     .where(and(eq(sessions.id, tokenId(token)), gt(sessions.expiresAt, new Date())))

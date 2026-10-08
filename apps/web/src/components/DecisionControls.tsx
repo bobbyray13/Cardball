@@ -1,5 +1,6 @@
 import { memo } from 'react';
-import type { EnginePlayer, GameState, Side } from '@cardball/engine';
+import { motion } from 'framer-motion';
+import type { EnginePlayer, GameState, RollDetail, Side } from '@cardball/engine';
 import {
   availablePitchers,
   benchHitters,
@@ -13,6 +14,7 @@ import {
   seasonForPlayer,
 } from '@cardball/engine';
 import type { GameAction } from '@cardball/shared';
+import { Die } from './Dice.js';
 import { Button, Notice } from './ui.js';
 
 /**
@@ -42,6 +44,37 @@ export const DecisionControls = memo(function DecisionControls({
   const defense = getDefense(state);
 
   if (pending) {
+    if (pending.kind === 'batter-roll') {
+      if (!mySides.includes(pending.side)) {
+        return <Waiting name={getTeam(state, pending.side).name} prompt={pending.prompt} />;
+      }
+      // The pitcher's die stays on the table beside the button, tumbling in
+      // with the button and then settling back after a few seconds.
+      const { pitcherRoll, pitcherTotal } = pending.detail ?? {};
+      const pitcherDie: RollDetail | null =
+        pitcherRoll !== undefined && pitcherTotal !== undefined
+          ? { label: 'Pitcher', sides: 6, value: pitcherRoll, modifier: pitcherTotal - pitcherRoll, total: pitcherTotal }
+          : null;
+      return (
+        <div className="space-y-3">
+          <p className="text-sm text-chalk/70">{pending.prompt}</p>
+          <div className="flex flex-wrap items-center gap-4">
+            {pitcherDie ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 1, 0.35] }}
+                transition={{ duration: 4.5, times: [0, 0.06, 0.72, 1] }}
+              >
+                <Die roll={pitcherDie} accent />
+              </motion.div>
+            ) : null}
+            <Button variant="primary" disabled={busy} onClick={() => onAction({ type: 'roll-bat' })}>
+              {busy ? 'Rolling…' : 'Roll the bat'}
+            </Button>
+          </div>
+        </div>
+      );
+    }
     if (!mySides.includes(pending.side)) {
       return <Waiting name={getTeam(state, pending.side).name} prompt={pending.prompt} />;
     }
@@ -49,14 +82,21 @@ export const DecisionControls = memo(function DecisionControls({
   }
 
   if (state.currentPa) {
-    if (!mySides.includes(offense.side)) {
-      return <Waiting name={offense.name} prompt={`${offense.name} are at bat.`} />;
+    // Paced pitching: the defense throws the pitcher's die, then the offense
+    // rolls the bat. Otherwise the offense resolves the whole roll.
+    const throwerSide = state.config.pacedPitch ? defense.side : offense.side;
+    if (!mySides.includes(throwerSide)) {
+      const name = state.config.pacedPitch ? defense.name : offense.name;
+      const prompt = state.config.pacedPitch ? `${defense.name} are on the mound.` : `${offense.name} are at bat.`;
+      return <Waiting name={name} prompt={prompt} />;
     }
-    const onBase = runnersOn(offense).filter((runner) => canSteal(state, runner.id).ok);
+    const onBase = state.config.pacedPitch ? [] : runnersOn(offense).filter((runner) => canSteal(state, runner.id).ok);
     return (
       <div className="space-y-3">
         <p className="text-sm text-chalk/70">
-          {batterName(state)} is due up against {defense.players.find((p) => p.id === defense.activePitcherId)?.name ?? 'the pitcher'}.
+          {state.config.pacedPitch
+            ? `${defense.players.find((p) => p.id === defense.activePitcherId)?.name ?? 'The pitcher'} deals to ${batterName(state)}.`
+            : `${batterName(state)} is due up against ${defense.players.find((p) => p.id === defense.activePitcherId)?.name ?? 'the pitcher'}.`}
           {state.currentPa.balls > 0 ? <span className="ml-1 text-gold">{state.currentPa.balls} tied roll{state.currentPa.balls > 1 ? 's' : ''} — one more is a walk.</span> : null}
         </p>
         <div className="flex flex-wrap gap-2">

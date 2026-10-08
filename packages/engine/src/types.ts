@@ -98,7 +98,7 @@ export type Phase = 'lobby' | 'live' | 'finished';
 
 /** A question the engine needs answered before play continues. */
 export interface PendingDecision {
-  kind: 'dp-attempt' | 'send-runner' | 'pinch-runner' | 'pitcher-change' | 'lineup-fill';
+  kind: 'dp-attempt' | 'send-runner' | 'pinch-runner' | 'pitcher-change' | 'lineup-fill' | 'batter-roll';
   side: Side;
   /** runner being sent / needing a pinch-runner */
   playerId?: string;
@@ -110,6 +110,9 @@ export interface PendingDecision {
     throwerId?: string;
     runnerAdvantage?: number;
     dpFactors?: { diff: number; fielding: number; batterSb: number };
+    /** paced pitching: the pitcher's die already on the table, awaiting the batter's */
+    pitcherRoll?: number;
+    pitcherTotal?: number;
   };
 }
 
@@ -151,6 +154,13 @@ export interface PlayContext {
 export interface GameConfig {
   mode: GameMode;
   regulationInnings: number;
+  /**
+   * Paced pitching: when true, a plate appearance's pitch roll is split in two
+   * — the defense throws (the pitcher's die), then the offense rolls (the
+   * batter's die). Human-vs-human games pace it so the batter sees the
+   * pitcher's roll before committing; bot games resolve the roll at once.
+   */
+  pacedPitch?: boolean;
   /**
    * The house rules this game was created under, snapshotted so a game in
    * progress never changes mid-inning when the commissioner edits them.
@@ -294,6 +304,8 @@ export interface GameSetup {
   id: string;
   mode: GameMode;
   regulationInnings: number;
+  /** pace the pitch roll into two steps (see GameConfig.pacedPitch) */
+  pacedPitch?: boolean;
   /** house rules for this game; missing fields fall back to the shipped defaults */
   rules?: Partial<HouseRules>;
   /** what cards this match allows; carried into the state for the room to print */

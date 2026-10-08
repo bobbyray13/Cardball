@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { GameAction } from '@cardball/shared';
-import { applyAction } from '../src/apply.js';
+import { applyAction, waitingOn } from '../src/apply.js';
 import { createGame } from '../src/create.js';
 import { GameError } from '../src/errors.js';
 import { OUT_OF_POSITION_RATING, fieldingRating } from '../src/queries.js';
@@ -312,5 +312,57 @@ describe('pitching', () => {
     const state = pitch(liveGame(3), [1, 6]);
     state.inning = 3;
     expect(() => act(state, { type: 'pitcher-change', inPlayerId: 'asp2' })).not.toThrow();
+  });
+});
+
+describe('paced pitching', () => {
+  /** Hotseat, paced: the defense throws the pitcher's die, then the offense rolls. */
+  function pacedGame(innings = 9): GameState {
+    const { state } = createGame(
+      { id: 'g2', mode: 'hotseat', regulationInnings: innings, pacedPitch: true, teams: [neutralTeam('a'), neutralTeam('b')] },
+      scriptedRng([6, 1]),
+    );
+    return act(state, { type: 'start-game' }, [1, 1]);
+  }
+
+  it('leaves an unpaced game resolving the roll in one throw', () => {
+    const state = liveGame();
+    expect(state.config.pacedPitch).toBeUndefined();
+    // Team B bats first, so the offense holds the throw.
+    expect(waitingOn(state)).toMatchObject({ side: 'away', kind: 'throw-pitch' });
+  });
+
+  it('asks the defense to throw, then the offense to roll', () => {
+    const thrown = applyAction(pacedGame(), { type: 'throw-pitch' }, ME, scriptedRng([4]));
+    // The pitcher's die is on the table before the batter commits.
+    expect(thrown.events.some((e) => e.kind === 'pitch')).toBe(true);
+    expect(thrown.state.pendingDecision).toMatchObject({ kind: 'batter-roll', side: 'away' });
+    expect(thrown.state.pendingDecision?.detail?.pitcherRoll).toBe(4);
+    expect(waitingOn(thrown.state)).toMatchObject({ side: 'away', kind: 'batter-roll' });
+
+    // The offense rolls: 5 over the pitcher's 4 → contact.
+    const rolled = applyAction(thrown.state, { type: 'roll-bat' }, ME, scriptedRng([5, 3, 12]));
+    expect(rolled.state.pendingDecision).toBeNull();
+    expect(rolled.events.some((e) => e.kind === 'pitch' && /makes contact/.test(e.text))).toBe(true);
+  });
+
+  it('a tie is a ball, and the pitcher throws again', () => {
+    const thrown = applyAction(pacedGame(), { type: 'throw-pitch' }, ME, scriptedRng([4]));
+    const rolled = applyAction(thrown.state, { type: 'roll-bat' }, ME, scriptedRng([4]));
+    expect(rolled.events.some((e) => e.kind === 'ball')).toBe(true);
+    expect(rolled.state.pendingDecision).toBeNull();
+    expect(rolled.state.currentPa?.balls).toBe(1);
+    expect(waitingOn(rolled.state)).toMatchObject({ side: 'home', kind: 'throw-pitch' });
+  });
+
+  it('a high pitcher roll strikes the batter out', () => {
+    const thrown = applyAction(pacedGame(), { type: 'throw-pitch' }, ME, scriptedRng([6]));
+    const rolled = applyAction(thrown.state, { type: 'roll-bat' }, ME, scriptedRng([1]));
+    expect(rolled.events.some((e) => e.kind === 'out' && /strikes out/.test(e.text))).toBe(true);
+    expect(rolled.state.outs).toBe(1);
+  });
+
+  it('refuses a batter roll before the pitcher has thrown', () => {
+    expect(() => act(pacedGame(), { type: 'roll-bat' })).toThrow(/No batter roll/);
   });
 });

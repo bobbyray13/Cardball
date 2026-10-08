@@ -69,6 +69,35 @@
     outline: 2px solid var(--color-gold);
     outline-offset: 2px;
   }
+
+  /*
+   * Selects. The closed control gets its surface from the field classes, but
+   * the OS paints the option list itself — and by default it paints a light
+   * grey list under the control's cream text, which is unreadable. Spelling
+   * the dark surfaces out here fixes the list on every platform, and covers
+   * selects that carry their own class instead of the shared field styles.
+   */
+  select {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background-color: var(--color-dugout);
+    color: var(--color-chalk);
+  }
+
+  select option:checked {
+    background-color: color-mix(in oklab, var(--color-gold) 35%, var(--color-dugout));
+    color: var(--color-chalk);
+  }
+
+  /* Open or focused, a select reads as live: gold edge, lifted surface. */
+  select:open,
+  select:focus {
+    border-color: var(--color-gold);
+    background-color: var(--color-dugout-light);
+  }
 }
 
 @utility panel {

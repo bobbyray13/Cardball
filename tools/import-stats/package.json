@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx src/index.ts",
     "challenges": "tsx src/challenges.ts",
+    "stock-teams": "tsx src/stockTeams.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"

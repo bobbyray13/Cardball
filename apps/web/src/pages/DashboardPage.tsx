@@ -74,11 +74,13 @@ export function DashboardPage() {
   const games = useLoad(() => api.games(), []);
   const teams = useLoad(() => api.teams(), []);
   const collection = useLoad(() => api.collection(), []);
+  const stockTeams = useLoad(() => api.stockTeams(), []);
 
   const [mode, setMode] = useState<GameMode>('remote');
   const [innings, setInnings] = useState(9);
   const [teamId, setTeamId] = useState<number | ''>('');
-  const [opponentTeamId, setOpponentTeamId] = useState<number | ''>('');
+  // The opponent, as "team:<id>" or "stock:<id>" so one control covers both.
+  const [opponent, setOpponent] = useState('');
   const [joinTeamId, setJoinTeamId] = useState<number | ''>('');
   // Match rules: which years of cards are allowed, and how many specials.
   const [era, setEra] = useState('any');
@@ -109,11 +111,18 @@ export function DashboardPage() {
   };
 
   const create = useAction(async () => {
+    // A stock team is bot-only; a hotseat opponent is always one of your own.
+    const opponentPick =
+      mode === 'remote'
+        ? {}
+        : opponent.startsWith('stock:')
+          ? { opponentStockTeamId: opponent.slice('stock:'.length) }
+          : { opponentTeamId: Number(opponent.slice('team:'.length)) || Number(teamId) };
     const created = await api.createGame({
       mode,
       regulationInnings: innings,
       teamId: Number(teamId),
-      ...(mode === 'remote' ? {} : { opponentTeamId: Number(opponentTeamId || teamId) }),
+      ...opponentPick,
       ...(password.trim() ? { password: password.trim() } : {}),
       ...(restricted
         ? {
@@ -216,7 +225,15 @@ export function DashboardPage() {
                 }}
               >
                 <Field label="How are you playing?">
-                  <SegmentedToggle namePrefix="mode" value={mode} options={MODE_OPTIONS} onChange={(next) => setMode(next)} />
+                  <SegmentedToggle
+                    namePrefix="mode"
+                    value={mode}
+                    options={MODE_OPTIONS}
+                    onChange={(next) => {
+                      setMode(next);
+                      setOpponent('');
+                    }}
+                  />
                 </Field>
 
                 <Field label="Innings">
@@ -263,17 +280,34 @@ export function DashboardPage() {
                 </Field>
 
                 {mode !== 'remote' ? (
-                  <Field label="Opponent" hint={mode === 'bot' ? 'The bot manages this team.' : 'You manage both sides.'}>
-                    <select name="opponentTeamId" className={inputClass} value={opponentTeamId} onChange={(e) => setOpponentTeamId(Number(e.target.value))} required>
+                  <Field
+                    label="Opponent"
+                    hint={mode === 'bot' ? 'The bot manages this team. Stock teams are ready-made opponents.' : 'You manage both sides.'}
+                  >
+                    <select name="opponent" className={inputClass} value={opponent} onChange={(e) => setOpponent(e.target.value)} required>
                       <option value="">Pick a team…</option>
-                      {myTeams
-                        .filter((t) => t.id !== teamId)
-                        .map((t) => (
-                          <option key={t.id} value={t.id}>
-                            {t.name}
-                          </option>
-                        ))}
+                      <optgroup label="Your teams">
+                        {myTeams
+                          .filter((t) => t.id !== teamId)
+                          .map((t) => (
+                            <option key={`team:${t.id}`} value={`team:${t.id}`}>
+                              {t.name} {t.hasLineup ? '' : '(no lineup)'}
+                            </option>
+                          ))}
+                      </optgroup>
+                      {mode === 'bot' && (stockTeams.data?.teams.length ?? 0) > 0 ? (
+                        <optgroup label="Stock teams">
+                          {(stockTeams.data?.teams ?? []).map((t) => (
+                            <option key={`stock:${t.id}`} value={`stock:${t.id}`}>
+                              {t.name}
+                            </option>
+                          ))}
+                        </optgroup>
+                      ) : null}
                     </select>
+                    {mode === 'bot' && (stockTeams.data?.teams.length ?? 0) > 0 ? (
+                      <p className="mt-1 text-xs text-chalk/45">No second team? Pick any stock team and the bot will manage it.</p>
+                    ) : null}
                   </Field>
                 ) : (
                   <p className="text-xs text-chalk/50">
@@ -295,7 +329,7 @@ export function DashboardPage() {
                 </Field>
 
                 <ErrorNote error={create.error} />
-                <Button type="submit" variant="primary" className="w-full" disabled={create.busy || !teamId}>
+                <Button type="submit" variant="primary" className="w-full" disabled={create.busy || !teamId || (mode !== 'remote' && !opponent)}>
                   {create.busy ? 'Setting the field…' : 'Play ball'}
                 </Button>
               </form>

@@ -64,6 +64,12 @@ export const attemptStealActionSchema = z.object({
 /** Offense, pre-at-bat: resolve this plate appearance's pitch rolls. */
 export const throwPitchActionSchema = z.object({ type: z.literal('throw-pitch') });
 
+/**
+ * Offense, after the pitcher's roll: roll the batter's die and resolve the
+ * plate appearance. Only used in a paced game (see GameConfig.pacedPitch).
+ */
+export const rollBatActionSchema = z.object({ type: z.literal('roll-bat') });
+
 /** Defense, after fielding a force grounder: gamble on the double play or take the out. */
 export const dpAttemptActionSchema = z.object({
   type: z.literal('dp-attempt'),
@@ -91,6 +97,7 @@ export const gameActionSchema = z.discriminatedUnion('type', [
   pitcherChangeActionSchema,
   attemptStealActionSchema,
   throwPitchActionSchema,
+  rollBatActionSchema,
   dpAttemptActionSchema,
   sendRunnerActionSchema,
   concedeActionSchema,

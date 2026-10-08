@@ -50,7 +50,11 @@ export function AppShell() {
           </nav>
 
           <div className="ml-auto flex items-center gap-3">
-            <span className="hidden text-sm text-chalk/60 sm:inline">{user?.displayName}</span>
+            {user ? (
+              <NavLink to={`/players/${encodeURIComponent(user.displayName)}`} className="hidden text-sm text-chalk/60 hover:text-gold sm:inline">
+                {user.displayName}
+              </NavLink>
+            ) : null}
             <button
               type="button"
               className="rounded-full border border-white/20 px-3 py-1.5 text-sm text-chalk/80 hover:bg-white/10"

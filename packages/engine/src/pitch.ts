@@ -100,6 +100,7 @@ export function leadForcedBase(state: GameState): 0 | 1 | 2 | 3 {
 // throw-pitch: resolve the whole plate appearance, pausing for decisions.
 // ---------------------------------------------------------------------------
 
+/** The pitch roll: pitcher vs batter, ties are balls. Resolves the whole PA. */
 export function applyThrowPitch(state: GameState, rng: Rng): GameEvent[] {
   if (state.phase !== 'live') throw new GameError('The game is not in progress');
   if (state.pendingDecision || state.pendingPlay) throw new GameError('A decision is pending');
@@ -118,6 +119,28 @@ export function applyThrowPitch(state: GameState, rng: Rng): GameEvent[] {
   const batterSeason = seasonForPlayer(state, batter);
   const pitcherSeason = seasonForPlayer(state, pitcher);
 
+  // Paced: the pitcher's roll goes on the table, and the batter answers it.
+  if (state.config.pacedPitch) {
+    const { mod: pMod, note: pNote } = pitcherPitchMod(pitcherSeason, rulesOf(state));
+    const pRoll = rng.d6();
+    const pTotal = pRoll + pMod;
+    events.push(
+      pushEvent(state, {
+        kind: 'pitch',
+        text: `${pitcher.name} deals — d6 ${pRoll} ${fmtMod(pMod)} = ${pTotal}. ${batter.name}, roll the bat.`,
+        rolls: [roll(`${pitcher.name} (pitching)`, 6, pRoll, pMod, pNote)],
+        refs: { playerId: pitcher.id, side: defense.side },
+      }),
+    );
+    state.pendingDecision = {
+      kind: 'batter-roll',
+      side: offense.side,
+      prompt: `${pitcher.name} rolls ${pTotal} — ${batter.name} steps in to roll.`,
+      detail: { pitcherRoll: pRoll, pitcherTotal: pTotal },
+    };
+    return events;
+  }
+
   // ---- pitch roll loop: pitcher vs batter, ties are balls ----
   while (true) {
     const { mod: bBase, note: bNote } = batterPitchMod(batterSeason, rulesOf(state));
@@ -134,50 +157,104 @@ export function applyThrowPitch(state: GameState, rng: Rng): GameEvent[] {
       roll(`${pitcher.name} (pitching)`, 6, pRoll, pMod, pNote),
     ];
 
-    if (pTotal > bTotal) {
-      // Strikeout.
-      events.push(
-        pushEvent(state, { kind: 'pitch', text: `Pitch roll: ${pitcher.name} ${pTotal} vs ${batter.name} ${bTotal}.`, rolls }),
-      );
-      creditPlateAppearance(state, 'strikeout');
-      recordOut(state, events, `${batter.name} strikes out (pitch roll ${pTotal} over ${bTotal}).`, batter.id, offense.side);
-      finishPlateAppearance(state, events);
-      return events;
-    }
+    if (resolvePitch(state, events, rng, batter, pitcher, batterSeason, bTotal, pTotal, rolls) === 'ended') return events;
+  }
+}
 
-    if (bTotal > pTotal) {
-      // Contact!
-      events.push(
-        pushEvent(state, { kind: 'pitch', text: `${batter.name} makes contact (pitch roll ${bTotal} over ${pTotal}).`, rolls }),
-      );
-      resolveContact(state, events, rng, batter, pitcher, batterSeason);
-      return events;
-    }
+/**
+ * The offense's answer to a paced pitch: roll the batter's die against the
+ * pitcher's total already on the table, then resolve the plate appearance. A
+ * tie is another ball, and the pitcher throws again.
+ */
+export function applyRollBat(state: GameState, rng: Rng): GameEvent[] {
+  if (state.phase !== 'live') throw new GameError('The game is not in progress');
+  const decision = state.pendingDecision;
+  if (!decision || decision.kind !== 'batter-roll') throw new GameError('No batter roll is pending');
+  const pa = state.currentPa;
+  if (!pa) throw new GameError('No plate appearance in progress');
 
-    // Tie: ball.
-    pa.balls += 1;
+  const offense = getOffense(state);
+  const defense = getDefense(state);
+  const batter = offense.players.find((p) => p.id === pa.batterId);
+  const pitcher = defense.players.find((p) => p.id === pa.pitcherId);
+  if (!batter || !pitcher) throw new GameError('Plate appearance has missing players');
+
+  state.pendingDecision = null;
+  const events: GameEvent[] = [];
+
+  const batterSeason = seasonForPlayer(state, batter);
+  const pitcherSeason = seasonForPlayer(state, pitcher);
+  const { mod: bBase, note: bNote } = batterPitchMod(batterSeason, rulesOf(state));
+  const bRbi = batterRbiBonus(state, batter, batterSeason);
+  const { mod: pMod, note: pNote } = pitcherPitchMod(pitcherSeason, rulesOf(state));
+
+  const pRoll = decision.detail?.pitcherRoll ?? 0;
+  const pTotal = decision.detail?.pitcherTotal ?? pRoll + pMod;
+  const bRoll = rng.d6();
+  const bTotal = bRoll + bBase + bRbi;
+
+  const rolls = [
+    roll(`${batter.name} (batting)`, 6, bRoll, bBase + bRbi, `${bNote}${bRbi ? `, ${bRbi} RBI bonus` : ''}`),
+    roll(`${pitcher.name} (pitching)`, 6, pRoll, pMod, pNote),
+  ];
+
+  resolvePitch(state, events, rng, batter, pitcher, batterSeason, bTotal, pTotal, rolls);
+  return events;
+}
+
+/**
+ * Compare one pitch's totals and either end the plate appearance or, on a tie,
+ * record a ball and ask for another roll.
+ */
+function resolvePitch(
+  state: GameState,
+  events: GameEvent[],
+  rng: Rng,
+  batter: EnginePlayer,
+  pitcher: EnginePlayer,
+  batterSeason: ReturnType<typeof seasonForPlayer>,
+  bTotal: number,
+  pTotal: number,
+  rolls: ReturnType<typeof roll>[],
+): 'ended' | 'retry' {
+  const offense = getOffense(state);
+  const pa = state.currentPa;
+  if (!pa) throw new GameError('No plate appearance in progress');
+
+  if (pTotal > bTotal) {
+    // Strikeout.
+    events.push(pushEvent(state, { kind: 'pitch', text: `Pitch roll: ${pitcher.name} ${pTotal} vs ${batter.name} ${bTotal}.`, rolls }));
+    creditPlateAppearance(state, 'strikeout');
+    recordOut(state, events, `${batter.name} strikes out (pitch roll ${pTotal} over ${bTotal}).`, batter.id, offense.side);
+    finishPlateAppearance(state, events);
+    return 'ended';
+  }
+
+  if (bTotal > pTotal) {
+    // Contact!
+    events.push(pushEvent(state, { kind: 'pitch', text: `${batter.name} makes contact (pitch roll ${bTotal} over ${pTotal}).`, rolls }));
+    resolveContact(state, events, rng, batter, pitcher, batterSeason);
+    return 'ended';
+  }
+
+  // Tie: ball.
+  pa.balls += 1;
+  events.push(pushEvent(state, { kind: 'ball', text: `Dead even — ball ${pa.balls}. Re-roll.`, rolls }));
+  if (pa.balls >= rulesOf(state).walkBalls) {
     events.push(
       pushEvent(state, {
-        kind: 'ball',
-        text: `Dead even — ball ${pa.balls}. Re-roll.`,
-        rolls,
+        kind: 'walk',
+        text: `${pa.balls} straight — ${batter.name} draws the walk.`,
+        refs: { playerId: batter.id, side: offense.side },
       }),
     );
-    if (pa.balls >= rulesOf(state).walkBalls) {
-      events.push(
-        pushEvent(state, {
-          kind: 'walk',
-          text: `${pa.balls} straight — ${batter.name} draws the walk.`,
-          refs: { playerId: batter.id, side: offense.side },
-        }),
-      );
-      creditPlateAppearance(state, 'walk');
-      applyWalkForces(state, batter, events);
-      if (state.phase === 'live' && maybeWalkOff(state, events)) return events;
-      finishPlateAppearance(state, events);
-      return events;
-    }
+    creditPlateAppearance(state, 'walk');
+    applyWalkForces(state, batter, events);
+    if (state.phase === 'live' && maybeWalkOff(state, events)) return 'ended';
+    finishPlateAppearance(state, events);
+    return 'ended';
   }
+  return 'retry';
 }
 
 // ---------------------------------------------------------------------------
