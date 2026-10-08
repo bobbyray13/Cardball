@@ -61,6 +61,48 @@ async function seedHitter(db: Db['db'], n: number): Promise<void> {
   });
 }
 
+/**
+ * A starting pitcher with seasons across a card's stat window. An era has to
+ * hold one for a draft to open there: every finished draft tops its seats up
+ * to a legal lineup out of the same pool.
+ */
+async function seedStarter(
+  db: Db['db'],
+  opts: { bbrefId: string; nameLast: string; debutYear: number; finalYear: number; years: number[]; era: number },
+): Promise<void> {
+  const [person] = await db
+    .insert(people)
+    .values({
+      bbrefId: opts.bbrefId,
+      nameFirst: 'Draft',
+      nameLast: opts.nameLast,
+      bats: 'R',
+      throws: 'R',
+      debutYear: opts.debutYear,
+      finalYear: opts.finalYear,
+      isStarter: true,
+    })
+    .returning({ id: people.id });
+  await db.insert(seasons).values(
+    opts.years.map((year) => ({
+      personId: person!.id,
+      year,
+      teamLabel: 'TST',
+      games: 32,
+      ab: 60,
+      h: 10,
+      avg: 0.167,
+      pa: 65,
+      pitchGames: 32,
+      pitchIpOuts: 620,
+      pitchEra: opts.era,
+      pitchBf: 850,
+      primaryPosition: 'P',
+      positionsPlayed: [{ position: 'P' as const, games: 32, rating: 0 }],
+    })),
+  );
+}
+
 /** A batter with exactly the seasons and numbers a test needs. */
 async function seedBatter(
   db: Db['db'],
@@ -127,6 +169,8 @@ beforeAll(async () => {
   }
 
   for (let i = 1; i <= 30; i++) await seedHitter(db, i);
+  // One starter, so the 2004 era can deal a team that takes the field.
+  await seedStarter(db, { bbrefId: 'draftsp', nameLast: 'Starter', debutYear: 1998, finalYear: 2004, years: [1998, 1999, 2000, 2001, 2002, 2003], era: 3.5 });
 
   app = await buildApp({ db, io: null } satisfies Ctx, { logger: false });
   await app.ready();
@@ -317,9 +361,12 @@ describe('draft rooms', () => {
     expect(directions).toEqual(new Set(['left', 'right']));
     // The previous two tests made the opening pass.
     expect(picks).toBe(totalPicks - 2);
-    expect(final.myPicks).toHaveLength(config.rounds * config.packSize);
-    expect(final.pickCounts).toEqual({ '0': config.rounds * config.packSize, '1': config.rounds * config.packSize });
-    expect(final.log.at(-1)?.text).toMatch(/draft complete/i);
+    // Field insurance tops each seat up to a legal lineup, so a seat may hold
+    // more cards than it picked.
+    expect(final.myPicks.length).toBeGreaterThanOrEqual(config.rounds * config.packSize);
+    expect(final.pickCounts['0']).toBeGreaterThanOrEqual(config.rounds * config.packSize);
+    expect(final.pickCounts['1']).toBeGreaterThanOrEqual(config.rounds * config.packSize);
+    expect(final.log.some((l) => /draft complete/i.test(l.text))).toBe(true);
   });
 
   it('hands every drafted card to the collection', async () => {
@@ -328,10 +375,50 @@ describe('draft rooms', () => {
       const cards = parse<{ cards: { quantity: number }[] }>(await call('GET', '/api/collection', { token })).cards;
       expect(cards.length).toBeGreaterThan(0);
       // The same player can come around in a later pack; that copy bumps the
-      // count on the row instead of stacking a duplicate.
+      // count on the row instead of stacking a duplicate. Field insurance
+      // cards land in the collection like any pick, so copies can exceed the
+      // six picked cards.
       const copies = cards.reduce((sum, card) => sum + card.quantity, 0);
-      expect(copies).toBe(expected);
-      expect(cards.length).toBeLessThanOrEqual(expected);
+      expect(copies).toBeGreaterThanOrEqual(expected);
+      expect(cards.length).toBeLessThanOrEqual(copies);
+    }
+  });
+
+  it('tops every seat up to a legal lineup when the last pack empties', async () => {
+    const invite = parse<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
+    const thirdToken = await register('insured@example.com', 'Insured', invite);
+    const tokens = [hostToken, guestToken, thirdToken];
+    // Three cards each: every seat is guaranteed short of nine bats and a
+    // starter, whatever the deal hands them, so insurance always fires.
+    const body = { rounds: 1, packSize: 3, yearFrom: CARD_YEAR, yearTo: CARD_YEAR, playableOnly: true };
+    const room = parse<{ draft: DraftView }>(await call('POST', '/api/drafts', { token: hostToken, body })).draft;
+    for (const token of tokens.slice(1)) await call('POST', `/api/drafts/${room.id}/join`, { token });
+    await call('POST', `/api/drafts/${room.id}/start`, { token: hostToken });
+
+    for (let guard = 0; guard < 100; guard++) {
+      const view = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${room.id}`, { token: hostToken })).draft;
+      if (view.phase === 'finished') break;
+      for (const seat of view.waitingOn) {
+        const token = tokens[seat]!;
+        expect((await call('POST', `/api/drafts/${room.id}/open`, { token })).statusCode, `seat ${seat}`).toBe(200);
+        const mine = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${room.id}`, { token })).draft;
+        expect(mine.myPack.length, `seat ${seat} should be holding cards`).toBeGreaterThan(0);
+        expect((await call('POST', `/api/drafts/${room.id}/pick`, { token, body: { cardId: mine.myPack[0]!.id } })).statusCode).toBe(200);
+      }
+    }
+
+    for (const token of tokens) {
+      const done = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${room.id}`, { token })).draft;
+      expect(done.phase).toBe('finished');
+      // Nine distinct bats plus a starter who is none of them — the engine's
+      // own rule — whatever the seat picked from its three cards.
+      const distinct = new Map(done.myPicks.map((p) => [p.personId, p]));
+      const bats = [...distinct.values()].filter((c) => c.playable && (c.positions?.length ?? 0) > 0 && !c.starter);
+      const starters = [...distinct.values()].filter((c) => c.playable && c.starter);
+      expect(bats.length).toBeGreaterThanOrEqual(9);
+      expect(starters.length).toBeGreaterThanOrEqual(1);
+      // And the league says so in the log.
+      expect(done.log.some((l) => /field insurance/i.test(l.text))).toBe(true);
     }
   });
 
@@ -405,7 +492,8 @@ describe('themed packs and draft rules', () => {
   let other = '';
 
   beforeAll(async () => {
-    // Only these five have seasons in 1970–1975, so the 1976 pool is exactly them.
+    // Only these five have 30-homer seasons in 1970–1975, so a slugger pack
+    // from 1976 is exactly them.
     for (const [i, hr] of [35, 33, 31, 12, 8].entries()) {
       await seedBatter(db, {
         bbrefId: `theme${i}`,
@@ -416,6 +504,19 @@ describe('themed packs and draft rules', () => {
         homeRuns: hr,
       });
     }
+    // Four more bats and a starter in the same window, so the 1976 era can
+    // deal a team that takes the field: a draft refuses an era that cannot.
+    for (const [i, hr] of [10, 10, 10, 10].entries()) {
+      await seedBatter(db, {
+        bbrefId: `themebat${i}`,
+        nameLast: `ThemeBat${i}`,
+        debutYear: 1969,
+        finalYear: 1975,
+        years: [1970, 1971, 1972, 1973, 1974, 1975],
+        homeRuns: hr,
+      });
+    }
+    await seedStarter(db, { bbrefId: 'themesp', nameLast: 'ThemeStarter', debutYear: 1969, finalYear: 1975, years: [1970, 1971, 1972, 1973, 1974, 1975], era: 3.5 });
     // Three rare bats in 1960–1965, for the cap: HR 30+ makes every one rare.
     for (const [i, hr] of [35, 33, 31].entries()) {
       await seedBatter(db, {
@@ -427,6 +528,19 @@ describe('themed packs and draft rules', () => {
         homeRuns: hr,
       });
     }
+    // Six more rare bats and a rare starter in 1960–1965, for the cap: HR 30+
+    // and a 3.00 ERA make every card in the pool rare, and the era fieldable.
+    for (const [i, hr] of [30, 30, 30, 30, 30, 30].entries()) {
+      await seedBatter(db, {
+        bbrefId: `capbat${i}`,
+        nameLast: `CapBat${i}`,
+        debutYear: 1959,
+        finalYear: 1965,
+        years: [1960, 1961, 1962, 1963, 1964, 1965],
+        homeRuns: hr,
+      });
+    }
+    await seedStarter(db, { bbrefId: 'capsp', nameLast: 'CapStarter', debutYear: 1959, finalYear: 1965, years: [1960, 1961, 1962, 1963, 1964, 1965], era: 3.0 });
     sluggers = ['Draft Themed0', 'Draft Themed1', 'Draft Themed2'];
 
     // The app is invite-only once the first manager exists; the first describe
@@ -476,8 +590,19 @@ describe('themed packs and draft rules', () => {
 
     expect(draft.myPack).toHaveLength(3);
     expect(draft.myPack.every((c) => c.cardYear === SLUGGER_YEAR)).toBe(true);
-    // A mixed pack may hold any of the five players, not just the sluggers.
-    const pool = new Set(['Draft Themed0', 'Draft Themed1', 'Draft Themed2', 'Draft Themed3', 'Draft Themed4']);
+    // A mixed pack may hold any of the era's ten players, not just the sluggers.
+    const pool = new Set([
+      'Draft Themed0',
+      'Draft Themed1',
+      'Draft Themed2',
+      'Draft Themed3',
+      'Draft Themed4',
+      'Draft ThemeBat0',
+      'Draft ThemeBat1',
+      'Draft ThemeBat2',
+      'Draft ThemeBat3',
+      'Draft ThemeStarter',
+    ]);
     expect(draft.myPack.every((c) => pool.has(c.name))).toBe(true);
     expect(draft.myPackTheme).toBe('mixed');
   });

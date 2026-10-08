@@ -283,7 +283,10 @@ describe('tournaments', () => {
     expect(tournament.status).toBe('drafting');
     const finished = await drainDraft(tournament.draftId!, tokens);
     expect(finished.phase).toBe('finished');
-    expect(finished.myPicks).toHaveLength(16);
+    // Sixteen picked cards, plus whatever field insurance topped the seat up
+    // with: a seat that drafted no starter, or too few distinct bats, is
+    // dealt what it lacks as the last pack empties.
+    expect(finished.myPicks.length).toBeGreaterThanOrEqual(16);
 
     // Reading the tournament catches up: teams, games, results, champion.
     const played = parse<{ tournament: TournamentView }>(await call('GET', `/api/tournaments/${tournamentId}`, { token: tokens[1] })).tournament;

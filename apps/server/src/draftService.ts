@@ -4,7 +4,7 @@ import { DRAFT_LIMITS, PACK_THEME_IDS, packTheme, packThemesForYears, themeForRo
 import { draftParticipants, drafts, tournaments } from '@cardball/db';
 import type { DraftRow } from '@cardball/db';
 import { fileCardIntoCollection } from './cardFiling.js';
-import { dealPack } from './packDeal.js';
+import { dealFieldInsurance, dealPack } from './packDeal.js';
 import type { AuthUser } from './auth.js';
 import type { Ctx } from './context.js';
 import { badRequest, forbidden, notFound, HttpError } from './http.js';
@@ -61,6 +61,68 @@ function capBlocks(caps: DraftConfig['rarityCaps'], picks: DraftCard[], card: Dr
   if (card.rarity === 'chase' && have.chase >= caps.chase) return `You already have ${caps.chase} chase card${caps.chase === 1 ? '' : 's'}`;
   if (card.rarity === 'rare' && have.rare >= caps.rare) return `You already have ${caps.rare} rare card${caps.rare === 1 ? '' : 's'}`;
   return null;
+}
+
+/**
+ * What a seat's picks are short of a legal lineup: nine distinct bats plus a
+ * starter who is none of them. That is the engine's own rule — the pitcher
+ * never bats for himself here — and `DraftCard` carries all it takes to count
+ * it: `positions` is empty exactly when a card cannot bat, and `starter`
+ * marks an SP.
+ */
+function fieldingShortfall(picks: DraftCard[]): { starters: number; bats: number } {
+  const distinct = new Map(picks.map((p) => [p.personId, p]));
+  let starters = 0;
+  let bats = 0;
+  for (const card of distinct.values()) {
+    if (!card.playable) continue;
+    if (card.starter) starters++;
+    else if ((card.positions?.length ?? 0) > 0) bats++;
+  }
+  return { starters: Math.max(0, 1 - starters), bats: Math.max(0, 9 - bats) };
+}
+
+/**
+ * Field insurance, dealt as the last pack empties. A pass-the-pack draft can
+ * hand a seat sixteen cards but no starter or no ninth bat, and a seat that
+ * cannot field forfeits on the deal's luck. Every seat short of a legal lineup
+ * is topped up with just what they lack — logged, filed into the collection,
+ * and kept in the picks — so a finished draft always leaves every seat able
+ * to take the field.
+ */
+async function topUpForFielding(
+  ctx: Ctx,
+  row: DraftRow,
+  seats: { userId: number; seat: number }[],
+  state: DraftState,
+): Promise<{ userId: number; card: DraftCard }[]> {
+  const config = parseConfig(row);
+  const names = await namesFor(ctx, seats.map((s) => s.userId));
+  const filed: { userId: number; card: DraftCard }[] = [];
+
+  for (const { userId, seat } of seats) {
+    const key = String(seat);
+    const picks = state.picks[key] ?? [];
+    const need = fieldingShortfall(picks);
+    if (need.starters === 0 && need.bats === 0) continue;
+
+    const dealt = await dealFieldInsurance(ctx, config, need, [...new Set(picks.map((p) => p.personId))]);
+    for (const card of dealt) {
+      state.picks[key] = [...(state.picks[key] ?? []), card];
+      state.log.push({
+        seq: state.log.length + 1,
+        text: `Field insurance: the league deals ${names.get(userId) ?? 'a manager'} ${card.name} — ${card.starter ? 'a starter' : 'another bat'}.`,
+      });
+      filed.push({ userId, card });
+    }
+    if (dealt.length < need.starters + need.bats) {
+      state.log.push({
+        seq: state.log.length + 1,
+        text: `Field insurance ran thin: ${names.get(userId) ?? 'a manager'} still cannot field a team from this era.`,
+      });
+    }
+  }
+  return filed;
 }
 
 // Commands on one draft run one at a time, so a double-clicked pick can't take two cards.
@@ -263,6 +325,13 @@ export async function createDraft(ctx: Ctx, user: AuthUser, input: CreateDraftIn
   const config = validateConfig(input);
   // Fail fast if a pack can't be dealt, instead of mid-draft.
   for (const theme of config.themes) await dealPack(ctx, config, 1, theme);
+  // And if the era could never field a team, since field insurance tops every
+  // seat up out of this same pool when the last pack empties.
+  const fieldable = await dealFieldInsurance(ctx, config, { starters: 1, bats: 9 });
+  if (fieldable.length < 10) {
+    const missing = fieldable.some((c) => c.starter) ? 'not enough distinct bats' : 'no starting pitcher';
+    throw badRequest(`That era cannot deal a team that can take the field — ${missing} — so widen ${config.yearFrom}–${config.yearTo}`);
+  }
 
   const state: DraftState = {
     round: 1,
@@ -440,6 +509,8 @@ async function pickUnlocked(ctx: Ctx, user: AuthUser, draftId: number, cardId: s
   state.waitingOn = state.waitingOn.filter((seat) => seat !== me.seat);
 
   let status: string = 'active';
+  // Field insurance dealt as the last pack empties, filed with the last pick.
+  let insurance: { userId: number; card: DraftCard }[] = [];
   if (state.waitingOn.length === 0) {
     // Everyone has picked: pass every pack one seat along together, wrapper and all.
     const step = passDirection(state.round) === 'left' ? 1 : seatCount - 1;
@@ -462,6 +533,8 @@ async function pickUnlocked(ctx: Ctx, user: AuthUser, draftId: number, cardId: s
         state.packs = {};
         state.packThemes = {};
         log("That's the last pack — draft complete.");
+        // No seat leaves a finished draft unable to field a team.
+        insurance = await topUpForFielding(ctx, row, seats, state);
       } else {
         state.round += 1;
         state.packs = await dealAllPacks(ctx, config, seatCount, state.round);
@@ -475,8 +548,10 @@ async function pickUnlocked(ctx: Ctx, user: AuthUser, draftId: number, cardId: s
 
   // File the card and save the pick in one transaction: a failure between the
   // two can no longer leave the card in the collection and still in the pack.
+  // The insurance cards ride along, so a topped-up seat owns what it was dealt.
   const updated = await ctx.db.transaction(async (tx) => {
     await filePickedCard(tx, user.id, card!);
+    for (const deal of insurance) await filePickedCard(tx, deal.userId, deal.card);
     const [saved] = await tx
       .update(drafts)
       .set({ state, status, version: row.version + 1, updatedAt: new Date() })
