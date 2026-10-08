@@ -209,6 +209,54 @@ export async function dealMoundPack(handle: DealDb, cardYear: number): Promise<D
   return picks;
 }
 
+/**
+ * Field insurance: the few cards a seat is short of a legal lineup — a starter
+ * and enough distinct bats — dealt straight from the era's pool, ignoring the
+ * draft's themes (the league deals these, not the wrapper).
+ *
+ * Commons and uncommons first, so an insurance card never pushes a seat over
+ * the rarity caps its draft set; only a window without enough cheap cards
+ * falls back to the whole sample. `skip` are the persons the seat already
+ * holds, since a lineup needs distinct bats and a starter who is none of them.
+ */
+export async function dealFieldInsurance(
+  handle: DealDb,
+  config: { yearFrom: number; yearTo: number; playableOnly?: boolean },
+  need: { starters: number; bats: number },
+  skip: readonly number[] = [],
+): Promise<DraftCard[]> {
+  const playableOnly = config.playableOnly ?? true;
+  const span = config.yearTo - config.yearFrom + 1;
+  const taken = new Set(skip);
+  const picks: DraftCard[] = [];
+  let starters = need.starters;
+  let bats = need.bats;
+
+  const takeFrom = (cards: CardSnapshot[]) => {
+    for (const card of cards) {
+      if (starters <= 0 && bats <= 0) return;
+      if (taken.has(card.personId) || !card.playable) continue;
+      if (card.pitcherClass === 'SP' && starters > 0) {
+        taken.add(card.personId);
+        picks.push(toDealCard(card));
+        starters--;
+      } else if (card.pitcherClass !== 'SP' && card.canBat && bats > 0) {
+        taken.add(card.personId);
+        picks.push(toDealCard(card));
+        bats--;
+      }
+    }
+  };
+
+  for (let attempt = 0; attempt < PACK_YEAR_TRIES && (starters > 0 || bats > 0); attempt++) {
+    const cardYear = config.yearFrom + Math.floor(Math.random() * span);
+    const cards = await sampleCards(handle, cardYear, 300, playableOnly);
+    takeFrom(cards.filter((c) => ['common', 'uncommon'].includes(rateCard(c).rarity)));
+    takeFrom(cards);
+  }
+  return picks;
+}
+
 /** Deal the cards a sealed pack holds, by its shape and theme. */
 export async function dealSealedPack(
   handle: DealDb,

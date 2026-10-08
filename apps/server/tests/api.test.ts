@@ -13,9 +13,9 @@ import { eq } from 'drizzle-orm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { botAction, waitingOn } from '@cardball/engine';
 import type { GameState } from '@cardball/engine';
-import { HISTORIC_TEAMS } from '@cardball/shared';
-import type { ChallengeView, PackShelfView, PackView, Position } from '@cardball/shared';
-import { createDb, people, runMigrations, seasons, userPacks } from '@cardball/db';
+import { HISTORIC_TEAMS, RULES_CONFIG, STOCK_TEAMS } from '@cardball/shared';
+import type { ChallengeView, PackShelfView, PackView, Position, PublicProfileView, StockTeamSummary } from '@cardball/shared';
+import { createDb, games, people, runMigrations, seasons, userPacks } from '@cardball/db';
 import type { Db } from '@cardball/db';
 import { buildApp } from '../src/app.js';
 import { SESSION_COOKIE } from '../src/auth.js';
@@ -187,6 +187,49 @@ async function seedStats(): Promise<void> {
   );
 }
 
+/**
+ * Seed one stock team's catalog roster into the stats database, so a bot game
+ * against it can build its cards for real. Every fielder can field anywhere
+ * and the pitchers carry real innings, so the auto-lineup has a legal answer.
+ */
+async function seedStockRoster(): Promise<void> {
+  const team = STOCK_TEAMS[0]!;
+  const years = span(team.year - RULES_CONFIG.statWindowSeasons, team.year);
+  for (const player of team.players) {
+    const [first, ...last] = player.name.split(' ');
+    const pitcher = player.position === 'SP' || player.position === 'RP';
+    await seedPerson(
+      {
+        bbrefId: player.bbrefId,
+        nameFirst: first!,
+        nameLast: last.join(' '),
+        bats: 'R',
+        throws: 'R',
+        debutYear: team.year - RULES_CONFIG.statWindowSeasons - 1,
+        finalYear: team.year,
+        isStarter: player.position === 'SP',
+      },
+      years,
+      pitcher
+        ? {
+            teamLabel: team.name,
+            games: 32,
+            ab: 60,
+            h: 10,
+            avg: 0.167,
+            pa: 65,
+            pitchGames: 32,
+            pitchIpOuts: 620,
+            pitchEra: 3.0,
+            pitchBf: 850,
+            primaryPosition: 'P',
+            positionsPlayed: [{ position: 'P', games: 32, rating: 0 }],
+          }
+        : hitterTemplate(1),
+    );
+  }
+}
+
 async function buildRoster(token: string): Promise<{ teamId: number; cardIds: number[] }> {
   const found = body<{ people: { id: number }[] }>(
     await call('GET', '/api/people/search?q=Test%20Hitter&limit=50', { token }),
@@ -286,6 +329,7 @@ beforeAll(async () => {
   mkdirSync(env.uploadDir, { recursive: true });
 
   await seedStats();
+  await seedStockRoster();
   app = await buildApp({ db, io: null } satisfies Ctx, { logger: false });
   await app.ready();
 });
@@ -803,6 +847,110 @@ describe('games', () => {
     const conceded = await call('POST', `/api/games/${gameId}/actions`, { token: hostToken, body: { action: { type: 'concede', side: 'away' } } });
     expect(conceded.statusCode).toBe(200);
     expect(body<{ game: { state: { winner: string; endedBy: string } } }>(conceded).game.state).toMatchObject({ winner: 'home', endedBy: 'concede' });
+  });
+});
+
+describe('stock teams', () => {
+  it('lists the ready-made bot teams to signed-in managers', async () => {
+    const res = await call('GET', '/api/stock-teams', { token: hostToken });
+    expect(res.statusCode).toBe(200);
+    const teams = body<{ teams: StockTeamSummary[] }>(res).teams;
+    expect(teams).toHaveLength(STOCK_TEAMS.length);
+    expect(teams[0]).toMatchObject({ id: STOCK_TEAMS[0]!.id, name: STOCK_TEAMS[0]!.name, year: STOCK_TEAMS[0]!.year });
+    // Signed-out visitors get nothing.
+    expect((await call('GET', '/api/stock-teams')).statusCode).toBe(401);
+  });
+
+  it('plays a bot game against a stock team with a legal lineup and a real starter', async () => {
+    const created = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'bot', regulationInnings: 3, teamId: hostTeamId, opponentStockTeamId: STOCK_TEAMS[0]!.id },
+    });
+    expect(created.statusCode).toBe(200);
+    const game = body<{ game: { id: number; guestUserId: number | null; awayTeamId: number | null; state: GameState } }>(created).game;
+
+    // The stock side takes the away seat but owns no team row and answers to no manager.
+    const [row] = await db.select({ awayTeamId: games.awayTeamId }).from(games).where(eq(games.id, game.id));
+    expect(row?.awayTeamId).toBeNull();
+    expect(game.guestUserId).toBeNull();
+
+    // The opening dice decide who is home, so find the stock side by its seat.
+    const stock = game.state.away.isBot ? game.state.away : game.state.home;
+    expect(stock.isBot).toBe(true);
+    expect(stock.userId).toBeNull();
+    expect(stock.name).toBe(STOCK_TEAMS[0]!.name);
+    // A legal nine-man batting order: every spot filled by a different card.
+    expect(stock.lineup).toHaveLength(9);
+    expect(stock.lineup.every((id) => id !== null)).toBe(true);
+    expect(new Set(stock.lineup).size).toBe(9);
+    // A real starter on the mound, not a reliever moonlighting as one.
+    const ace = stock.players.find((p) => p.id === stock.activePitcherId);
+    expect(ace?.pitcherClass).toBe('SP');
+
+    const state = await playOut(game.id, hostToken, () => hostToken);
+    expect(state.phase).toBe('finished');
+  });
+
+  it('refuses an unknown stock team, and both kinds of opponent at once', async () => {
+    const unknown = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'bot', regulationInnings: 3, teamId: hostTeamId, opponentStockTeamId: 'nope-1885' },
+    });
+    expect(unknown.statusCode).toBe(404);
+
+    const both = await call('POST', '/api/games', {
+      token: hostToken,
+      body: { mode: 'bot', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId, opponentStockTeamId: STOCK_TEAMS[0]!.id },
+    });
+    expect(both.statusCode).toBe(400);
+    expect(body<{ error: string }>(both).error).toMatch(/one opponent/i);
+  });
+});
+
+describe('public profiles', () => {
+  it('keeps a closed binder to its owner, and the switch with them', async () => {
+    // The friend has not opted in: only the header shows, to anyone who asks.
+    const res = await call('GET', '/api/profile/Friend', { token: hostToken });
+    expect(res.statusCode).toBe(200);
+    const profile = body<{ profile: PublicProfileView }>(res).profile;
+    expect(profile.user.displayName).toBe('Friend');
+    expect(profile.open).toBe(false);
+    expect(profile.collection).toBeNull();
+    expect(profile.teams).toBeNull();
+    expect(profile.games).toBeNull();
+
+    // A name nobody answers to is a 404, and the shelf is closed to strangers.
+    expect((await call('GET', '/api/profile/Nobody', { token: hostToken })).statusCode).toBe(404);
+    expect((await call('GET', '/api/profile/Friend')).statusCode).toBe(401);
+    expect((await call('PATCH', '/api/me', { body: { publicProfile: true } })).statusCode).toBe(401);
+  });
+
+  it('shows the collection, teams, and finished games once the binder is opened', async () => {
+    expect((await call('PATCH', '/api/me', { token: guestToken, body: { publicProfile: true } })).statusCode).toBe(200);
+
+    const res = await call('GET', '/api/profile/Friend', { token: hostToken });
+    expect(res.statusCode).toBe(200);
+    const profile = body<{ profile: PublicProfileView }>(res).profile;
+    expect(profile.open).toBe(true);
+    expect(profile.user.displayName).toBe('Friend');
+    // The roster cards, the built team, and the finished remote game all show.
+    expect(profile.collection?.length).toBeGreaterThan(0);
+    expect(profile.teams?.map((t) => t.name)).toContain(`Team ${guestToken.slice(0, 4)}`);
+    expect(profile.teams?.every((t) => t.hasLineup)).toBe(true);
+    expect(profile.games?.length).toBeGreaterThan(0);
+    for (const game of profile.games ?? []) {
+      expect(game.home.score + game.away.score).toBeGreaterThanOrEqual(0);
+      expect(['remote', 'hotseat', 'bot']).toContain(game.mode);
+    }
+    // The finished remote game against the host is in there.
+    expect(profile.games?.some((g) => g.won !== null)).toBe(true);
+
+    // Closing the binder hides it again.
+    expect((await call('PATCH', '/api/me', { token: guestToken, body: { publicProfile: false } })).statusCode).toBe(200);
+    const closed = body<{ profile: PublicProfileView }>(await call('GET', '/api/profile/Friend', { token: hostToken })).profile;
+    expect(closed.open).toBe(false);
+    expect(closed.games).toBeNull();
+    expect(closed.collection).toBeNull();
   });
 });
 

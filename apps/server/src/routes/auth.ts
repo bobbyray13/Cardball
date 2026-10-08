@@ -77,7 +77,7 @@ export function authRoutes(app: FastifyInstance, ctx: Ctx): void {
     });
 
     setSessionCookie(reply, await createSession(ctx, user.id));
-    return { user: { id: user.id, email: user.email, displayName: user.displayName, isAdmin: user.isAdmin } };
+    return { user: { id: user.id, email: user.email, displayName: user.displayName, isAdmin: user.isAdmin, publicProfile: user.publicProfile } };
   });
 
   app.post('/api/auth/login', async (request, reply) => {
@@ -87,7 +87,7 @@ export function authRoutes(app: FastifyInstance, ctx: Ctx): void {
       throw new HttpError(401, 'Wrong email or password');
     }
     setSessionCookie(reply, await createSession(ctx, user.id));
-    return { user: { id: user.id, email: user.email, displayName: user.displayName, isAdmin: user.isAdmin } };
+    return { user: { id: user.id, email: user.email, displayName: user.displayName, isAdmin: user.isAdmin, publicProfile: user.publicProfile } };
   });
 
   app.post('/api/auth/logout', async (request, reply) => {

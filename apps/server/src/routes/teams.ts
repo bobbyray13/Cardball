@@ -11,6 +11,7 @@ import { env } from '../env.js';
 import { badRequest, idParam, parse } from '../http.js';
 import { lineupProblem, loadTeam, playsOutOfPosition, rosterCards } from '../roster.js';
 import type { LoadedTeam } from '../roster.js';
+import { listStockTeams } from '../stockTeams.js';
 
 const colorSchema = z.string().regex(/^#[0-9a-fA-F]{6}$/, 'Color must look like #1a2b3c');
 
@@ -40,6 +41,12 @@ function teamView(loaded: LoadedTeam): TeamView {
 }
 
 export function teamRoutes(app: FastifyInstance, ctx: Ctx): void {
+  /** The ready-made bot teams offered as a Vs. Bot opponent. */
+  app.get('/api/stock-teams', async (request) => {
+    requireUser(request);
+    return { teams: listStockTeams() };
+  });
+
   app.get('/api/teams', async (request) => {
     const user = requireUser(request);
     const rows = await ctx.db

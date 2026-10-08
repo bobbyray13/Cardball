@@ -88,6 +88,8 @@ export const users = pgTable(
     passwordHash: text('password_hash').notNull(),
     displayName: text('display_name').notNull(),
     isAdmin: boolean('is_admin').notNull().default(false),
+    /** the manager has opened their binder to the league: profile shows collection, teams, and finished games */
+    publicProfile: boolean('public_profile').notNull().default(false),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [uniqueIndex('users_email_idx').on(t.email)],

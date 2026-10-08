@@ -3,8 +3,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { PACK_SOURCE_LABEL, faceLabel, packTheme, rarityRank, rateCard } from '@cardball/shared';
 import type { CollectionCard, PackView } from '@cardball/shared';
 import { api } from '../api.js';
-import { BallCard } from './BallCard.js';
 import { PackArt } from './PackArt.js';
+import { ZoomableCard } from './CardZoom.js';
 import { pushCardToast } from './Toasts.js';
 import { Button, EmptyState, ErrorNote, Panel, useAction, useLoad } from './ui.js';
 
@@ -112,47 +112,68 @@ export function PackShelf({ onCardsFiled }: { onCardsFiled?: () => void }) {
       <AnimatePresence>
         {revealed ? (
           <motion.div
-            className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto bg-black/80 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-[80] overflow-y-auto bg-black/80 backdrop-blur-sm"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setRevealed(null)}
           >
-            <motion.div
-              className="panel w-full max-w-5xl p-5"
-              initial={{ y: 24, scale: 0.97 }}
-              animate={{ y: 0, scale: 1 }}
-              exit={{ y: 16, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 280, damping: 26 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h3 className="font-display text-xl font-semibold text-chalk">
-                    {revealed.cards.length} card{revealed.cards.length === 1 ? '' : 's'} from your{' '}
-                    {packTheme(revealed.pack.themeId).name.toLowerCase()}
-                  </h3>
-                  <p className="text-sm text-chalk/60">{revealed.pack.label ?? PACK_SOURCE_LABEL[revealed.pack.source]} — filed in your collection.</p>
+            {/* min-h-full + items-start keeps the top of a tall reveal reachable
+                on a phone, where centering would push it off screen. */}
+            <div className="flex min-h-full items-start justify-center p-3 sm:items-center sm:p-6">
+              <motion.div
+                className="panel relative w-full max-w-5xl p-5"
+                initial={{ y: 24, scale: 0.97 }}
+                animate={{ y: 0, scale: 1 }}
+                exit={{ y: 16, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 280, damping: 26 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  aria-label="Close the pack"
+                  onClick={() => setRevealed(null)}
+                  className="absolute top-3 right-3 rounded-full border border-white/20 px-2.5 py-1 text-sm text-chalk/75 hover:bg-white/10"
+                >
+                  ✕
+                </button>
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3 pr-10">
+                  <div>
+                    <h3 className="font-display text-xl font-semibold text-chalk">
+                      {revealed.cards.length} card{revealed.cards.length === 1 ? '' : 's'} from your{' '}
+                      {packTheme(revealed.pack.themeId).name.toLowerCase()}
+                    </h3>
+                    <p className="text-sm text-chalk/60">{revealed.pack.label ?? PACK_SOURCE_LABEL[revealed.pack.source]} — filed in your collection.</p>
+                  </div>
+                  <Button onClick={() => setRevealed(null)}>Done</Button>
                 </div>
-                <Button onClick={() => setRevealed(null)}>Done</Button>
-              </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-                {revealed.cards.map((card, i) => {
-                  const rating = rateCard(card.card);
-                  return (
-                    <motion.div
-                      key={card.id}
-                      initial={{ opacity: 0, y: 24, rotate: -2 }}
-                      animate={{ opacity: 1, y: 0, rotate: 0 }}
-                      transition={{ delay: 0.08 * i, type: 'spring', stiffness: 260, damping: 22 }}
-                    >
-                      <BallCard card={card.card} rarity={faceLabel(rating.rarity)} tier={rating.rarity} />
-                      <p className="mt-1 truncate font-mono text-[11px] text-chalk/50">{rating.headline}</p>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </motion.div>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                  {revealed.cards.map((card, i) => {
+                    const rating = rateCard(card.card);
+                    return (
+                      <motion.div
+                        key={card.id}
+                        initial={{ opacity: 0, y: 24, rotate: -2 }}
+                        animate={{ opacity: 1, y: 0, rotate: 0 }}
+                        transition={{ delay: 0.08 * i, type: 'spring', stiffness: 260, damping: 22 }}
+                      >
+                        <ZoomableCard
+                          target={{
+                            card: card.card,
+                            photoId: card.photoId,
+                            rarity: faceLabel(rating.rarity),
+                            tier: rating.rarity,
+                            userCardId: card.id,
+                          }}
+                        />
+                        <p className="mt-1 truncate font-mono text-[11px] text-chalk/50">{rating.headline}</p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-center text-xs text-chalk/45">Tap a card to zoom in and read the stats on its back.</p>
+              </motion.div>
+            </div>
           </motion.div>
         ) : null}
       </AnimatePresence>

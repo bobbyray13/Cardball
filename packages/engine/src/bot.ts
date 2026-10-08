@@ -49,10 +49,20 @@ export function botAction(state: GameState, side: Side): GameAction | null {
         const best = maxBy(options, (p) => pitMod(seasonForPlayer(state, p).pitching?.era ?? null, rules.pitBands));
         return best ? { type: 'pitcher-change', inPlayerId: best.id } : null;
       }
+      case 'batter-roll':
+        // Paced pitching: the bot takes its own roll without hesitation.
+        return { type: 'roll-bat' };
     }
   }
 
-  if (state.currentPa && getOffense(state).side === side) return { type: 'throw-pitch' };
+  if (state.currentPa) {
+    const offense = getOffense(state);
+    if (state.config.pacedPitch) {
+      // The defense throws the pitcher's die; the offense answers with roll-bat.
+      return getDefense(state).side === side ? { type: 'throw-pitch' } : null;
+    }
+    return offense.side === side ? { type: 'throw-pitch' } : null;
+  }
   return null;
 }
 

@@ -2,7 +2,7 @@ import type { GameAction } from '@cardball/shared';
 import { applySetFieldingOverride, applySetLineup, startGame } from './create.js';
 import { GameError } from './errors.js';
 import { finishGame, startHalfInning } from './flow.js';
-import { applyDpDecision, applySendDecision, applyThrowPitch } from './pitch.js';
+import { applyDpDecision, applyRollBat, applySendDecision, applyThrowPitch } from './pitch.js';
 import { getDefense, getOffense, getTeam } from './queries.js';
 import type { Rng } from './rng.js';
 import { applySteal } from './steal.js';
@@ -42,9 +42,13 @@ export function requiredSide(state: GameState, action: GameAction): Side | null 
     case 'dp-attempt':
       return getDefense(state).side;
     case 'attempt-steal':
-    case 'throw-pitch':
     case 'send-runner':
+    case 'roll-bat':
       return getOffense(state).side;
+    case 'throw-pitch':
+      // A paced game has the defense throw the pitcher's die; otherwise the
+      // offense resolves the whole roll.
+      return state.config.pacedPitch ? getDefense(state).side : getOffense(state).side;
     case 'concede':
       return action.side ?? null;
   }
@@ -71,6 +75,7 @@ export function applyAction(input: GameState, action: GameAction, actor: Actor, 
       (pending.kind === 'dp-attempt' && action.type === 'dp-attempt') ||
       (pending.kind === 'send-runner' && action.type === 'send-runner') ||
       (pending.kind === 'pitcher-change' && action.type === 'pitcher-change') ||
+      (pending.kind === 'batter-roll' && action.type === 'roll-bat') ||
       ((pending.kind === 'pinch-runner' || pending.kind === 'lineup-fill') && action.type === 'substitute');
     if (!resolves) throw new GameError(`Waiting on a decision: ${pending.prompt}`);
   }
@@ -97,6 +102,9 @@ export function applyAction(input: GameState, action: GameAction, actor: Actor, 
       break;
     case 'throw-pitch':
       events = applyThrowPitch(state, rng);
+      break;
+    case 'roll-bat':
+      events = applyRollBat(state, rng);
       break;
     case 'dp-attempt':
       events = applyDpDecision(state, action.attempt, rng);
@@ -131,6 +139,10 @@ export function waitingOn(state: GameState): { side: Side; kind: string; prompt:
   }
   if (state.currentPa) {
     const offense = getOffense(state);
+    if (state.config.pacedPitch) {
+      const defense = getDefense(state);
+      return { side: defense.side, kind: 'throw-pitch', prompt: `${defense.name} to pitch — throw it in.` };
+    }
     return { side: offense.side, kind: 'throw-pitch', prompt: `${offense.name} to bat — throw the pitch.` };
   }
   return null;

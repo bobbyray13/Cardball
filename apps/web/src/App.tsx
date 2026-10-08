@@ -24,6 +24,7 @@ const DraftsPage = page('DraftsPage', () => import('./pages/DraftsPage.js'));
 const DraftPage = page('DraftPage', () => import('./pages/DraftPage.js'));
 const TournamentsPage = page('TournamentsPage', () => import('./pages/TournamentsPage.js'));
 const TournamentPage = page('TournamentPage', () => import('./pages/TournamentPage.js'));
+const ProfilePage = page('ProfilePage', () => import('./pages/ProfilePage.js'));
 const AdminPage = page('AdminPage', () => import('./pages/AdminPage.js'));
 
 export default function App() {
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="/drafts/:id" element={<DraftPage />} />
           <Route path="/tournaments" element={<TournamentsPage />} />
           <Route path="/tournaments/:id" element={<TournamentPage />} />
+          <Route path="/players/:username" element={<ProfilePage />} />
           <Route path="/admin" element={user?.isAdmin ? <AdminPage /> : <Navigate to="/" replace />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />

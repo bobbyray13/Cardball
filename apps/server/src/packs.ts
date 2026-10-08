@@ -199,6 +199,7 @@ export function toPackView(row: UserPackRow): PackView {
     size: row.size,
     source: row.source,
     label: row.label,
+    rewardKey: row.rewardKey,
     era: { from: row.yearFrom, to: row.yearTo },
     createdAt: row.createdAt.toISOString(),
     openedAt: row.openedAt ? row.openedAt.toISOString() : null,

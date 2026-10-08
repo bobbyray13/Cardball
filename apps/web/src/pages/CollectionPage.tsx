@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RARITY_LABEL, RARITY_ORDER, faceLabel, rarityRank, rateCard } from '@cardball/shared';
@@ -10,7 +9,7 @@ import { CardZoom, CareerSummary } from '../components/CardZoom.js';
 import { PackShelf } from '../components/PackShelf.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { PhotoUploader } from '../components/PhotoUploader.js';
-import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { Button, Chip, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 
 type SortKey = 'rarity' | 'newest' | 'name' | 'year-desc' | 'year-asc';
 type RoleFilter = 'all' | 'hitters' | 'pitchers';
@@ -236,22 +235,6 @@ export function CollectionPage() {
         ) : null}
       </AnimatePresence>
     </div>
-  );
-}
-
-function Chip({ active, disabled, onClick, children }: { active: boolean; disabled?: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors disabled:opacity-35 ${
-        active ? 'bg-chalk text-field-deep' : 'border border-white/15 text-chalk/70 hover:bg-white/10'
-      }`}
-    >
-      {children}
-    </button>
   );
 }
 

@@ -52,31 +52,38 @@ const NEUTRAL_SEASON: SeasonStats = {
 };
 
 /**
- * Where everyone stands on the mat, as a percentage of the container. These
- * are the same coordinates the painted diamond is drawn in (a 100×75 viewBox
- * on a 4:3 box), so chips sit on the bases and grass they belong to.
+ * The mat's coordinate system: a 100×75 viewBox (a 4:3 box, the same aspect
+ * the container keeps). Everything below — the painted diamond and every chip —
+ * is expressed in these units. Because the viewBox is 75 tall but CSS `top`
+ * runs 0–100%, the chips convert y on the way out (see `pctY`), or they would
+ * sit a quarter of the field too high.
  */
-const HOME_PLATE = { x: 50, y: 70 };
+const VIEW_H = 75;
+const pctY = (y: number) => (y / VIEW_H) * 100;
+
+/** Home plate, second base, and the two bases on the foul lines. */
+const HOME_PLATE = { x: 50, y: 68 };
 const BASE_SPOTS: Record<1 | 2 | 3, { x: number; y: number }> = {
-  1: { x: 76, y: 58 },
-  2: { x: 50, y: 47 },
-  3: { x: 24, y: 58 },
+  1: { x: 70, y: 48 },
+  2: { x: 50, y: 28 },
+  3: { x: 30, y: 48 },
 };
 
+/** Where each defender stands: on the infield skin, outfielders in the grass. */
 const FIELDER_SPOTS: Record<string, { x: number; y: number }> = {
-  C: { x: 55, y: 74 },
-  '1B': { x: 68, y: 57 },
-  '2B': { x: 59, y: 50 },
-  '3B': { x: 32, y: 57 },
-  SS: { x: 41, y: 50 },
-  LF: { x: 16, y: 28 },
-  CF: { x: 50, y: 22 },
-  RF: { x: 84, y: 28 },
-  P: { x: 50, y: 55 },
+  C: { x: 50, y: 74 },
+  '1B': { x: 66, y: 47 },
+  '2B': { x: 58, y: 42 },
+  '3B': { x: 34, y: 47 },
+  SS: { x: 42, y: 42 },
+  LF: { x: 26, y: 26 },
+  CF: { x: 50, y: 16 },
+  RF: { x: 74, y: 26 },
+  P: { x: 50, y: 49 },
 };
 
-/** Where the batter waits, in the left-hand batter's box. */
-const BATTER_BOX = { x: 43, y: 71 };
+/** Where the batter waits, in the left-hand batter's box beside the plate. */
+const BATTER_BOX = { x: 42, y: 69 };
 
 export type ZoomPlayer = (side: Side, player: EnginePlayer) => void;
 
@@ -226,8 +233,8 @@ function Chip({
         style={{ background: color }}
         title={title}
         aria-label={title}
-        initial={{ left: `${from.x}%`, top: `${from.y}%`, opacity: 0, scale: 0.6 }}
-        animate={{ left: `${x}%`, top: `${y}%`, opacity: 1, scale: 1 }}
+        initial={{ left: `${from.x}%`, top: `${pctY(from.y)}%`, opacity: 0, scale: 0.6 }}
+        animate={{ left: `${x}%`, top: `${pctY(y)}%`, opacity: 1, scale: 1 }}
         transition={{ type: 'spring', stiffness: 180, damping: 22 }}
       >
         {label}
@@ -243,7 +250,7 @@ function Chip({
       className={`absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left shadow-lg ring-1 ring-black/40 enabled:cursor-zoom-in enabled:hover:brightness-125 ${
         ring ? 'ring-2 ring-gold/70' : ''
       }`}
-      style={{ background: color, left: `${x}%`, top: `${y}%` }}
+      style={{ background: color, left: `${x}%`, top: `${pctY(y)}%` }}
       title={title}
       aria-label={title}
       initial={false}
@@ -398,8 +405,9 @@ const shortName = (name: string) => {
 };
 
 /**
- * The mat itself: mown grass, a dirt infield, chalk lines, and the bases.
- * Occupied bases glow so a glance answers "who's on?".
+ * The mat itself: mown outfield grass, the infield skin inside the foul lines,
+ * a grass diamond between the bases, chalk lines through first and third, and
+ * the bases. Occupied bases glow so a glance answers "who's on?".
  */
 function FieldArt({ occupied }: { occupied: (1 | 2 | 3)[] }) {
   return (
@@ -414,44 +422,51 @@ function FieldArt({ occupied }: { occupied: (1 | 2 | 3)[] }) {
         </pattern>
       </defs>
 
+      {/* outfield grass, mown in stripes */}
       <rect width="100" height="75" fill="url(#mat-grass)" />
       <rect width="100" height="75" fill="url(#mat-mow)" />
 
-      {/* outfield wall */}
-      <path d="M0 30 Q50 6 100 30 L100 0 L0 0 Z" fill="#0b2f21" opacity="0.75" />
-      <path d="M0 30 Q50 6 100 30" fill="none" stroke="#f6f2e6" strokeOpacity="0.45" strokeWidth="0.5" />
+      {/* outfield wall, behind the deepest grass */}
+      <path d="M0 32 Q50 4 100 32 L100 0 L0 0 Z" fill="#0b2f21" opacity="0.85" />
+      <path d="M0 32 Q50 4 100 32" fill="none" stroke="#f6f2e6" strokeOpacity="0.5" strokeWidth="0.5" />
 
-      {/* infield dirt */}
-      <ellipse cx="50" cy="63" rx="34" ry="17" fill="#b4834f" opacity="0.9" />
-      {/* grass diamond inside the dirt */}
-      <path d="M50 47 L71 57 L50 68 L29 57 Z" fill="#1a6344" />
+      {/* the infield skin: the area inside the foul lines, rounded behind second */}
+      <path
+        d="M50 68 L78 40 Q74 24 50 22 Q26 24 22 40 Z"
+        fill="#b4834f"
+        opacity="0.95"
+      />
 
-      {/* foul lines */}
-      <path d="M50 70 L4 34" stroke="#f6f2e6" strokeOpacity="0.7" strokeWidth="0.4" />
-      <path d="M50 70 L96 34" stroke="#f6f2e6" strokeOpacity="0.7" strokeWidth="0.4" />
-      {/* infield dirt lines */}
-      <path d="M50 70 L76 58" stroke="#f6f2e6" strokeOpacity="0.5" strokeWidth="0.3" />
-      <path d="M50 70 L24 58" stroke="#f6f2e6" strokeOpacity="0.5" strokeWidth="0.3" />
+      {/* the grass diamond between the bases; its edges ARE the basepaths */}
+      <path d="M50 68 L70 48 L50 28 L30 48 Z" fill="#1a6344" />
 
-      {/* bases */}
+      {/* foul lines run from the plate through first and third into the outfield */}
+      <path d="M50 68 L94 24" stroke="#f6f2e6" strokeOpacity="0.75" strokeWidth="0.4" />
+      <path d="M50 68 L6 24" stroke="#f6f2e6" strokeOpacity="0.75" strokeWidth="0.4" />
+      {/* the basepaths themselves, chalked over the grass diamond */}
+      <path d="M50 68 L70 48 L50 28 L30 48 Z" fill="none" stroke="#f6f2e6" strokeOpacity="0.45" strokeWidth="0.3" />
+
+      {/* the mound */}
+      <ellipse cx="50" cy="49" rx="4.5" ry="2.4" fill="#c08c56" />
+      <ellipse cx="50" cy="49" rx="4.5" ry="2.4" fill="none" stroke="#f6f2e6" strokeOpacity="0.25" strokeWidth="0.25" />
+
+      {/* bases: first and third on the foul lines, second on the centre line */}
       {(
         [
-          [76, 58],
-          [50, 47],
-          [24, 58],
+          [70, 48],
+          [50, 28],
+          [30, 48],
         ] as const
       ).map(([x, y], i) => (
-        <rect key={i} x={x - 1.6} y={y - 1.6} width="3.2" height="3.2" fill="#f6f2e6" transform={`rotate(45 ${x} ${y})`} />
+        <rect key={i} x={x - 1.7} y={y - 1.7} width="3.4" height="3.4" fill="#f6f2e6" transform={`rotate(45 ${x} ${y})`} />
       ))}
       {/* occupied bases glow */}
       {occupied.map((base) => {
         const spot = BASE_SPOTS[base];
-        return <circle key={base} cx={spot.x} cy={spot.y} r="3.4" fill="none" stroke="#d8a83c" strokeWidth="0.7" opacity="0.9" />;
+        return <circle key={base} cx={spot.x} cy={spot.y} r="3.6" fill="none" stroke="#d8a83c" strokeWidth="0.7" opacity="0.9" />;
       })}
       {/* home plate */}
-      <path d="M48.6 68.6 L51.4 68.6 L51.4 70.6 L50 71.6 L48.6 70.6 Z" fill="#f6f2e6" />
-      {/* mound */}
-      <ellipse cx="50" cy="55" rx="4" ry="2" fill="#c08c56" />
+      <path d="M48.6 66.6 L51.4 66.6 L51.4 68.6 L50 69.6 L48.6 68.6 Z" fill="#f6f2e6" />
     </svg>
   );
 }

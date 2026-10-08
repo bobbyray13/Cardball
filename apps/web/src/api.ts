@@ -24,8 +24,10 @@ import type {
   PackView,
   PersonDetail,
   PersonSummary,
+  PublicProfileView,
   SavedLineup,
   SessionUser,
+  StockTeamSummary,
   TeamSummary,
   TeamView,
   TournamentListItem,
@@ -113,6 +115,10 @@ export const api = {
   login: (input: { email: string; password: string }) => request<{ user: SessionUser }>('POST', '/api/auth/login', input),
   logout: () => request<{ ok: true }>('POST', '/api/auth/logout'),
   users: () => request<{ users: { id: number; displayName: string }[] }>('GET', '/api/users'),
+  /** Your own settings. Today that is one switch: the public profile opt-in. */
+  updateMe: (input: { publicProfile: boolean }) => request<{ user: SessionUser }>('PATCH', '/api/me', input),
+  /** A manager's public card: collection, teams, and finished games, if they opted in. */
+  profile: (username: string) => request<{ profile: PublicProfileView }>('GET', `/api/profile/${encodeURIComponent(username)}`),
 
   // ---- invites (commissioner) ----
   invites: () => request<{ invites: InviteSummary[] }>('GET', '/api/invites'),
@@ -157,6 +163,8 @@ export const api = {
 
   // ---- teams ----
   teams: () => request<{ teams: TeamSummary[] }>('GET', '/api/teams'),
+  /** Ready-made bot teams, offered as a Vs. Bot opponent. */
+  stockTeams: () => request<{ teams: StockTeamSummary[] }>('GET', '/api/stock-teams'),
   createTeam: (input: { name: string; primaryColor?: string | null }) => request<{ team: TeamView }>('POST', '/api/teams', input),
   team: (id: number) => request<{ team: TeamView }>('GET', `/api/teams/${id}`),
   updateTeam: (id: number, input: { name?: string; primaryColor?: string | null; lineup?: SavedLineup | null }) =>
@@ -172,6 +180,8 @@ export const api = {
     regulationInnings: number;
     teamId: number;
     opponentTeamId?: number;
+    /** a stock bot team id, instead of an owned opponent */
+    opponentStockTeamId?: string;
     /** what cards the match allows; omit for any card, no caps */
     match?: MatchRules;
     /** opt-in: watching or joining takes this password */

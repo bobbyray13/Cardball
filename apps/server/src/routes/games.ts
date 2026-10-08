@@ -26,6 +26,8 @@ const createSchema = z.object({
     .refine((n) => activeHouseRules().regulationInningsOptions.includes(n), 'Pick a regulation length from the house rules'),
   teamId: z.number().int().positive(),
   opponentTeamId: z.number().int().positive().optional(),
+  /** a stock bot team id from the catalog, instead of an owned opponent */
+  opponentStockTeamId: z.string().min(1).max(40).optional(),
   /** what cards this match allows; missing means any card, no caps */
   match: matchRulesSchema.optional(),
   /** opt-in: watching or joining takes this password */

@@ -34,7 +34,11 @@ export function AdminPage() {
         subtitle="Single-use codes. Every account after yours needs one."
         actions={
           <>
-            <select className="rounded-full border border-white/20 bg-black/25 px-3 py-1.5 text-sm text-chalk" value={days} onChange={(e) => setDays(Number(e.target.value))}>
+            <select
+              className="rounded-full border border-white/25 bg-dugout-light px-3 py-1.5 text-sm text-chalk focus:border-gold focus:bg-dugout focus:outline-none"
+              value={days}
+              onChange={(e) => setDays(Number(e.target.value))}
+            >
               {[7, 30, 90, 365].map((d) => (
                 <option key={d} value={d}>
                   {d} days

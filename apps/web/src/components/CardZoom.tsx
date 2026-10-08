@@ -57,7 +57,7 @@ export function CardZoom({ target, onClose }: { target: ZoomTarget | null; onClo
           role="dialog"
           aria-modal="true"
           aria-label={`${target.card.name}, ${target.card.cardYear}`}
-          className="fixed inset-0 z-[70] overflow-y-auto bg-black/80 backdrop-blur-sm"
+          className="fixed inset-0 z-[90] overflow-y-auto bg-black/80 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}

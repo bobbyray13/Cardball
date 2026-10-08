@@ -18,12 +18,15 @@ const KIND_BADGE: Record<string, { label: string; className: string; accent: boo
 
 const badgeOf = (kind: string) => KIND_BADGE[kind] ?? { label: kind.replace('-', ' ').toUpperCase(), className: 'bg-white/10 text-chalk/70', accent: false };
 
-/** How long each event of a new play holds the strip before the next. */
-const REVEAL_MS = 500;
+/**
+ * How long each event of a new play holds the strip before the next. A full
+ * second, so the call is followable at the table instead of flashing past.
+ */
+const REVEAL_MS = 1000;
 /** The first beat of a fresh play answers the button quickly; the rest pace out. */
-const FIRST_BEAT_MS = 180;
+const FIRST_BEAT_MS = 400;
 /** Longer than this since the last beat means the batch is over. */
-const BATCH_GAP_MS = 1200;
+const BATCH_GAP_MS = 1600;
 
 /**
  * The broadcast line on the mat. A new play arrives as a batch of events —

@@ -69,6 +69,8 @@ export interface PackView {
   source: PackSource;
   /** where it came from, e.g. "Beat the Bot Nine" */
   label: string | null;
+  /** what earned it, e.g. "game:12#0"; ties a pack back to the game that dealt it */
+  rewardKey: string | null;
   /** the card years the deal draws from */
   era: { from: number; to: number };
   createdAt: string;
@@ -172,6 +174,14 @@ export interface PersonDetail extends PersonSummary {
   cardYears: { min: number; max: number } | null;
 }
 
+/** One stock team offered as a Vs. Bot opponent. */
+export interface StockTeamSummary {
+  id: string;
+  name: string;
+  year: number;
+  tagline: string;
+}
+
 export interface ChatMessage {
   id: number;
   userId: number | null;
@@ -185,6 +195,8 @@ export interface SessionUser {
   email: string;
   displayName: string;
   isAdmin: boolean;
+  /** the manager has opened their binder to the league: profile, collection, teams, and finished games */
+  publicProfile: boolean;
 }
 
 export interface InviteSummary {
@@ -192,6 +204,29 @@ export interface InviteSummary {
   createdAt: string;
   expiresAt: string | null;
   usedBy: string | null;
+}
+
+/** One finished game on a manager's public card. */
+export interface PublicGameResult {
+  id: number;
+  mode: GameMode;
+  /** when the final out was recorded */
+  finishedAt: string;
+  home: { name: string; score: number };
+  away: { name: string; score: number };
+  winner: 'home' | 'away' | null;
+  /** whether the manager this card belongs to was on the winning side */
+  won: boolean | null;
+}
+
+/** A manager's public card: collection, teams, and finished games, for whoever has opted in. */
+export interface PublicProfileView {
+  user: { id: number; displayName: string; joinedAt: string };
+  /** false while the manager keeps the binder closed: only the header shows */
+  open: boolean;
+  collection: CollectionCard[] | null;
+  teams: TeamSummary[] | null;
+  games: PublicGameResult[] | null;
 }
 
 /** A game room, generic over the engine's state type. */
