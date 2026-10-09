@@ -72,7 +72,7 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
   app.get('/api/people/search', async (request) => {
     requireUser(request);
     const q = parse(
-      z.object({ q: z.string().trim().min(2).max(60), limit: z.coerce.number().int().min(1).max(50).default(25) }),
+      z.object({ q: z.string().trim().min(2).max(60), limit: z.coerce.number().int().min(1).max(100).default(25) }),
       request.query,
     );
     const terms = q.q.split(/\s+/).filter(Boolean);

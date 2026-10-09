@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RARITY_LABEL, RARITY_ORDER, faceLabel, rarityRank, rateCard } from '@cardball/shared';
@@ -91,14 +91,21 @@ export function CollectionPage() {
 
   const filtering = query.trim() !== '' || tierFilter !== 'all' || role !== 'all' || photosOnly;
 
+  // A binder can run to hundreds of cards; the grid shows one page at a time,
+  // and a new search or filter starts back at the first page.
+  const PAGE_SIZE = 60;
+  const [shown, setShown] = useState(PAGE_SIZE);
+  useEffect(() => setShown(PAGE_SIZE), [query, tierFilter, role, photosOnly, sort]);
+  const paged = useMemo(() => filtered.slice(0, shown), [filtered, shown]);
+
   // Under "Rarest first", split the grid into one shelf per tier.
   const groups = useMemo(() => {
-    if (sort !== 'rarity') return [{ tier: null as DraftRarity | null, cards: filtered }];
+    if (sort !== 'rarity') return [{ tier: null as DraftRarity | null, cards: paged }];
     return [...RARITY_ORDER]
       .reverse()
-      .map((tier) => ({ tier: tier as DraftRarity | null, cards: filtered.filter((c) => ratings.get(c.id)!.rarity === tier) }))
+      .map((tier) => ({ tier: tier as DraftRarity | null, cards: paged.filter((c) => ratings.get(c.id)!.rarity === tier) }))
       .filter((g) => g.cards.length > 0);
-  }, [filtered, sort, ratings]);
+  }, [paged, sort, ratings]);
 
   return (
     <div className="space-y-6">
@@ -215,6 +222,16 @@ export function CollectionPage() {
               </div>
             </section>
           ))}
+          {filtered.length > shown ? (
+            <div className="flex flex-col items-center gap-1 pb-2">
+              <Button onClick={() => setShown((n) => n + PAGE_SIZE)}>
+                Show more · {filtered.length - shown} card{filtered.length - shown === 1 ? '' : 's'} left
+              </Button>
+              <p className="text-xs text-chalk/40">
+                Showing {shown} of {filtered.length}
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
 

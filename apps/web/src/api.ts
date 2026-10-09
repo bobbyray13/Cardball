@@ -128,7 +128,7 @@ export const api = {
   deleteInvite: (code: string) => request<{ ok: true }>('DELETE', `/api/invites/${encodeURIComponent(code)}`),
 
   // ---- card database ----
-  searchPeople: (q: string, limit = 25) =>
+  searchPeople: (q: string, limit = 60) =>
     request<{ people: PersonSummary[] }>('GET', `/api/people/search?q=${encodeURIComponent(q)}&limit=${limit}`),
   person: (id: number) => request<{ person: PersonDetail; seasons: PersonDetail['seasons']; cardYears: { min: number; max: number } | null }>('GET', `/api/people/${id}`),
   previewCard: (personId: number, cardYear: number) =>
