@@ -13,6 +13,8 @@ export const env = {
   cookieSecure: (process.env.COOKIE_SECURE ?? (process.env.NODE_ENV === 'production' ? 'true' : 'false')) === 'true',
   /** Optional standing Discord voice channel invite offered in every game room. */
   discordVoiceUrl: process.env.DISCORD_VOICE_URL ?? null,
+  /** Trust X-Forwarded-* headers: on in production (behind Caddy), off in dev. */
+  trustProxy: (process.env.TRUST_PROXY ?? (process.env.NODE_ENV === 'production' ? 'true' : 'false')) === 'true',
   sessionDays: 30,
   maxUploadBytes: 8 * 1024 * 1024,
   maxRosterSize: 26,

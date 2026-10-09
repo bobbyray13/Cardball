@@ -467,7 +467,7 @@ describe('card database and collection', () => {
 
   it('uploads a card photo and serves it back to signed-in members', async () => {
     const boundary = '----cardballtest';
-    const bytes = Buffer.from('not-really-a-jpeg-but-the-server-only-checks-the-mime-type');
+    const bytes = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.from('-really-a-jpeg-the-server-checks-the-signature')]);
     const head = [
       `--${boundary}`,
       'Content-Disposition: form-data; name="width"',

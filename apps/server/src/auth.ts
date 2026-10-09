@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { hash, verify } from '@node-rs/argon2';
-import { and, eq, gt } from 'drizzle-orm';
+import { and, eq, gt, lt } from 'drizzle-orm';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import { sessions, users } from '@cardball/db';
 import type { Ctx } from './context.js';
@@ -31,6 +31,11 @@ export async function createSession(ctx: Ctx, userId: number): Promise<string> {
 
 export async function destroySession(ctx: Ctx, token: string): Promise<void> {
   await ctx.db.delete(sessions).where(eq(sessions.id, tokenId(token)));
+}
+
+/** Delete sessions past their expiry. Rows are checked on use; this sweeps them off disk. */
+export async function purgeExpiredSessions(ctx: Ctx): Promise<void> {
+  await ctx.db.delete(sessions).where(lt(sessions.expiresAt, new Date()));
 }
 
 export async function userFromToken(ctx: Ctx, token: string | undefined): Promise<AuthUser | null> {

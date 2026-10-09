@@ -20,7 +20,16 @@ import { teamRoutes } from './routes/teams.js';
 import { tournamentRoutes } from './routes/tournaments.js';
 
 export async function buildApp(ctx: Ctx, opts: { logger?: boolean } = {}) {
-  const app = Fastify({ logger: opts.logger ?? true, trustProxy: true, bodyLimit: 1024 * 1024 });
+  const app = Fastify({ logger: opts.logger ?? true, trustProxy: env.trustProxy, bodyLimit: 1024 * 1024 });
+
+  // Defensive headers on everything we serve, including the built client in
+  // production. (No CSP yet: card and team colors are inline styles, and a
+  // half-useful policy is worse than an honest one.)
+  app.addHook('onSend', async (_request, reply) => {
+    reply.header('X-Content-Type-Options', 'nosniff');
+    reply.header('X-Frame-Options', 'DENY');
+    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+  });
 
   await app.register(cookie);
   await app.register(multipart, { limits: { fileSize: env.maxUploadBytes, files: 1 } });
