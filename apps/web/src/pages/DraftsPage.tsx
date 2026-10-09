@@ -7,6 +7,7 @@ import { eraById } from '../eras.js';
 import { PackArt } from '../components/PackArt.js';
 import { EraRangePicker, PackThemePicker, RarityCapFields, RoundSizeFields, chosenThemes } from '../components/RoomConfig.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { useLiveListUpdates } from '../lib/liveList.js';
 
 const PHASE_LABEL: Record<DraftListItem['phase'], string> = {
   lobby: 'Taking seats',
@@ -19,6 +20,7 @@ const PHASE_LABEL: Record<DraftListItem['phase'], string> = {
 export function DraftsPage() {
   const navigate = useNavigate();
   const drafts = useLoad(() => api.drafts(), []);
+  useLiveListUpdates('drafts', drafts.reload);
 
   const [era, setEra] = useState<string>('expansion');
   const [yearFrom, setYearFrom] = useState(1961);
@@ -82,14 +84,7 @@ export function DraftsPage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Panel
-          title="Draft rooms"
-          actions={
-            <Button size="sm" onClick={drafts.reload} disabled={drafts.loading}>
-              Refresh
-            </Button>
-          }
-        >
+        <Panel title="Draft rooms">
           <ErrorNote error={drafts.error} />
           <ErrorNote error={join.error} />
           {drafts.loading && !drafts.data ? (

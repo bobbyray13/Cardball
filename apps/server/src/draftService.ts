@@ -445,7 +445,7 @@ async function loadRow(ctx: Ctx, draftId: number): Promise<DraftRow> {
 }
 
 /** Persist a new draft state with an optimistic version check, as games are saved. */
-async function saveDraft(ctx: Ctx, row: DraftRow, state: DraftState, status: string = row.status): Promise<DraftRow> {
+async function saveDraft(ctx: Ctx, row: DraftRow, state: DraftState, status: string = row.status, notifyList = true): Promise<DraftRow> {
   const [updated] = await ctx.db
     .update(drafts)
     .set({ state, status, version: row.version + 1, updatedAt: new Date() })
@@ -453,6 +453,7 @@ async function saveDraft(ctx: Ctx, row: DraftRow, state: DraftState, status: str
     .returning();
   if (!updated) throw new HttpError(409, 'The draft moved on — refresh and try again');
   broadcast(ctx, updated);
+  if (notifyList) ctx.io?.to('list:drafts').emit('drafts:update', { draftId: row.id });
   return updated;
 }
 
@@ -537,7 +538,7 @@ function validateConfig(input: CreateDraftInput): DraftConfig {
   };
 }
 
-export async function createDraft(ctx: Ctx, user: AuthUser, input: CreateDraftInput): Promise<DraftView> {
+export async function createDraft(ctx: Ctx, user: AuthUser, input: CreateDraftInput, notifyList = true): Promise<DraftView> {
   const config = validateConfig(input);
   // Fail fast if a pack can't be dealt, instead of mid-draft.
   for (const theme of config.themes) await dealPack(ctx, config, 1, theme);
@@ -555,6 +556,7 @@ export async function createDraft(ctx: Ctx, user: AuthUser, input: CreateDraftIn
     .values({ hostUserId: user.id, status: 'lobby', config, state })
     .returning();
   await ctx.db.insert(draftParticipants).values({ draftId: row!.id, userId: user.id, seat: 0 });
+  if (notifyList) ctx.io?.to('list:drafts').emit('drafts:update', { draftId: row!.id });
   return viewOf(ctx, row!, user.id);
 }
 
@@ -613,19 +615,19 @@ export async function getDraft(ctx: Ctx, user: AuthUser, draftId: number): Promi
   return viewOf(ctx, await loadRow(ctx, draftId), user.id);
 }
 
-export function joinDraft(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
-  return withLock(draftId, () => joinUnlocked(ctx, user, draftId));
+export function joinDraft(ctx: Ctx, user: AuthUser, draftId: number, notifyList = true): Promise<DraftView> {
+  return withLock(draftId, () => joinUnlocked(ctx, user, draftId, notifyList));
 }
 
-export function startDraft(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
-  return withLock(draftId, () => startUnlocked(ctx, user, draftId));
+export function startDraft(ctx: Ctx, user: AuthUser, draftId: number, notifyList = true): Promise<DraftView> {
+  return withLock(draftId, () => startUnlocked(ctx, user, draftId, notifyList));
 }
 
 export function pickCard(ctx: Ctx, user: AuthUser, draftId: number, cardId: string): Promise<DraftView> {
   return withLock(draftId, () => pickUnlocked(ctx, user, draftId, cardId));
 }
 
-async function joinUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
+async function joinUnlocked(ctx: Ctx, user: AuthUser, draftId: number, notifyList: boolean): Promise<DraftView> {
   const row = await loadRow(ctx, draftId);
   const seats = await loadParticipants(ctx, draftId);
   if (seats.some((s) => s.userId === user.id)) return viewOf(ctx, row, user.id);
@@ -635,11 +637,11 @@ async function joinUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise<
   await ctx.db.insert(draftParticipants).values({ draftId, userId: user.id, seat: seats.length });
   const state = parseState(row);
   state.log.push({ seq: state.log.length + 1, text: `${user.displayName} took seat ${seats.length + 1}.` });
-  const updated = await saveDraft(ctx, row, state);
+  const updated = await saveDraft(ctx, row, state, row.status, notifyList);
   return viewOf(ctx, updated, user.id);
 }
 
-async function startUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
+async function startUnlocked(ctx: Ctx, user: AuthUser, draftId: number, notifyList: boolean): Promise<DraftView> {
   const row = await loadRow(ctx, draftId);
   if (row.hostUserId !== user.id) throw forbidden('Only the host can start the draft');
   if (row.status !== 'lobby') throw badRequest('That draft already started');
@@ -658,7 +660,7 @@ async function startUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise
     seq: state.log.length + 1,
     text: `Pack 1 of ${config.rounds} is on the table — ${first.name.toLowerCase()}, ${config.packSize} cards each. Tear yours open, take one, then pass ${passDirection(1)}.`,
   });
-  const updated = await saveDraft(ctx, row, state, 'active');
+  const updated = await saveDraft(ctx, row, state, 'active', notifyList);
   return viewOf(ctx, updated, user.id);
 }
 
@@ -1191,6 +1193,7 @@ export async function deleteDraft(ctx: Ctx, user: AuthUser, draftId: number): Pr
   if (row.hostUserId !== user.id) throw forbidden('Only the host can close the room');
   await ctx.db.delete(drafts).where(eq(drafts.id, draftId));
   ctx.io?.to(`draft:${draftId}`).emit('draft:closed', { draftId });
+  ctx.io?.to('list:drafts').emit('drafts:update', { draftId });
 }
 
 function broadcast(ctx: Ctx, row: DraftRow): void {

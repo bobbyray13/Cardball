@@ -7,6 +7,7 @@ import type { NewTournament } from '../api.js';
 import { eraById } from '../eras.js';
 import { EraRangePicker, PackThemePicker, RarityCapFields, RoundSizeFields, SegmentedToggle, chosenThemes } from '../components/RoomConfig.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { useLiveListUpdates } from '../lib/liveList.js';
 
 const STATUS_LABEL: Record<TournamentListItem['status'], string> = {
   lobby: 'Taking seats',
@@ -30,6 +31,7 @@ const SEAT_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
 export function TournamentsPage() {
   const navigate = useNavigate();
   const tournaments = useLoad(() => api.tournaments(), []);
+  useLiveListUpdates('tournaments', tournaments.reload);
 
   const [name, setName] = useState('');
   const [format, setFormat] = useState<TournamentFormatChoice>('round-robin');
@@ -98,14 +100,7 @@ export function TournamentsPage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Panel
-          title="Tournament rooms"
-          actions={
-            <Button size="sm" onClick={tournaments.reload} disabled={tournaments.loading}>
-              Refresh
-            </Button>
-          }
-        >
+        <Panel title="Tournament rooms">
           <ErrorNote error={tournaments.error} />
           <ErrorNote error={join.error} />
           {tournaments.loading && !tournaments.data ? (

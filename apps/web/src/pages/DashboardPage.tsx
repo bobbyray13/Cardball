@@ -8,6 +8,7 @@ import { EraRangePicker, RarityCapFields, SegmentedToggle } from '../components/
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 import { eraById } from '../eras.js';
 import { useSession } from '../session.js';
+import { useLiveListUpdates } from '../lib/liveList.js';
 
 const STATUS_LABEL: Record<GameListItem['status'], string> = {
   open: 'Open seat',
@@ -72,6 +73,7 @@ export function DashboardPage() {
   const { user } = useSession();
   const navigate = useNavigate();
   const games = useLoad(() => api.games(), []);
+  useLiveListUpdates('lobby', games.reload);
   const teams = useLoad(() => api.teams(), []);
   const collection = useLoad(() => api.collection(), []);
   const stockTeams = useLoad(() => api.stockTeams(), []);
@@ -178,15 +180,7 @@ export function DashboardPage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Panel
-          title="Your games"
-          subtitle="Open seats are joinable by anyone in the league."
-          actions={
-            <Button size="sm" onClick={games.reload} disabled={games.loading}>
-              Refresh
-            </Button>
-          }
-        >
+        <Panel title="Your games" subtitle="Open seats are joinable by anyone in the league.">
           <ErrorNote error={games.error} />
           {games.loading && !games.data ? (
             <Spinner />

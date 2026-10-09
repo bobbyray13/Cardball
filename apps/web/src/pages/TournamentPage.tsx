@@ -48,6 +48,7 @@ export function TournamentPage() {
     navigate('/tournaments');
   });
   const [askClose, setAskClose] = useState(false);
+  const [simulation, setSimulation] = useState<{ current: number; total: number; stage?: string; done?: boolean } | null>(null);
 
   // Live updates: the tournament room nudges, and while the draft is running so
   // does the draft room, so picks move the schedule along.
@@ -55,6 +56,7 @@ export function TournamentPage() {
     const socket: Socket = io({ path: '/socket.io', withCredentials: true });
     socket.on('connect', () => socket.emit('tournament:join', id, () => void room.reload()));
     socket.on('tournament:update', () => void room.reload());
+    socket.on('tournament:progress', (progress: { current: number; total: number; stage?: string; done?: boolean }) => setSimulation(progress));
     return () => {
       socket.emit('tournament:leave', id);
       socket.close();
@@ -164,9 +166,6 @@ export function TournamentPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={room.reload} disabled={room.loading}>
-            Refresh
-          </Button>
           {isHost && t.status === 'lobby' ? (
             <Button size="sm" variant="primary" disabled={start.busy || seatsFilled < t.config.seats} onClick={() => void start.execute()}>
               {start.busy ? 'Dealing…' : 'Deal the packs'}
@@ -189,6 +188,21 @@ export function TournamentPage() {
           ) : null}
         </div>
       </section>
+
+      {simulation && !simulation.done ? (
+        <div className="rounded-xl border border-gold/25 bg-black/20 px-4 py-3" role="status" aria-live="polite">
+          <div className="mb-2 flex items-center justify-between gap-3 text-sm text-chalk/80">
+            <span>Simulating match {simulation.current} of {simulation.total}{simulation.stage ? ` · ${simulation.stage}` : ''}</span>
+            <span className="font-mono text-xs text-chalk/55">{Math.round((simulation.current / simulation.total) * 100)}%</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-gold transition-[width] duration-300"
+              style={{ width: `${Math.round((simulation.current / simulation.total) * 100)}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
 
       <ConfirmDialog
         open={askClose}

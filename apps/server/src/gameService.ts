@@ -113,6 +113,7 @@ async function loadRow(ctx: Ctx, gameId: number): Promise<GameRow> {
 
 function broadcast(ctx: Ctx, row: GameRow, events: GameEvent[]): void {
   ctx.io?.to(`game:${row.id}`).emit('game:update', { game: toView(row), events });
+  ctx.io?.to('list:lobby').emit('lobby:update', { gameId: row.id });
   // A tournament catches up on its next read; nudge its open pages to read.
   if (row.tournamentId !== null && stored(row).engine?.phase === 'finished') {
     ctx.io?.to(`tournament:${row.tournamentId}`).emit('tournament:update', { tournamentId: row.tournamentId, status: 'playing' });
@@ -303,6 +304,7 @@ export async function createNewGame(ctx: Ctx, user: AuthUser, input: CreateGameI
       events.map((e) => ({ gameId: row!.id, seq: e.seq, inning: e.inning, half: e.half, kind: e.kind, text: e.text, data: e })),
     );
   }
+  ctx.io?.to('list:lobby').emit('lobby:update', { gameId: row!.id });
   return toView(row!);
 }
 
@@ -410,6 +412,7 @@ export async function deleteOpenGame(ctx: Ctx, user: AuthUser, gameId: number): 
     throw badRequest('Concede the game instead of deleting it');
   }
   await ctx.db.delete(games).where(eq(games.id, gameId));
+  ctx.io?.to('list:lobby').emit('lobby:update', { gameId });
 }
 
 // ---------------------------------------------------------------------------
