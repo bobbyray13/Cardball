@@ -132,7 +132,7 @@ export const api = {
     request<{ people: PersonSummary[] }>('GET', `/api/people/search?q=${encodeURIComponent(q)}&limit=${limit}`),
   person: (id: number) => request<{ person: PersonDetail; seasons: PersonDetail['seasons']; cardYears: { min: number; max: number } | null }>('GET', `/api/people/${id}`),
   previewCard: (personId: number, cardYear: number) =>
-    request<{ card: CardSnapshot }>('GET', `/api/cards/preview?personId=${personId}&cardYear=${cardYear}`),
+    request<{ card: CardSnapshot; artPhotoId: number | null }>('GET', `/api/cards/preview?personId=${personId}&cardYear=${cardYear}`),
 
   // ---- collection ----
   collection: () => request<{ cards: CollectionCard[] }>('GET', '/api/collection'),

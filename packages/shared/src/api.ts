@@ -53,7 +53,10 @@ export interface CollectionCard {
   setLabel: string;
   rarity: string | null;
   quantity: number;
+  /** the art to show: this copy's own photo, else the shared art for this player + year */
   photoId: number | null;
+  /** the photo this manager attached to this copy, if any */
+  ownPhotoId: number | null;
   notes: string | null;
   addedAt: string;
   card: CardSnapshot;

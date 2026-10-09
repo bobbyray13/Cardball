@@ -508,6 +508,35 @@ describe('card database and collection', () => {
     expect(body<{ card: { photoId: number } }>(patched).card.photoId).toBe(photoId);
   });
 
+  it('shares an uploaded photo with every copy of that player and year', async () => {
+    type Entry = { id: number; photoId: number | null; ownPhotoId: number | null; card: { personId: number; cardYear: number } };
+    const hostCards = body<{ cards: Entry[] }>(await call('GET', '/api/collection', { token: hostToken })).cards;
+    const shot = hostCards.find((c) => c.ownPhotoId === photoId)!;
+    const { personId, cardYear } = shot.card;
+
+    // Another manager files the same player and year, under a different set.
+    const added = await call('POST', '/api/collection', {
+      token: guestToken,
+      body: { personId, cardYear, setLabel: 'Shared art check' },
+    });
+    expect(added.statusCode).toBe(200);
+    const theirs = body<{ card: Entry }>(added).card;
+    expect(theirs.photoId).toBe(photoId);
+    expect(theirs.ownPhotoId).toBeNull();
+
+    const preview = body<{ artPhotoId: number | null }>(
+      await call('GET', `/api/cards/preview?personId=${personId}&cardYear=${cardYear}`, { token: guestToken }),
+    );
+    expect(preview.artPhotoId).toBe(photoId);
+    // The same player in another year keeps the stock face.
+    const otherYear = body<{ artPhotoId: number | null }>(
+      await call('GET', `/api/cards/preview?personId=${personId}&cardYear=${cardYear + 1}`, { token: guestToken }),
+    );
+    expect(otherYear.artPhotoId).toBeNull();
+
+    expect((await call('DELETE', `/api/collection/${theirs.id}`, { token: guestToken })).statusCode).toBe(200);
+  });
+
   it('rejects a file that is not an image', async () => {
     const boundary = '----cardballbad';
     const payload = Buffer.from(

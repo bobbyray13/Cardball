@@ -6,7 +6,7 @@
  * browser or a real camera roll.
  */
 import { describe, expect, it } from 'vitest';
-import { detectCardQuad, homography, quadSize, warpQuad } from '../src/lib/cardDetect.js';
+import { detectCardQuad, homography, quadSize, rotateQuarterTurns, warpQuad } from '../src/lib/cardDetect.js';
 import type { PixelImage, Point, Quad } from '../src/lib/cardDetect.js';
 
 type RGB = [number, number, number];
@@ -163,6 +163,74 @@ describe('detectCardQuad', () => {
     expectQuadsNear(found!.quad.corners, corners, 7);
   });
 
+  it('finds a card on a grainy table', () => {
+    const corners = turnedCard(-7, 480, 620);
+    const shot = photo(480, 620, corners);
+    // Wood-grain-ish noise on the table: streaks and speckle, no straight outline.
+    for (let y = 0; y < shot.height; y++) {
+      for (let x = 0; x < shot.width; x++) {
+        if (inPolygon(x + 0.5, y + 0.5, corners)) continue;
+        const grain = 18 * Math.sin(x * 0.21 + Math.sin(y * 0.05) * 3) + ((x * 7919 + y * 104729) % 23) - 11;
+        const at = (y * shot.width + x) * 4;
+        for (let ch = 0; ch < 3; ch++) shot.data[at + ch] = Math.max(0, Math.min(255, shot.data[at + ch]! + 40 + grain));
+      }
+    }
+    const found = detectCardQuad(shot);
+    expect(found).not.toBeNull();
+    expectQuadsNear(found!.quad.corners, corners, 6);
+  });
+
+  it('bridges a stretch of outline lost to glare', () => {
+    const { corners } = centeredCard(420, 560);
+    const tl = corners[0]!;
+    // A patch of glare on the table, card-coloured, pressed against 40% of the left edge.
+    const base = photo(420, 560, corners);
+    for (let y = Math.round(tl.y + 120); y < Math.round(tl.y + 120 + CARD_HEIGHT * 0.4); y++) {
+      for (let x = Math.round(tl.x - 70); x < Math.round(tl.x); x++) {
+        const at = (y * 420 + x) * 4;
+        base.data.set(CARD, at);
+      }
+    }
+    const found = detectCardQuad(base);
+    expect(found).not.toBeNull();
+    expectQuadsNear(found!.quad.corners, corners, 5);
+  });
+
+  it('ignores a pen lying against the card', () => {
+    const { corners } = centeredCard(420, 560);
+    const tr = corners[1]!;
+    const shot = photo(420, 560, corners);
+    for (let y = Math.round(tr.y + 60); y < Math.round(tr.y + 78); y++) {
+      for (let x = Math.round(tr.x); x < 415; x++) shot.data.set(BLUE, (y * 420 + x) * 4);
+    }
+    const found = detectCardQuad(shot);
+    expect(found).not.toBeNull();
+    expectQuadsNear(found!.quad.corners, corners, 5);
+  });
+
+  it('takes the card’s outer edge, not the printed frame inside it', () => {
+    const { corners } = centeredCard(420, 560);
+    const tl = corners[0]!;
+    const border = 22;
+    // A white border round a dark photo window, the way most fronts are printed.
+    const shot = photo(420, 560, corners, (x, y) =>
+      x > tl.x + border && x < tl.x + CARD_WIDTH - border && y > tl.y + border && y < tl.y + CARD_HEIGHT - border * 3
+        ? [70, 90, 130]
+        : null,
+    );
+    const found = detectCardQuad(shot);
+    expect(found).not.toBeNull();
+    expectQuadsNear(found!.quad.corners, corners, 5);
+  });
+
+  it('pins the corners to the edge in a full-size photo', () => {
+    // At phone resolution the outline is re-fitted at full size, not just scaled up.
+    const big = turnedCard(5, 1000, 1300).map((p) => ({ x: 500 + (p.x - 500) * 2.4, y: 650 + (p.y - 650) * 2.4 }));
+    const found = detectCardQuad(photo(1000, 1300, big));
+    expect(found).not.toBeNull();
+    expectQuadsNear(found!.quad.corners, big, 3);
+  });
+
   it('gives up on a photo with nothing card-shaped in it', () => {
     expect(detectCardQuad(photo(400, 500, []))).toBeNull();
     // A flat grey wall: no edges anywhere, so no outline either.
@@ -221,8 +289,7 @@ describe('warpQuad', () => {
     expect(near(pixelAt(warped, at, warped.height - 1 - at), YELLOW, 60)).toBe(true);
   });
 
-  it('stands a sideways card back up', () => {
-    // A portrait card lying on its side in a landscape photo.
+  it('keeps a horizontal card horizontal', () => {
     const corners: Point[] = [
       { x: 130, y: 190 },
       { x: 130 + CARD_HEIGHT, y: 190 },
@@ -233,8 +300,8 @@ describe('warpQuad', () => {
     const found = detectCardQuad(shot);
     expect(found).not.toBeNull();
     const warped = warpQuad(shot, found!.quad);
-    expect(warped.height).toBeGreaterThan(warped.width);
-    expect(warped.width).toBeGreaterThan(CARD_WIDTH - 12);
+    expect(warped.width).toBeGreaterThan(warped.height);
+    expect(warped.height).toBeGreaterThan(CARD_WIDTH - 12);
     expect(cardShare(warped)).toBeGreaterThan(0.96);
   });
 
@@ -259,6 +326,21 @@ describe('warpQuad', () => {
     expect(map(0, 1).y).toBeCloseTo(380, 6);
     expect(map(1, 1).x).toBeCloseTo(280, 6);
     expect(map(1, 1).y).toBeCloseTo(400, 6);
+  });
+
+  it('turns a picture by quarter turns', () => {
+    // 2 wide, 3 tall, each pixel's red channel its index.
+    const img = { width: 2, height: 3, data: new Uint8ClampedArray(2 * 3 * 4) };
+    for (let i = 0; i < 6; i++) img.data[i * 4] = i;
+    const reds = (r: { width: number; data: Uint8ClampedArray }) => Array.from({ length: r.data.length / 4 }, (_, i) => r.data[i * 4]);
+    const cw = rotateQuarterTurns(img, 1);
+    expect([cw.width, cw.height]).toEqual([3, 2]);
+    // Clockwise: the left column, read bottom to top, becomes the top row.
+    expect(reds(cw)).toEqual([4, 2, 0, 5, 3, 1]);
+    const ccw = rotateQuarterTurns(img, -1);
+    expect(reds(ccw)).toEqual([1, 3, 5, 0, 2, 4]);
+    expect(reds(rotateQuarterTurns(img, 2))).toEqual([5, 4, 3, 2, 1, 0]);
+    expect(reds(rotateQuarterTurns(cw, 3))).toEqual(reds(img));
   });
 
   it('reports the card’s own width and height from the quad', () => {

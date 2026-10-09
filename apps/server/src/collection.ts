@@ -2,6 +2,7 @@ import { and, eq, inArray } from 'drizzle-orm';
 import type { CollectionCard } from '@cardball/shared';
 import { cardModels, people, userCards } from '@cardball/db';
 import type { CardModelRow, PersonRow, UserCardRow } from '@cardball/db';
+import { cardArtKey, loadCardArt } from './cardArt.js';
 import { buildCard, loadWindowSeasons } from './cards.js';
 import type { Ctx } from './context.js';
 
@@ -10,17 +11,18 @@ export type { CollectionCard };
 type Row = { user_cards: UserCardRow; card_models: CardModelRow; people: PersonRow };
 
 export async function toCollectionCards(ctx: Ctx, rows: Row[]): Promise<CollectionCard[]> {
-  const seasonRows = await loadWindowSeasons(
-    ctx,
-    rows.map((r) => ({ personId: r.people.id, cardYear: r.card_models.cardYear })),
-  );
+  const keys = rows.map((r) => ({ personId: r.people.id, cardYear: r.card_models.cardYear }));
+  const [seasonRows, art] = await Promise.all([loadWindowSeasons(ctx, keys), loadCardArt(ctx, keys)]);
   return rows.map((r) => ({
     id: r.user_cards.id,
     cardModelId: r.card_models.id,
     setLabel: r.card_models.setLabel,
     rarity: r.card_models.rarity,
     quantity: r.user_cards.quantity,
-    photoId: r.user_cards.photoId,
+    // A manager's own photo of their copy comes first; otherwise the card wears
+    // whatever art anyone has uploaded for this player and year.
+    photoId: r.user_cards.photoId ?? art.get(cardArtKey({ personId: r.people.id, cardYear: r.card_models.cardYear })) ?? null,
+    ownPhotoId: r.user_cards.photoId,
     notes: r.user_cards.notes,
     addedAt: r.user_cards.createdAt.toISOString(),
     card: buildCard(r.people, seasonRows, r.card_models.cardYear),

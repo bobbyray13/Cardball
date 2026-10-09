@@ -107,7 +107,7 @@ export function CollectionPage() {
           <h1 className="font-display text-3xl font-bold text-chalk">Your collection</h1>
           <p className="mt-1 text-sm text-chalk/60">
             {cards.length} {cards.length === 1 ? 'card' : 'cards'} · {tierCounts.mythic} mythic · {tierCounts.star} star ·{' '}
-            {tierCounts.rare} rare · {cards.filter((c) => c.photoId).length} with your own photo
+            {tierCounts.rare} rare · {cards.filter((c) => c.ownPhotoId).length} with your own photo
           </p>
         </div>
         <Link to="/search">
@@ -350,7 +350,7 @@ function CardDetail({
 
             <div>
               <p className="mb-1 text-xs font-semibold tracking-wide text-chalk/60 uppercase">Your photo</p>
-              <PhotoUploader photoId={entry.photoId} label="Add a photo of this card" onUploaded={(id) => void attach.execute(id)} />
+              <PhotoUploader photoId={entry.ownPhotoId} label="Add a photo of this card" onUploaded={(id) => void attach.execute(id)} />
               <ErrorNote error={attach.error} />
             </div>
 

@@ -3,28 +3,30 @@
  *
  * Card photos come straight off a phone, so they are prepared in the browser
  * before upload: downscaled, re-encoded, and — when the card's outline can be
- * found — cropped to the card itself, so the shelf shows the card and not the
- * table it was sitting on. If the browser cannot decode the file (some HEIC
- * images), we fall back to sending the original and let the server accept or
- * reject it.
+ * found — cropped and straightened to the card itself, so the shelf shows the
+ * card and not the table it was sitting on. The manager then gets a look at
+ * the result and can turn it a quarter at a time before it is saved. If the
+ * browser cannot decode the file (some HEIC images), we fall back to sending
+ * the original and let the server accept or reject it.
  */
-import { detectCardQuad, warpQuad } from './cardDetect.js';
-
-export interface PreparedPhoto {
-  blob: Blob;
-  width: number;
-  height: number;
-  /** true when the card's outline was found and the photo cropped to it */
-  cropped: boolean;
-}
+import { detectCardQuad, rotateQuarterTurns, warpQuad } from './cardDetect.js';
+import type { Warped } from './cardDetect.js';
 
 const MAX_EDGE = 1400;
 const QUALITY = 0.88;
 
-export async function preparePhoto(file: File): Promise<PreparedPhoto> {
+export interface LoadedPhoto {
+  /** the whole photo, downscaled */
+  full: Warped;
+  /** the card cut out and straightened, when its outline was found */
+  card: Warped | null;
+}
+
+export async function loadCardPhoto(file: File): Promise<LoadedPhoto> {
   if (!file.type.startsWith('image/')) throw new Error('Pick an image file');
 
-  const bitmap = await createImageBitmap(file);
+  // Phones store a sideways sensor image plus an EXIF turn; honour the turn.
+  const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
   try {
     const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
     const width = Math.max(1, Math.round(bitmap.width * scale));
@@ -35,52 +37,46 @@ export async function preparePhoto(file: File): Promise<PreparedPhoto> {
     canvas.height = height;
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('This browser cannot process images');
-
     ctx.imageSmoothingQuality = 'high';
     ctx.drawImage(bitmap, 0, 0, width, height);
+    const pixels = ctx.getImageData(0, 0, width, height);
+    const full: Warped = { width, height, data: pixels.data };
 
-    // Find the card and fit the photo to it. Best effort: a photo we cannot
-    // read keeps its original framing rather than failing the upload.
-    let out = canvas;
-    let cropped = false;
+    // Best effort: a photo we cannot read keeps its original framing.
+    let card: Warped | null = null;
     try {
-      const pixels = ctx.getImageData(0, 0, width, height);
       const found = detectCardQuad(pixels);
-      if (found) {
-        const warped = warpQuad(pixels, found.quad);
-        const crop = document.createElement('canvas');
-        crop.width = warped.width;
-        crop.height = warped.height;
-        const cropCtx = crop.getContext('2d');
-        if (cropCtx) {
-          cropCtx.putImageData(new ImageData(new Uint8ClampedArray(warped.data), warped.width, warped.height), 0, 0);
-          out = crop;
-          cropped = true;
-        }
-      }
+      if (found) card = warpQuad(pixels, found.quad);
     } catch {
-      /* no readable outline: keep the full photo */
+      /* no readable outline */
     }
-
-    const blob = await new Promise<Blob | null>((resolve) => out.toBlob(resolve, 'image/jpeg', QUALITY));
-    if (!blob) throw new Error('Could not process that image');
-    return { blob, width: out.width, height: out.height, cropped };
+    return { full, card };
   } finally {
     bitmap.close();
   }
 }
 
-/** Resize and crop when we can, otherwise hand back the original untouched. */
-export async function photoForUpload(file: File): Promise<{ file: File; width: number; height: number; cropped: boolean }> {
-  try {
-    const prepared = await preparePhoto(file);
-    return {
-      file: new File([prepared.blob], 'card.jpg', { type: 'image/jpeg' }),
-      width: prepared.width,
-      height: prepared.height,
-      cropped: prepared.cropped,
-    };
-  } catch {
-    return { file, width: 0, height: 0, cropped: false };
-  }
+/** The picture to save: the card (or whole photo), turned by quarter turns clockwise. */
+export function framed(photo: LoadedPhoto, useCard: boolean, turns: number): Warped {
+  return rotateQuarterTurns(useCard && photo.card ? photo.card : photo.full, turns);
+}
+
+function toCanvas(img: Warped): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('This browser cannot process images');
+  ctx.putImageData(new ImageData(new Uint8ClampedArray(img.data), img.width, img.height), 0, 0);
+  return canvas;
+}
+
+export function previewUrl(img: Warped): string {
+  return toCanvas(img).toDataURL('image/jpeg', 0.8);
+}
+
+export async function encodeForUpload(img: Warped): Promise<{ file: File; width: number; height: number }> {
+  const blob = await new Promise<Blob | null>((resolve) => toCanvas(img).toBlob(resolve, 'image/jpeg', QUALITY));
+  if (!blob) throw new Error('Could not process that image');
+  return { file: new File([blob], 'card.jpg', { type: 'image/jpeg' }), width: img.width, height: img.height };
 }

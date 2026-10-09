@@ -9,6 +9,7 @@ import type { FastifyInstance } from 'fastify';
 import { z } from 'zod';
 import { people, photos, seasonRowToStats, seasons, userCards } from '@cardball/db';
 import { requireUser } from '../auth.js';
+import { cardArtKey, loadCardArt } from '../cardArt.js';
 import { fileCardIntoCollection } from '../cardFiling.js';
 import { cardCareer } from '../cardStats.js';
 import { buildCard, validCardYears } from '../cards.js';
@@ -91,7 +92,8 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
     const q = parse(z.object({ personId: z.coerce.number().int(), cardYear: z.coerce.number().int() }), request.query);
     const person = await loadPerson(ctx, q.personId);
     const rows = await ctx.db.select().from(seasons).where(eq(seasons.personId, person.id));
-    return { card: buildCard(person, rows, q.cardYear) };
+    const art = await loadCardArt(ctx, [{ personId: person.id, cardYear: q.cardYear }]);
+    return { card: buildCard(person, rows, q.cardYear), artPhotoId: art.get(cardArtKey({ personId: person.id, cardYear: q.cardYear })) ?? null };
   });
 
   // ---- collection ----

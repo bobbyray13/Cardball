@@ -184,7 +184,7 @@ function CardPicker({ person }: { person: PersonSummary }) {
 
           {card ? (
             <motion.div key={card.cardYear} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid gap-4 sm:grid-cols-2">
-              <ZoomableCard target={{ card, photoId }} face="front" />
+              <ZoomableCard target={{ card, photoId: photoId ?? preview.data?.artPhotoId ?? null }} face="front" />
               <ZoomableCard target={{ card }} face="back" />
             </motion.div>
           ) : (

@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import type { SyntheticEvent } from 'react';
 import type { CardSnapshot, DraftRarity } from '@cardball/shared';
 import { activeHouseRules, hitMod, pitMod, sbMod, scoutingNotes, whipOf } from '@cardball/shared';
 import { formatIp } from '@cardball/engine';
@@ -81,6 +83,27 @@ export function BallCard({ card, photoId, rarity, tier, face = 'front', classNam
   );
 }
 
+/**
+ * The uploaded photo in the art window. A vertical card fills it; a
+ * horizontal card would lose its sides to a portrait crop, so it is shown
+ * whole over a blurred copy of itself.
+ */
+function CardPhoto({ photoId, alt }: { photoId: number; alt: string }) {
+  const [landscape, setLandscape] = useState(false);
+  const src = `/api/photos/${photoId}`;
+  const onLoad = (e: SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    setLandscape(img.naturalWidth > img.naturalHeight);
+  };
+  if (!landscape) return <img src={src} alt={alt} className="h-full w-full object-cover" loading="lazy" onLoad={onLoad} />;
+  return (
+    <>
+      <img src={src} alt="" aria-hidden className="absolute inset-0 h-full w-full scale-110 object-cover blur-md brightness-75" />
+      <img src={src} alt={alt} className="relative h-full w-full object-contain" onLoad={onLoad} />
+    </>
+  );
+}
+
 function CardFront({
   card,
   photoId,
@@ -110,7 +133,7 @@ function CardFront({
     <div className="flex h-full flex-col p-[3.2cqw]" style={{ background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})` }}>
       <div className="relative min-h-0 flex-1 overflow-hidden rounded-[2.4cqw] ring-[0.8cqw] ring-chalk/85">
         {photoId ? (
-          <img src={`/api/photos/${photoId}`} alt={`${card.name} card`} className="h-full w-full object-cover" loading="lazy" />
+          <CardPhoto photoId={photoId} alt={`${card.name} card`} />
         ) : (
           <CardArt name={card.name} role={role} colors={colors} />
         )}
