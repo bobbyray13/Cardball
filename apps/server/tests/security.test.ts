@@ -14,9 +14,12 @@ import type { Ctx } from '../src/context.js';
 import { env } from '../src/env.js';
 import { resetRateLimits } from '../src/rateLimit.js';
 
-const TEST_URL = env.databaseUrl;
+const BASE_URL = env.databaseUrl;
+// Its own database, like the drafts and tournaments suites, so the files can
+// bootstrap in parallel without truncating or migrating each other's tables.
+const DB_NAME = `${new URL(BASE_URL).pathname.slice(1)}_security`;
+const TEST_URL = BASE_URL.replace(/\/[^/]+$/, `/${DB_NAME}`);
 const ADMIN_URL = TEST_URL.replace(/\/[^/]+$/, '/postgres');
-const DB_NAME = new URL(TEST_URL).pathname.slice(1);
 const THROWAWAY_DB = DB_NAME.startsWith('cardball_test_');
 
 let app: Awaited<ReturnType<typeof buildApp>>;
