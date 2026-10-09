@@ -404,6 +404,39 @@ describe('tournaments', () => {
     expect(done.log.some((l) => /Rival wins by forfeit/.test(l.text))).toBe(true);
   });
 
+  it('runs a rematch with the same teams and a fresh bracket, without a second draft', async () => {
+    const before = parse<{ tournament: TournamentView }>(await call('GET', `/api/tournaments/${tournamentId}`, { token: tokens[0] })).tournament;
+    const teams = before.seats.map((s) => s.teamId);
+
+    expect((await call('POST', `/api/tournaments/${tournamentId}/rematch`, { token: tokens[1] })).statusCode).toBe(403);
+    const res = await call('POST', `/api/tournaments/${tournamentId}/rematch`, { token: tokens[0] });
+    expect(res.statusCode, res.body).toBe(200);
+    const rematch = parse<{ tournament: TournamentView }>(res).tournament;
+    expect(rematch.id).not.toBe(tournamentId);
+    expect(rematch.name).toBe(`${before.name} (rematch)`);
+    expect(rematch.status).toBe('lobby');
+    expect(rematch.matches).toEqual([]);
+    expect(rematch.championSeat).toBeNull();
+    expect(rematch.log.at(-1)!.text).toMatch(/rematch of/i);
+    // The same managers in the same seats, with the same teams.
+    expect(rematch.seats.map((s) => s.name)).toEqual(before.seats.map((s) => s.name));
+    expect(rematch.seats.map((s) => s.teamId)).toEqual(teams);
+
+    // Starting it skips the draft entirely: the bracket is scheduled at once
+    // and the teams on the field are the first run's.
+    const started = await call('POST', `/api/tournaments/${rematch.id}/start`, { token: tokens[0] });
+    expect(started.statusCode, started.body).toBe(200);
+    expect(parse<{ tournament: TournamentView }>(started).tournament.matches).toHaveLength(3);
+
+    const played = parse<{ tournament: TournamentView }>(await call('GET', `/api/tournaments/${rematch.id}`, { token: tokens[1] })).tournament;
+    expect(played.status).toBe('finished');
+    expect(played.championSeat).not.toBeNull();
+    expect(played.matches.every((m) => m.gameId !== null && m.winnerSeat !== null)).toBe(true);
+    expect(played.seats.map((s) => s.teamId)).toEqual(teams);
+    // Its games belong to the rematch, and it owns no draft room of its own.
+    expect(played.draftId).toBeNull();
+  });
+
   it('closes on the host and takes the draft room with it', async () => {
     const before = parse<{ tournament: TournamentView }>(await call('GET', `/api/tournaments/${tournamentId}`, { token: tokens[0] })).tournament;
     const draftId = before.draftId!;

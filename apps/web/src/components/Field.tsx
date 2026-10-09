@@ -7,13 +7,15 @@ import {
   batterDue,
   batterPitchMod,
   cardSeasons,
+  fatigueInnings,
   fieldingRating,
   fmtMod,
   formatIp,
   getDefense,
   getOffense,
   lineFor,
-  pitcherPitchMod,
+  pitcherFatigue,
+  pitcherTotalMod,
   runnerSbMod,
   runnersOn,
 } from '@cardball/engine';
@@ -62,28 +64,39 @@ const VIEW_H = 75;
 const pctY = (y: number) => (y / VIEW_H) * 100;
 
 /** Home plate, second base, and the two bases on the foul lines. */
-const HOME_PLATE = { x: 50, y: 68 };
+const HOME_PLATE = { x: 50, y: 64 };
 const BASE_SPOTS: Record<1 | 2 | 3, { x: number; y: number }> = {
-  1: { x: 70, y: 48 },
-  2: { x: 50, y: 28 },
-  3: { x: 30, y: 48 },
+  1: { x: 70, y: 44 },
+  2: { x: 50, y: 24 },
+  3: { x: 30, y: 44 },
+};
+
+/**
+ * Where a runner stands while he holds a base. Nudged a few units off the base
+ * spot along the basepath toward home, so the white base and its glow ring
+ * stay visible under the chip.
+ */
+const RUNNER_SPOTS: Record<1 | 2 | 3, { x: number; y: number }> = {
+  1: { x: 66.5, y: 40.5 },
+  2: { x: 50, y: 30.5 },
+  3: { x: 33.5, y: 40.5 },
 };
 
 /** Where each defender stands: on the infield skin, outfielders in the grass. */
 const FIELDER_SPOTS: Record<string, { x: number; y: number }> = {
-  C: { x: 50, y: 74 },
-  '1B': { x: 66, y: 47 },
-  '2B': { x: 58, y: 42 },
-  '3B': { x: 34, y: 47 },
-  SS: { x: 42, y: 42 },
-  LF: { x: 26, y: 26 },
-  CF: { x: 50, y: 16 },
-  RF: { x: 74, y: 26 },
-  P: { x: 50, y: 49 },
+  C: { x: 50, y: 70 },
+  '1B': { x: 66, y: 43 },
+  '2B': { x: 59, y: 36 },
+  '3B': { x: 34, y: 43 },
+  SS: { x: 41, y: 36 },
+  LF: { x: 26, y: 22 },
+  CF: { x: 50, y: 12 },
+  RF: { x: 74, y: 22 },
+  P: { x: 50, y: 45 },
 };
 
 /** Where the batter waits, in the left-hand batter's box beside the plate. */
-const BATTER_BOX = { x: 42, y: 69 };
+const BATTER_BOX = { x: 42, y: 65 };
 
 export type ZoomPlayer = (side: Side, player: EnginePlayer) => void;
 
@@ -159,7 +172,7 @@ export const Field = memo(function Field({ state, photos, onZoom }: { state: Gam
 
         {/* runners, sliding between bases as plays resolve */}
         {onBase.map((runner) => {
-          const spot = BASE_SPOTS[runner.base as 1 | 2 | 3];
+          const spot = RUNNER_SPOTS[runner.base as 1 | 2 | 3];
           if (!spot) return null;
           return (
             <Chip
@@ -279,7 +292,10 @@ function MatchupStrip({
   const batterSeason = batter ? seasonNow(batter, offense.yearRoll, rules) : null;
   const batterMod = batterSeason ? batterPitchMod(batterSeason, rules) : null;
   const pitcherSeason = pitcher ? seasonNow(pitcher, defense.yearRoll, rules) : null;
-  const pitcherMod = pitcherSeason ? pitcherPitchMod(pitcherSeason, rules) : null;
+  // Season PIT plus what the innings have cost him: the reading the dice use.
+  const pitcherMod = pitcher ? pitcherTotalMod(state, pitcher) : null;
+  const pitcherFatigueValue = pitcher ? pitcherFatigue(state, pitcher) : 0;
+  const pitcherFatiguedInnings = pitcher ? fatigueInnings(state, pitcher) : 0;
   const batterToday = batter ? lineFor(state, offense.side, batter.id).batting : null;
   const pitcherToday = pitcher ? lineFor(state, defense.side, pitcher.id).pitching : null;
   const pitching = pitcherSeason?.pitching ?? null;
@@ -311,6 +327,8 @@ function MatchupStrip({
         name={pitcher?.name ?? '—'}
         sub={pitcher ? `${pitcher.pitchingRole ?? 'pitcher'} · ${pitcherSeason?.year ?? '—'} season` : ''}
         mod={pitcherMod ? `PIT ${fmtMod(pitcherMod.mod)}` : ''}
+        fatigue={pitcherFatigueValue !== 0 ? `fatigue ${fmtMod(pitcherFatigueValue)}` : undefined}
+        fatigueTitle={pitcherFatiguedInnings > 0 ? `${pitcherFatiguedInnings} fatigued inning${pitcherFatiguedInnings === 1 ? '' : 's'}` : undefined}
         photoId={pitcher ? photos[pitcher.id] : undefined}
         accent="var(--color-navy)"
         stats={
@@ -334,6 +352,8 @@ function MatchupSide({
   name,
   sub,
   mod,
+  fatigue,
+  fatigueTitle,
   photoId,
   accent,
   stats,
@@ -344,6 +364,9 @@ function MatchupSide({
   name: string;
   sub: string;
   mod: string;
+  /** a second, amber badge for a pitcher working on tired legs */
+  fatigue?: string | undefined;
+  fatigueTitle?: string | undefined;
   photoId?: number | null | undefined;
   accent: string;
   /** the season the dice are reading, as [label, value] pairs */
@@ -375,9 +398,21 @@ function MatchupSide({
           </button>
           <p className="truncate font-mono text-[11px] text-chalk/50">{sub}</p>
         </div>
-        {mod ? (
-          <span className="ml-auto shrink-0 rounded-full px-2 py-0.5 font-mono text-xs font-bold text-chalk" style={{ background: accent }}>
-            {mod}
+        {mod || fatigue ? (
+          <span className="ml-auto flex shrink-0 items-center gap-1.5">
+            {mod ? (
+              <span className="rounded-full px-2 py-0.5 font-mono text-xs font-bold text-chalk" style={{ background: accent }}>
+                {mod}
+              </span>
+            ) : null}
+            {fatigue ? (
+              <span
+                title={fatigueTitle}
+                className="rounded-full bg-amber-400/20 px-2 py-0.5 font-mono text-[11px] font-bold text-amber-300"
+              >
+                {fatigue}
+              </span>
+            ) : null}
           </span>
         ) : null}
       </div>
@@ -426,36 +461,36 @@ function FieldArt({ occupied }: { occupied: (1 | 2 | 3)[] }) {
       <rect width="100" height="75" fill="url(#mat-grass)" />
       <rect width="100" height="75" fill="url(#mat-mow)" />
 
-      {/* outfield wall, behind the deepest grass */}
-      <path d="M0 32 Q50 4 100 32 L100 0 L0 0 Z" fill="#0b2f21" opacity="0.85" />
-      <path d="M0 32 Q50 4 100 32" fill="none" stroke="#f6f2e6" strokeOpacity="0.5" strokeWidth="0.5" />
+      {/* outfield wall, pushed back behind the foul poles so they sit in front */}
+      <path d="M0 24 Q50 -2 100 24 L100 0 L0 0 Z" fill="#0b2f21" opacity="0.85" />
+      <path d="M0 24 Q50 -2 100 24" fill="none" stroke="#f6f2e6" strokeOpacity="0.5" strokeWidth="0.5" />
 
       {/* the infield skin: the area inside the foul lines, rounded behind second */}
       <path
-        d="M50 68 L78 40 Q74 24 50 22 Q26 24 22 40 Z"
+        d="M50 64 L78 36 Q74 20 50 18 Q26 20 22 36 Z"
         fill="#b4834f"
         opacity="0.95"
       />
 
       {/* the grass diamond between the bases; its edges ARE the basepaths */}
-      <path d="M50 68 L70 48 L50 28 L30 48 Z" fill="#1a6344" />
+      <path d="M50 64 L70 44 L50 24 L30 44 Z" fill="#1a6344" />
 
       {/* foul lines run from the plate through first and third into the outfield */}
-      <path d="M50 68 L94 24" stroke="#f6f2e6" strokeOpacity="0.75" strokeWidth="0.4" />
-      <path d="M50 68 L6 24" stroke="#f6f2e6" strokeOpacity="0.75" strokeWidth="0.4" />
+      <path d="M50 64 L94 20" stroke="#f6f2e6" strokeOpacity="0.75" strokeWidth="0.4" />
+      <path d="M50 64 L6 20" stroke="#f6f2e6" strokeOpacity="0.75" strokeWidth="0.4" />
       {/* the basepaths themselves, chalked over the grass diamond */}
-      <path d="M50 68 L70 48 L50 28 L30 48 Z" fill="none" stroke="#f6f2e6" strokeOpacity="0.45" strokeWidth="0.3" />
+      <path d="M50 64 L70 44 L50 24 L30 44 Z" fill="none" stroke="#f6f2e6" strokeOpacity="0.45" strokeWidth="0.3" />
 
       {/* the mound */}
-      <ellipse cx="50" cy="49" rx="4.5" ry="2.4" fill="#c08c56" />
-      <ellipse cx="50" cy="49" rx="4.5" ry="2.4" fill="none" stroke="#f6f2e6" strokeOpacity="0.25" strokeWidth="0.25" />
+      <ellipse cx="50" cy="45" rx="4.5" ry="2.4" fill="#c08c56" />
+      <ellipse cx="50" cy="45" rx="4.5" ry="2.4" fill="none" stroke="#f6f2e6" strokeOpacity="0.25" strokeWidth="0.25" />
 
       {/* bases: first and third on the foul lines, second on the centre line */}
       {(
         [
-          [70, 48],
-          [50, 28],
-          [30, 48],
+          [70, 44],
+          [50, 24],
+          [30, 44],
         ] as const
       ).map(([x, y], i) => (
         <rect key={i} x={x - 1.7} y={y - 1.7} width="3.4" height="3.4" fill="#f6f2e6" transform={`rotate(45 ${x} ${y})`} />
@@ -466,7 +501,7 @@ function FieldArt({ occupied }: { occupied: (1 | 2 | 3)[] }) {
         return <circle key={base} cx={spot.x} cy={spot.y} r="3.6" fill="none" stroke="#d8a83c" strokeWidth="0.7" opacity="0.9" />;
       })}
       {/* home plate */}
-      <path d="M48.6 66.6 L51.4 66.6 L51.4 68.6 L50 69.6 L48.6 68.6 Z" fill="#f6f2e6" />
+      <path d="M48.6 62.6 L51.4 62.6 L51.4 64.6 L50 65.6 L48.6 64.6 Z" fill="#f6f2e6" />
     </svg>
   );
 }

@@ -43,7 +43,8 @@ export function TournamentsPage() {
   const [packSize, setPackSize] = useState(6);
   const [themes, setThemes] = useState<PackThemeId[]>(['sluggers', 'aces', 'speedsters']);
   const [maxRare, setMaxRare] = useState(0);
-  const [maxChase, setMaxChase] = useState(0);
+  const [maxStar, setMaxStar] = useState(0);
+  const [maxMythic, setMaxMythic] = useState(0);
 
   const chosen = chosenThemes(themes, yearFrom, yearTo);
 
@@ -73,7 +74,7 @@ export function TournamentsPage() {
       yearFrom,
       yearTo,
       themes: chosen,
-      rarityCaps: maxRare > 0 || maxChase > 0 ? { rare: maxRare, chase: maxChase } : null,
+      rarityCaps: maxRare > 0 || maxStar > 0 || maxMythic > 0 ? { rare: maxRare, star: maxStar, mythic: maxMythic } : null,
     };
     const { tournament } = await api.createTournament({ name, format, seats, regulationInnings: innings, autoSimulate, draft });
     navigate(`/tournaments/${tournament.id}`);
@@ -208,11 +209,14 @@ export function TournamentsPage() {
 
             <RarityCapFields
               rare={maxRare}
-              chase={maxChase}
+              star={maxStar}
+              mythic={maxMythic}
               onRareChange={setMaxRare}
-              onChaseChange={setMaxChase}
+              onStarChange={setMaxStar}
+              onMythicChange={setMaxMythic}
               maxRare={DRAFT_LIMITS.maxRare}
-              maxChase={DRAFT_LIMITS.maxChase}
+              maxStar={DRAFT_LIMITS.maxStar}
+              maxMythic={DRAFT_LIMITS.maxMythic}
             />
 
             <label className="flex items-center gap-2 text-sm text-chalk/70">

@@ -4,7 +4,16 @@ import { DRAFT_LIMITS, TOURNAMENT_LIMITS } from '@cardball/shared';
 import { requireUser } from '../auth.js';
 import type { Ctx } from '../context.js';
 import { idParam, parse } from '../http.js';
-import { createTournament, deleteTournament, getTournament, joinTournament, listTournaments, simulateTournament, startTournament } from '../tournamentService.js';
+import {
+  createTournament,
+  deleteTournament,
+  getTournament,
+  joinTournament,
+  listTournaments,
+  rematchTournament,
+  simulateTournament,
+  startTournament,
+} from '../tournamentService.js';
 
 const createSchema = z.object({
   name: z.string().trim().min(2).max(40),
@@ -18,7 +27,14 @@ const createSchema = z.object({
     yearFrom: z.number().int().min(DRAFT_LIMITS.minYear).max(DRAFT_LIMITS.maxYear),
     yearTo: z.number().int().min(DRAFT_LIMITS.minYear).max(DRAFT_LIMITS.maxYear),
     themes: z.array(z.string()).default([]),
-    rarityCaps: z.object({ rare: z.number().int().min(0).max(DRAFT_LIMITS.maxRare), chase: z.number().int().min(0).max(DRAFT_LIMITS.maxChase) }).nullable().default(null),
+    rarityCaps: z
+      .object({
+        rare: z.number().int().min(0).max(DRAFT_LIMITS.maxRare),
+        star: z.number().int().min(0).max(DRAFT_LIMITS.maxStar),
+        mythic: z.number().int().min(0).max(DRAFT_LIMITS.maxMythic),
+      })
+      .nullable()
+      .default(null),
   }),
 });
 
@@ -48,6 +64,11 @@ export function tournamentRoutes(app: FastifyInstance, ctx: Ctx): void {
   app.post('/api/tournaments/:id/simulate', async (request) => {
     const user = requireUser(request);
     return { tournament: await simulateTournament(ctx, user, idParam(request.params)) };
+  });
+
+  app.post('/api/tournaments/:id/rematch', async (request) => {
+    const user = requireUser(request);
+    return { tournament: await rematchTournament(ctx, user, idParam(request.params)) };
   });
 
   app.delete('/api/tournaments/:id', async (request) => {

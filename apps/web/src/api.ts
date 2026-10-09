@@ -12,6 +12,7 @@ import type {
   ChatMessage,
   CollectionCard,
   DraftListItem,
+  DraftTeamView,
   DraftView,
   GameAction,
   GameListItem,
@@ -43,7 +44,8 @@ export interface NewDraft {
   yearTo: number;
   playableOnly: boolean;
   themes: PackThemeId[];
-  rarityCaps: { rare: number; chase: number } | null;
+  rarityCaps: { rare: number; star: number; mythic: number } | null;
+  regulationInnings: number;
 }
 
 /** What the host fills in to open a tournament. */
@@ -59,7 +61,7 @@ export interface NewTournament {
     yearFrom: number;
     yearTo: number;
     themes: PackThemeId[];
-    rarityCaps: { rare: number; chase: number } | null;
+    rarityCaps: { rare: number; star: number; mythic: number } | null;
   };
 }
 
@@ -204,6 +206,19 @@ export const api = {
   startDraft: (id: number) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/start`),
   openDraftPack: (id: number) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/open`),
   pickDraftCard: (id: number, cardId: string) => request<{ draft: DraftView }>('POST', `/api/drafts/${id}/pick`, { cardId }),
+  /** The assembly screen: this seat's drafted cards with full stats, plus a suggested lineup. */
+  draftTeam: (id: number) => request<{ team: DraftTeamView }>('GET', `/api/drafts/${id}/team`),
+  /** Lock in this seat's lineup for the series. */
+  setDraftLineup: (id: number, lineup: SavedLineup) =>
+    request<{ draft: DraftView }>('POST', `/api/drafts/${id}/lineup`, lineup),
+  /** Deal the series a new game with the same drafted teams. */
+  rematchDraft: (id: number) => request<{ draft: DraftView; gameId: number }>('POST', `/api/drafts/${id}/rematch`),
+  /** The winner of a draft game files one card from their team into their collection. */
+  keepDraftCard: (id: number, gameId: number, cardId: string) =>
+    request<{ draft: DraftView }>('POST', `/api/drafts/${id}/keep-card`, { gameId, cardId }),
+  /** The winner of a draft game picks the wrapper of their bonus pack. */
+  chooseDraftPack: (id: number, gameId: number, themeId: PackThemeId) =>
+    request<{ draft: DraftView }>('POST', `/api/drafts/${id}/choose-pack`, { gameId, themeId }),
   deleteDraft: (id: number) => request<{ ok: true }>('DELETE', `/api/drafts/${id}`),
 
   // ---- tournaments ----
@@ -213,6 +228,8 @@ export const api = {
   joinTournament: (id: number) => request<{ tournament: TournamentView }>('POST', `/api/tournaments/${id}/join`),
   startTournament: (id: number) => request<{ tournament: TournamentView }>('POST', `/api/tournaments/${id}/start`),
   simulateTournament: (id: number) => request<{ tournament: TournamentView }>('POST', `/api/tournaments/${id}/simulate`),
+  /** Run the same tournament again with the same drafted teams. */
+  rematchTournament: (id: number) => request<{ tournament: TournamentView }>('POST', `/api/tournaments/${id}/rematch`),
   deleteTournament: (id: number) => request<{ ok: true }>('DELETE', `/api/tournaments/${id}`),
 
   // ---- league settings ----

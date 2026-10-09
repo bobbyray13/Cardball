@@ -192,26 +192,32 @@ export function PackThemePicker({
 }
 
 /**
- * How many rare and chase cards one manager may hold. Zero is "no cap", which
- * the rooms send as a null rarityCaps rather than a pair of zeroes.
+ * How many rare, star, and mythic cards one manager may hold. Zero is "no cap",
+ * which the rooms send as a null rarityCaps rather than a row of zeroes.
  */
 export function RarityCapFields({
   rare,
-  chase,
+  star,
+  mythic,
   onRareChange,
-  onChaseChange,
+  onStarChange,
+  onMythicChange,
   maxRare,
-  maxChase,
+  maxStar,
+  maxMythic,
 }: {
   rare: number;
-  chase: number;
+  star: number;
+  mythic: number;
   onRareChange: (value: number) => void;
-  onChaseChange: (value: number) => void;
+  onStarChange: (value: number) => void;
+  onMythicChange: (value: number) => void;
   maxRare: number;
-  maxChase: number;
+  maxStar: number;
+  maxMythic: number;
 }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-3 gap-3">
       <Field label="Most rare each (0 = no cap)">
         <input
           name="maxRare"
@@ -223,15 +229,26 @@ export function RarityCapFields({
           onChange={(e) => onRareChange(Number(e.target.value))}
         />
       </Field>
-      <Field label="Most chase each (0 = no cap)">
+      <Field label="Most star each (0 = no cap)">
         <input
-          name="maxChase"
+          name="maxStar"
           type="number"
           className={inputClass}
           min={0}
-          max={maxChase}
-          value={chase}
-          onChange={(e) => onChaseChange(Number(e.target.value))}
+          max={maxStar}
+          value={star}
+          onChange={(e) => onStarChange(Number(e.target.value))}
+        />
+      </Field>
+      <Field label="Most mythic each (0 = no cap)">
+        <input
+          name="maxMythic"
+          type="number"
+          className={inputClass}
+          min={0}
+          max={maxMythic}
+          value={mythic}
+          onChange={(e) => onMythicChange(Number(e.target.value))}
         />
       </Field>
     </div>

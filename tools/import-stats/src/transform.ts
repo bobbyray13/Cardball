@@ -127,6 +127,15 @@ function parsePitching(text: string): PitchingStint[] {
     ['playerID', 'yearID', 'stint', 'teamID', 'G', 'IPouts', 'ER', 'BFP'] as const,
     'Pitching.csv',
   );
+  // The counting stats every Lahman release carries. Read softly, so an
+  // unusual mirror missing one column imports zeros instead of failing.
+  const at = (name: string) => table.header.indexOf(name);
+  const cSo = at('SO');
+  const cBb = at('BB');
+  const cH = at('H');
+  const cW = at('W');
+  const cL = at('L');
+  const cSv = at('SV');
   const stints: PitchingStint[] = [];
   for (const row of table.rows) {
     const playerId = cell(row, c.playerID).trim();
@@ -141,6 +150,12 @@ function parsePitching(text: string): PitchingStint[] {
       ipOuts: num(cell(row, c.IPouts)),
       er: num(cell(row, c.ER)),
       bf: num(cell(row, c.BFP)),
+      so: cSo >= 0 ? num(cell(row, cSo)) : 0,
+      bb: cBb >= 0 ? num(cell(row, cBb)) : 0,
+      h: cH >= 0 ? num(cell(row, cH)) : 0,
+      w: cW >= 0 ? num(cell(row, cW)) : 0,
+      l: cL >= 0 ? num(cell(row, cL)) : 0,
+      sv: cSv >= 0 ? num(cell(row, cSv)) : 0,
     });
   }
   return stints;
@@ -484,6 +499,12 @@ export function buildDataset(files: Record<string, string>, options: BuildOption
       pitchIpOuts: entry.pitching.ipOuts,
       pitchEra: entry.pitching.era,
       pitchBf: entry.pitching.bf,
+      pitchSo: entry.pitching.so,
+      pitchBb: entry.pitching.bb,
+      pitchH: entry.pitching.h,
+      pitchW: entry.pitching.w,
+      pitchL: entry.pitching.l,
+      pitchSv: entry.pitching.sv,
       primaryPosition,
       positionsPlayed,
     };

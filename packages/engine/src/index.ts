@@ -4,9 +4,10 @@ export * from './rng.js';
 export { createGame, validateTeamSetup, cardCanBat, cardCanPitch } from './create.js';
 export { applyAction, controlsSide, sidesFor, requiredSide, waitingOn } from './apply.js';
 export type { ApplyResult } from './apply.js';
-export { botAction } from './bot.js';
+export { botAction, botOffClockAction } from './bot.js';
 export { autoPlay } from './sim.js';
 export { canSteal } from './steal.js';
+export { canSubstituteNow } from './subs.js';
 export {
   OUT_OF_POSITION_RATING,
   activePitcher,
@@ -18,6 +19,7 @@ export {
   canEnterAsPitcher,
   cardSeasons,
   contactAdvantage,
+  fatigueInnings,
   fieldingRating,
   fmtMod,
   formatIp,
@@ -27,19 +29,19 @@ export {
   getPlayerTeam,
   getTeam,
   isCloserInning,
-  isRelieverOnlyInning,
-  isSeasonInjured,
   leadRunner,
   outsRemaining,
-  pitcherCap,
+  pitcherFatigue,
   pitcherLegalOnMound,
   pitcherPitchMod,
+  pitcherTotalMod,
   playerById,
+  resolveSeason,
   roleForEnteringPitcher,
   runnerSbMod,
   runnersOn,
   seasonForPlayer,
   sideOfPlayer,
 } from './queries.js';
-export { benchHitters } from './flow.js';
+export { benchHitters, recordAchievement } from './flow.js';
 export { collectionLines, lineFor } from './box.js';

@@ -23,6 +23,12 @@ export interface MergedPitching {
   er: number;
   bf: number;
   era: number | null;
+  so: number;
+  bb: number;
+  h: number;
+  w: number;
+  l: number;
+  sv: number;
 }
 
 /** Batting average, or null when the season has no official at-bats. */
@@ -94,15 +100,27 @@ export function mergePitching(stints: readonly PitchingStint[]): MergedPitching 
   let ipOuts = 0;
   let er = 0;
   let bf = 0;
+  let so = 0;
+  let bb = 0;
+  let h = 0;
+  let w = 0;
+  let l = 0;
+  let sv = 0;
 
   for (const stint of stints) {
     games += stint.games;
     ipOuts += stint.ipOuts;
     er += stint.er;
     bf += stint.bf;
+    so += stint.so;
+    bb += stint.bb;
+    h += stint.h;
+    w += stint.w;
+    l += stint.l;
+    sv += stint.sv;
   }
 
-  return { games, ipOuts, er, bf, era: earnedRunAverage(er, ipOuts) };
+  return { games, ipOuts, er, bf, era: earnedRunAverage(er, ipOuts), so, bb, h, w, l, sv };
 }
 
 /** Sums every fielding stint the player had at one position in one season. */

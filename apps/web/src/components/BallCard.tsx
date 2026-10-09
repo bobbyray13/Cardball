@@ -1,5 +1,5 @@
 import type { CardSnapshot, DraftRarity } from '@cardball/shared';
-import { activeHouseRules, hitMod, pitMod, sbMod } from '@cardball/shared';
+import { activeHouseRules, hitMod, pitMod, sbMod, scoutingNotes, whipOf } from '@cardball/shared';
 import { formatIp } from '@cardball/engine';
 
 /**
@@ -21,11 +21,23 @@ interface BallCardProps {
   photoId?: number | null;
   /** the collection entry's rarity label ("Refractor", "Rookie"), when it has one */
   rarity?: string | null;
-  /** stat-based tier; rare and chase cards get a foil finish on the front */
+  /** stat-based tier; rare and up get a foil finish on the front */
   tier?: DraftRarity | null;
   face?: CardFace;
   className?: string;
 }
+
+/** The ring a card wears on its edge, one step per printed tier. */
+const RING: Record<DraftRarity, string> = {
+  common: 'ring-1 ring-black/25',
+  uncommon: 'ring-1 ring-emerald-200/25',
+  rare: 'ring-2 ring-sky-300/50',
+  star: 'ring-2 ring-gold/80',
+  mythic: 'ring-2 ring-fuchsia-400/80',
+};
+
+/** The foil finish on the front, one per tier; common and uncommon stay plain. */
+const FOIL: Partial<Record<DraftRarity, string>> = { rare: 'foil-rare', star: 'foil-star', mythic: 'foil-mythic' };
 
 /** Deterministic team colors, so the same franchise always looks the same. */
 export function teamColors(label: string): { primary: string; secondary: string; accent: string } {
@@ -45,18 +57,18 @@ const fmtMod = (mod: number) => (mod > 0 ? `+${mod}` : String(mod));
 
 export function BallCard({ card, photoId, rarity, tier, face = 'front', className = '' }: BallCardProps) {
   const colors = teamColors(card.teamLabel);
-  const ring = tier === 'chase' ? 'ring-2 ring-gold/80' : tier === 'rare' ? 'ring-2 ring-sky-300/50' : 'ring-1 ring-black/25';
+  const ring = RING[tier ?? 'common'];
   const shell = `@container relative aspect-[5/7] w-full overflow-hidden rounded-[var(--radius-card)] card-stock text-ink shadow-[0_18px_40px_-18px_rgba(0,0,0,0.8)] select-none ${ring}`;
 
   return (
     <div className={`${shell} ${className}`} style={{ containerType: 'inline-size' }}>
       {face === 'front' ? (
-        <CardFront card={card} photoId={photoId} rarity={rarity} colors={colors} />
+        <CardFront card={card} photoId={photoId} rarity={rarity} tier={tier ?? null} colors={colors} />
       ) : (
-        <CardBack card={card} colors={colors} />
+        <CardBack card={card} colors={colors} tier={tier ?? null} />
       )}
-      {face === 'front' && (tier === 'rare' || tier === 'chase') ? (
-        <div aria-hidden className={`pointer-events-none absolute inset-0 ${tier === 'chase' ? 'foil-chase' : 'foil-rare'}`} />
+      {face === 'front' && tier && FOIL[tier] ? (
+        <div aria-hidden className={`pointer-events-none absolute inset-0 ${FOIL[tier]}`} />
       ) : null}
     </div>
   );
@@ -66,11 +78,13 @@ function CardFront({
   card,
   photoId,
   rarity,
+  tier,
   colors,
 }: {
   card: CardSnapshot;
   photoId?: number | null;
   rarity?: string | null;
+  tier: DraftRarity | null;
   colors: { primary: string; secondary: string; accent: string };
 }) {
   return (
@@ -95,6 +109,16 @@ function CardFront({
             style={{ background: 'var(--color-gold)' }}
           >
             {rarity}
+          </span>
+        ) : null}
+        {/* The mark the two top tiers wear on their face, matching their badge. */}
+        {tier === 'star' || tier === 'mythic' ? (
+          <span
+            aria-hidden
+            className="absolute top-[2cqw] left-[2cqw] z-10 grid place-items-center rounded-full px-[1.8cqw] py-[0.6cqw] text-[3cqw] leading-none font-bold text-ink"
+            style={{ background: tier === 'mythic' ? 'linear-gradient(120deg,#e79ab4,#8a5fc4)' : 'var(--color-gold)' }}
+          >
+            {tier === 'mythic' ? '✦' : '★'}
           </span>
         ) : null}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-black/45 to-transparent" />
@@ -189,11 +213,22 @@ function ProceduralArt({ name, colors }: { name: string; colors: { primary: stri
   );
 }
 
-function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: string; secondary: string } }) {
+/**
+ * The card back: the stat window the dice actually read.
+ *
+ * A card with a pitcher class wears the pitching back (YR/ERA/IP/K/BB/WHIP/W/L,
+ * plus SV for a reliever) even when it could also bat; everyone else wears the
+ * hitting back (YR/AVG/HIT/AB/HR/RBI/SB). Star and Mythic cards add a scouting
+ * blurb drawn from their own seasons, the way a real card carries trivia.
+ */
+function CardBack({ card, colors, tier }: { card: CardSnapshot; colors: { primary: string; secondary: string }; tier: DraftRarity | null }) {
   const rows = card.seasons;
   // The back prints the modifiers the dice will actually use, so it reads the
   // commissioner's current house rules rather than a hardcoded band.
   const rules = activeHouseRules();
+  const pitchingBack = card.pitcherClass !== null;
+  const reliever = card.pitcherClass === 'RP';
+  const notes = tier === 'star' || tier === 'mythic' ? scoutingNotes(card) : [];
 
   return (
     <div className="flex h-full flex-col">
@@ -213,42 +248,72 @@ function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: str
             <thead>
               <tr className="text-ink-soft">
                 <th className="text-left font-sans font-semibold">YR</th>
-                <th className="text-right font-sans font-semibold">AVG</th>
-                <th className="text-right font-sans font-semibold">HIT</th>
-                <th className="text-right font-sans font-semibold">HR</th>
-                <th className="text-right font-sans font-semibold">RBI</th>
-                <th className="text-right font-sans font-semibold">SB</th>
-                <th className="text-right font-sans font-semibold">ERA</th>
+                {pitchingBack ? (
+                  <>
+                    <th className="text-right font-sans font-semibold">ERA</th>
+                    <th className="text-right font-sans font-semibold">IP</th>
+                    <th className="text-right font-sans font-semibold">K</th>
+                    <th className="text-right font-sans font-semibold">BB</th>
+                    <th className="text-right font-sans font-semibold">WHIP</th>
+                    <th className="text-right font-sans font-semibold">W</th>
+                    <th className="text-right font-sans font-semibold">L</th>
+                    {reliever ? <th className="text-right font-sans font-semibold">SV</th> : null}
+                  </>
+                ) : (
+                  <>
+                    <th className="text-right font-sans font-semibold">AVG</th>
+                    <th className="text-right font-sans font-semibold">HIT</th>
+                    <th className="text-right font-sans font-semibold">AB</th>
+                    <th className="text-right font-sans font-semibold">HR</th>
+                    <th className="text-right font-sans font-semibold">RBI</th>
+                    <th className="text-right font-sans font-semibold">SB</th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody>
               {rows.map((s) => (
                 <tr key={s.year} className="border-t border-ink/10">
                   <td className="py-[0.5cqw] text-left">{String(s.year).slice(2)}</td>
-                  <td className="text-right">{fmtAvg(s.avg)}</td>
-                  <td className="text-right font-bold" style={{ color: 'var(--color-crimson)' }}>
-                    {s.ab >= rules.fullGameAb ? fmtMod(hitMod(s.avg, rules.hitBands)) : '·'}
-                  </td>
-                  <td className="text-right">{s.homeRuns}</td>
-                  <td className="text-right">{s.rbi}</td>
-                  <td className="text-right">
-                    {s.sb}
-                    <span className="pl-[0.8cqw] font-bold" style={{ color: 'var(--color-navy)' }}>
-                      {fmtMod(sbMod(s.sb, rules.sbBands))}
-                    </span>
-                  </td>
-                  <td className="text-right">
-                    {s.pitching ? (
-                      <>
-                        {s.pitching.era === null ? '—' : s.pitching.era.toFixed(2)}
+                  {pitchingBack ? (
+                    <>
+                      <td className="text-right">
+                        {s.pitching ? (
+                          <>
+                            {s.pitching.era === null ? '—' : s.pitching.era.toFixed(2)}
+                            <span className="pl-[0.8cqw] font-bold" style={{ color: 'var(--color-navy)' }}>
+                              {fmtMod(pitMod(s.pitching.era, rules.pitBands))}
+                            </span>
+                          </>
+                        ) : (
+                          '—'
+                        )}
+                      </td>
+                      <td className="text-right">{s.pitching ? formatIp(s.pitching.ipOuts) : '—'}</td>
+                      <td className="text-right">{s.pitching?.so ?? 0}</td>
+                      <td className="text-right">{s.pitching?.bb ?? 0}</td>
+                      <td className="text-right">{s.pitching ? whipOf(s) : '—'}</td>
+                      <td className="text-right">{s.pitching?.w ?? 0}</td>
+                      <td className="text-right">{s.pitching?.l ?? 0}</td>
+                      {reliever ? <td className="text-right">{s.pitching?.sv ?? 0}</td> : null}
+                    </>
+                  ) : (
+                    <>
+                      <td className="text-right">{fmtAvg(s.avg)}</td>
+                      <td className="text-right font-bold" style={{ color: 'var(--color-crimson)' }}>
+                        {s.ab >= rules.fullGameAb ? fmtMod(hitMod(s.avg, rules.hitBands)) : '·'}
+                      </td>
+                      <td className="text-right">{s.ab}</td>
+                      <td className="text-right">{s.homeRuns}</td>
+                      <td className="text-right">{s.rbi}</td>
+                      <td className="text-right">
+                        {s.sb}
                         <span className="pl-[0.8cqw] font-bold" style={{ color: 'var(--color-navy)' }}>
-                          {fmtMod(pitMod(s.pitching.era, rules.pitBands))}
+                          {fmtMod(sbMod(s.sb, rules.sbBands))}
                         </span>
-                      </>
-                    ) : (
-                      '—'
-                    )}
-                  </td>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -256,14 +321,16 @@ function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: str
         )}
 
         <div className="mt-[2cqw] grid grid-cols-2 gap-x-[2cqw] gap-y-[0.6cqw] font-mono text-[clamp(10px,2.7cqw,14px)] text-ink-soft">
-          {rows
-            .filter((s) => s.pitching && s.pitching.ipOuts > 0)
-            .slice(-1)
-            .map((s) => (
-              <span key={s.year}>
-                {s.year} IP {formatIp(s.pitching!.ipOuts)}
-              </span>
-            ))}
+          {!pitchingBack
+            ? rows
+                .filter((s) => s.pitching && s.pitching.ipOuts > 0)
+                .slice(-1)
+                .map((s) => (
+                  <span key={s.year}>
+                    {s.year} IP {formatIp(s.pitching!.ipOuts)}
+                  </span>
+                ))
+            : null}
           {card.pitcherClass ? <span>role {card.pitcherClass}</span> : null}
           {card.fielding && Object.keys(card.fielding).length ? (
             <span className="col-span-2 truncate">
@@ -276,8 +343,14 @@ function CardBack({ card, colors }: { card: CardSnapshot; colors: { primary: str
         </div>
       </div>
 
+      {notes.length > 0 ? (
+        <div className="border-t border-ink/10 bg-stock-dark/45 px-[3.5cqw] py-[1.8cqw]">
+          <p className="font-mono text-[clamp(9px,2.4cqw,13px)] leading-snug text-ink-soft italic">{notes[0]}</p>
+        </div>
+      ) : null}
+
       <footer className="border-t border-ink/10 px-[4cqw] py-[2cqw] font-mono text-[clamp(10px,2.6cqw,13px)] text-ink-soft">
-        HIT from AVG · PIT from ERA · SB from steals
+        {pitchingBack ? 'PIT from ERA · WHIP from hits + walks' : 'HIT from AVG · SB from steals'}
       </footer>
     </div>
   );

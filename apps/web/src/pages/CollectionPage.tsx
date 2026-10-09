@@ -38,7 +38,7 @@ export function CollectionPage() {
   const ratingOf = (c: CollectionCard) => ratings.get(c.id) ?? rateCard(c.card);
 
   const tierCounts = useMemo(() => {
-    const counts: Record<DraftRarity, number> = { common: 0, uncommon: 0, rare: 0, chase: 0 };
+    const counts: Record<DraftRarity, number> = { common: 0, uncommon: 0, rare: 0, star: 0, mythic: 0 };
     for (const r of ratings.values()) counts[r.rarity]++;
     return counts;
   }, [ratings]);
@@ -106,8 +106,8 @@ export function CollectionPage() {
         <div>
           <h1 className="font-display text-3xl font-bold text-chalk">Your collection</h1>
           <p className="mt-1 text-sm text-chalk/60">
-            {cards.length} {cards.length === 1 ? 'card' : 'cards'} · {tierCounts.chase} chase · {tierCounts.rare} rare ·{' '}
-            {cards.filter((c) => c.photoId).length} with your own photo
+            {cards.length} {cards.length === 1 ? 'card' : 'cards'} · {tierCounts.mythic} mythic · {tierCounts.star} star ·{' '}
+            {tierCounts.rare} rare · {cards.filter((c) => c.photoId).length} with your own photo
           </p>
         </div>
         <Link to="/search">

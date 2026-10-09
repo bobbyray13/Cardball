@@ -127,9 +127,18 @@ export function themeForRound(themes: PackThemeId[], round: number, seat: number
 /**
  * Packs that live in a manager's inventory, separate from the draft room.
  * A starter pack comes with the account; the rest are earned — by winning
- * games and tournaments, and by finishing a historic collection.
+ * games and tournaments, finishing a historic collection, pulling off a feat
+ * on the field, and winning a draft series.
  */
-export type PackSource = 'starter' | 'game-win' | 'tournament-win' | 'challenge' | 'grant';
+export type PackSource =
+  | 'starter'
+  | 'game-win'
+  | 'tournament-win'
+  | 'challenge'
+  | 'draft-win'
+  | 'draft-runner-up'
+  | 'achievement'
+  | 'grant';
 
 /** How the cards inside a pack are dealt. */
 export type PackShape = 'random' | 'lineup' | 'mound';
@@ -139,6 +148,9 @@ export const PACK_SOURCE_LABEL: Record<PackSource, string> = {
   'game-win': 'Won a game',
   'tournament-win': 'Won a tournament',
   challenge: 'Collection complete',
+  'draft-win': 'Won a draft game',
+  'draft-runner-up': 'Draft consolation',
+  achievement: 'Pulled off a feat',
   grant: 'Commissioner grant',
 };
 
@@ -166,4 +178,27 @@ export const REWARDS = {
   perTournamentWin: 3,
   /** packs for completing a historic collection challenge */
   perChallenge: 2,
+  /** bonus packs for feats pulled off during a game */
+  perfectGame: 5,
+  noHitter: 3,
+  grandSlam: 1,
+  walkoffHomer: 1,
+  cycle: 5,
 } as const;
+
+/**
+ * The wrappers a draft winner chooses between, in the room's own language:
+ * a slugger pack, an aces pack, a speedster pack, or a batting-champs pack.
+ */
+export const WINNER_PACK_THEMES: readonly PackThemeId[] = ['sluggers', 'aces', 'speedsters', 'contact'];
+
+/** The kind of achievement packs are awarded for, and what each pays. */
+export const ACHIEVEMENT_PACKS = {
+  'perfect-game': REWARDS.perfectGame,
+  'no-hitter': REWARDS.noHitter,
+  'grand-slam': REWARDS.grandSlam,
+  'walkoff-hr': REWARDS.walkoffHomer,
+  cycle: REWARDS.cycle,
+} as const;
+
+export type AchievementKind = keyof typeof ACHIEVEMENT_PACKS;

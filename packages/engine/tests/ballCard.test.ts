@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { defaultHouseRules, hitMod, pitMod, resolveHitKind, sbMod } from '@cardball/shared';
-import { activeSeason } from '../src/queries.js';
+import { activeSeason, resolveSeason } from '../src/queries.js';
 import { batter, CARD_YEAR, season } from './fixtures.js';
 import type { EnginePlayer } from '../src/types.js';
 
@@ -70,20 +70,25 @@ describe('power tiers', () => {
 });
 
 describe('roll for year', () => {
-  const asPlayer = (seasonYears: number[]): EnginePlayer => {
+  /** A card whose seasons are listed years, optionally with per-year stat overrides. */
+  const asPlayer = (
+    seasonYears: (number | { year: number; ab?: number; ipOuts?: number })[],
+    pitcherCard = false,
+  ): EnginePlayer => {
     const setup = batter('x', ['1B']);
     return {
       ...setup,
-      seasons: seasonYears.map((y) => season(y)),
+      seasons: seasonYears.map((y) =>
+        typeof y === 'number'
+          ? season(y, {}, pitcherCard)
+          : season(y.year, y.ab !== undefined ? { ab: y.ab } : { ipOuts: y.ipOuts }, pitcherCard && y.ab === undefined),
+      ),
       status: 'active',
       lineupSpot: 0,
       fieldPosition: '1B',
       base: null,
       outsPitched: 0,
       pitchingRole: null,
-      injured: false,
-      exitDue: false,
-      fatigueWaived: false,
     };
   };
 
@@ -113,5 +118,35 @@ describe('roll for year', () => {
     expect(activeSeason(p, 1, shortWindow).year).toBe(2009);
     expect(activeSeason(p, 2, shortWindow).year).toBe(2008);
     expect(activeSeason(p, 3, shortWindow).year).toBe(2009);
+  });
+
+  it('skips an unusable season to the next-older one on the card', () => {
+    // 2009 was a cup of coffee (20 AB); roll 1 lands on it, so the card reads 2008.
+    const p = asPlayer([2007, 2008, { year: 2009, ab: 20 }]);
+    const resolution = resolveSeason(p, 1, RULES);
+    expect(resolution.season.year).toBe(2008);
+    expect(resolution.skippedYear).toBe(2009);
+  });
+
+  it('wraps from the oldest unusable season back to the most recent', () => {
+    // 2007 unusable: roll 3 lands on it and wraps to 2009.
+    const p = asPlayer([{ year: 2007, ab: 20 }, 2008, 2009]);
+    const resolution = resolveSeason(p, 3, RULES);
+    expect(resolution.season.year).toBe(2009);
+    expect(resolution.skippedYear).toBe(2007);
+  });
+
+  it('plays the rolled season as-is when every season is unusable', () => {
+    const p = asPlayer([{ year: 2007, ab: 20 }, { year: 2008, ab: 20 }, { year: 2009, ab: 20 }]);
+    const resolution = resolveSeason(p, 1, RULES);
+    expect(resolution.season.year).toBe(2009);
+    expect(resolution.skippedYear).toBeNull();
+  });
+
+  it('a healthy pitching year counts even when the bat was quiet', () => {
+    // A pitcher card: roll 1 lands on 2009, where he did not bat but threw 60 IP.
+    const p = asPlayer([2007, 2008, { year: 2009, ipOuts: 180 }], true);
+    expect(resolveSeason(p, 1, RULES).skippedYear).toBeNull();
+    expect(resolveSeason(p, 1, RULES).season.year).toBe(2009);
   });
 });

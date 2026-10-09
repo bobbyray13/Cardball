@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MATCH_LIMITS, matchEraLabel } from '@cardball/shared';
+import { MATCH_LIMITS, matchCapsLabel, matchEraLabel } from '@cardball/shared';
 import type { GameListItem, MatchRules } from '@cardball/shared';
 import { api } from '../api.js';
 import { ZoomableCard } from '../components/CardZoom.js';
@@ -27,8 +27,8 @@ const MODE_OPTIONS: ReadonlyArray<{ value: GameMode; label: string }> = [
 /** A one-line summary of what a match allows, for the room list. */
 function matchSummary(match: MatchRules): string {
   const era = matchEraLabel(match);
-  if (!match.rarityCaps) return era;
-  return `${era} · ${match.rarityCaps.rare} rare/${match.rarityCaps.chase} chase`;
+  const caps = matchCapsLabel(match);
+  return caps ? `${era} · ${caps}` : era;
 }
 
 function GameRow({ game }: { game: GameListItem }) {
@@ -87,12 +87,13 @@ export function DashboardPage() {
   const [yearFrom, setYearFrom] = useState<number>(MATCH_LIMITS.minYear);
   const [yearTo, setYearTo] = useState<number>(MATCH_LIMITS.maxYear);
   const [maxRare, setMaxRare] = useState(0);
-  const [maxChase, setMaxChase] = useState(0);
+  const [maxStar, setMaxStar] = useState(0);
+  const [maxMythic, setMaxMythic] = useState(0);
   const [password, setPassword] = useState('');
 
   // "Any era" means the whole range, and sends no match at all when no cap is
   // set, so an ordinary game carries no restriction.
-  const restricted = era !== 'any' || maxRare > 0 || maxChase > 0;
+  const restricted = era !== 'any' || maxRare > 0 || maxStar > 0 || maxMythic > 0;
 
   const pickEra = (id: string) => {
     setEra(id);
@@ -130,8 +131,12 @@ export function DashboardPage() {
               yearFrom: era === 'any' ? MATCH_LIMITS.minYear : yearFrom,
               yearTo: era === 'any' ? MATCH_LIMITS.maxYear : yearTo,
               rarityCaps:
-                maxRare > 0 || maxChase > 0
-                  ? { rare: maxRare > 0 ? maxRare : MATCH_LIMITS.maxRare, chase: maxChase > 0 ? maxChase : MATCH_LIMITS.maxChase }
+                maxRare > 0 || maxStar > 0 || maxMythic > 0
+                  ? {
+                      rare: maxRare > 0 ? maxRare : MATCH_LIMITS.maxRare,
+                      star: maxStar > 0 ? maxStar : MATCH_LIMITS.maxStar,
+                      mythic: maxMythic > 0 ? maxMythic : MATCH_LIMITS.maxMythic,
+                    }
                   : null,
             },
           }
@@ -261,11 +266,14 @@ export function DashboardPage() {
                 />
                 <RarityCapFields
                   rare={maxRare}
-                  chase={maxChase}
+                  star={maxStar}
+                  mythic={maxMythic}
                   onRareChange={setMaxRare}
-                  onChaseChange={setMaxChase}
+                  onStarChange={setMaxStar}
+                  onMythicChange={setMaxMythic}
                   maxRare={MATCH_LIMITS.maxRare}
-                  maxChase={MATCH_LIMITS.maxChase}
+                  maxStar={MATCH_LIMITS.maxStar}
+                  maxMythic={MATCH_LIMITS.maxMythic}
                 />
 
                 <Field label="Your team">

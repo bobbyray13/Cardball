@@ -1,7 +1,18 @@
-import { hitMod, pitMod, sbMod } from '@cardball/shared';
+import { hitMod, sbMod } from '@cardball/shared';
 import type { GameAction } from '@cardball/shared';
 import { benchHitters } from './flow.js';
-import { availablePitchers, fieldingRating, getDefense, getOffense, getTeam, rulesOf, seasonForPlayer } from './queries.js';
+import { canSubstituteNow } from './subs.js';
+import {
+  availablePitchers,
+  fieldingRating,
+  getDefense,
+  getOffense,
+  getTeam,
+  pitcherFatigue,
+  pitcherTotalMod,
+  rulesOf,
+  seasonForPlayer,
+} from './queries.js';
 import type { EnginePlayer, GameState, Side, TeamState } from './types.js';
 
 /** Average d6 with 1s re-rolled. */
@@ -46,7 +57,7 @@ export function botAction(state: GameState, side: Side): GameAction | null {
       }
       case 'pitcher-change': {
         const options = availablePitchers(state, side);
-        const best = maxBy(options, (p) => pitMod(seasonForPlayer(state, p).pitching?.era ?? null, rules.pitBands));
+        const best = maxBy(options, (p) => pitcherTotalMod(state, p).mod);
         return best ? { type: 'pitcher-change', inPlayerId: best.id } : null;
       }
       case 'batter-roll':
@@ -64,6 +75,27 @@ export function botAction(state: GameState, side: Side): GameAction | null {
     return offense.side === side ? { type: 'throw-pitch' } : null;
   }
   return null;
+}
+
+/**
+ * A move a bot manager makes off the clock: when his tired pitcher is a
+ * worse bet than the best fresh arm in the bullpen, he goes to it. Callers
+ * decide which sides they drive — a live game only drives its bot teams, a
+ * simulation drives both.
+ */
+export function botOffClockAction(state: GameState, side: Side): GameAction | null {
+  if (state.phase !== 'live') return null;
+  if (getDefense(state).side !== side) return null;
+  if (!canSubstituteNow(state)) return null;
+
+  const defense = getDefense(state);
+  const pitcher = defense.players.find((p) => p.id === defense.activePitcherId);
+  if (!pitcher || pitcherFatigue(state, pitcher) === 0) return null;
+
+  const current = pitcherTotalMod(state, pitcher).mod;
+  const best = maxBy(availablePitchers(state, side), (p) => pitcherTotalMod(state, p).mod);
+  if (!best || pitcherTotalMod(state, best).mod <= current) return null;
+  return { type: 'pitcher-change', inPlayerId: best.id };
 }
 
 function bestBench(state: GameState, team: TeamState, out: EnginePlayer | null, by: 'speed' | 'bat'): EnginePlayer | null {

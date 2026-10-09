@@ -8,7 +8,7 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { defaultHouseRules, parseHouseRules, setActiveHouseRules } from '@cardball/shared';
+import { defaultHouseRules, parseHouseRules, resolveHouseRules, setActiveHouseRules } from '@cardball/shared';
 import type { HouseRules } from '@cardball/shared';
 import { settings } from '@cardball/db';
 import type { AuthUser } from './auth.js';
@@ -19,10 +19,11 @@ export async function loadHouseRules(ctx: Ctx): Promise<HouseRules> {
   const [row] = await ctx.db.select({ houseRules: settings.houseRules }).from(settings).where(eq(settings.id, 1)).limit(1);
   if (!row) return defaultHouseRules();
   try {
-    return parseHouseRules(row.houseRules);
+    // Merged against the shipped defaults, so a row written before a rule
+    // existed (or edited by hand) still parses with that rule defaulted.
+    return resolveHouseRules(row.houseRules);
   } catch {
-    // A row written by an older build, or edited by hand. Fall back rather
-    // than refusing to boot.
+    // A row no merge can save. Fall back rather than refuse to boot.
     return defaultHouseRules();
   }
 }

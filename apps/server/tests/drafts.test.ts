@@ -7,13 +7,16 @@
 import postgres from 'postgres';
 import type { InjectOptions, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { createDb, people, runMigrations, seasons } from '@cardball/db';
+import { botAction, waitingOn } from '@cardball/engine';
+import type { GameState } from '@cardball/engine';
+import { createDb, draftParticipants, drafts, people, runMigrations, seasons } from '@cardball/db';
 import type { Db } from '@cardball/db';
-import type { DraftView } from '@cardball/shared';
+import type { DraftView, PackView, SavedLineup } from '@cardball/shared';
 import { buildApp } from '../src/app.js';
 import { SESSION_COOKIE } from '../src/auth.js';
 import type { Ctx } from '../src/context.js';
 import { env } from '../src/env.js';
+import { rewardAchievements } from '../src/packs.js';
 
 const BASE_URL = env.databaseUrl;
 const DB_NAME = `${new URL(BASE_URL).pathname.slice(1)}_drafts`;
@@ -301,7 +304,7 @@ describe('draft rooms', () => {
     expect(parse<{ error: string }>(res).error).toMatch(/not in your pack/i);
   });
 
-  it('passes every pack once everyone has picked, and files the card in the collection', async () => {
+  it('passes every pack once everyone has picked, and files the card in the sandbox', async () => {
     const before = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: hostToken })).draft;
     const taken = before.myPack[0]!;
 
@@ -321,25 +324,26 @@ describe('draft rooms', () => {
       before.myPack.map((c) => c.id).filter((id) => id !== taken.id).sort(),
     );
 
-    const collection = parse<{ cards: { card: { name: string }; notes: string | null }[] }>(
+    // A drafted card is playable on its draft team but is not in the binder
+    // yet: it only lands in the collection when its manager keeps it.
+    const collection = parse<{ cards: { card: { name: string } }[] }>(
       await call('GET', '/api/collection', { token: hostToken }),
     ).cards;
-    expect(collection.map((c) => c.card.name)).toContain(taken.name);
-    expect(collection.find((c) => c.card.name === taken.name)?.notes).toMatch(/^Drafted/);
+    expect(collection.map((c) => c.card.name)).not.toContain(taken.name);
   });
 
-  it('runs both rounds, then closes with a full set of picks', async () => {
+  it('runs both rounds, then opens assembly with a full set of picks', async () => {
     const tokens = [hostToken, guestToken];
     const totalPicks = config.rounds * config.packSize * 2;
     let picks = 0;
-    let finished: DraftView | null = null;
+    let assembled: DraftView | null = null;
 
     const directions = new Set<string>();
 
-    for (let pass = 0; pass < totalPicks && !finished; pass++) {
+    for (let pass = 0; pass < totalPicks && !assembled; pass++) {
       const view = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: hostToken })).draft;
-      if (view.phase === 'finished') {
-        finished = view;
+      if (view.phase !== 'active') {
+        assembled = view;
         break;
       }
       directions.add(view.passDirection);
@@ -357,7 +361,10 @@ describe('draft rooms', () => {
     }
 
     const final = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: hostToken })).draft;
-    expect(final.phase).toBe('finished');
+    // A room with two managers stops dealing and moves to assembly, where the
+    // two seats build a lineup and play the series. 'finished' is only for
+    // rooms dealt before the series existed.
+    expect(final.phase).toBe('assembling');
     expect(directions).toEqual(new Set(['left', 'right']));
     // The previous two tests made the opening pass.
     expect(picks).toBe(totalPicks - 2);
@@ -367,20 +374,32 @@ describe('draft rooms', () => {
     expect(final.pickCounts['0']).toBeGreaterThanOrEqual(config.rounds * config.packSize);
     expect(final.pickCounts['1']).toBeGreaterThanOrEqual(config.rounds * config.packSize);
     expect(final.log.some((l) => /draft complete/i.test(l.text))).toBe(true);
+    expect(final.log.some((l) => /build your lineup/i.test(l.text))).toBe(true);
+    // Every seat's picks are on the table, with the positions on each card.
+    expect(final.seats.map((s) => s.seat)).toEqual([0, 1]);
+    expect(final.seats[0]!.picks.length).toBe(final.myPicks.length);
+    expect(final.seats.every((s) => s.lineupReady === false)).toBe(true);
+    expect(final.gameId).toBeNull();
+    expect(final.games).toEqual([]);
+    expect(final.myKeeps).toEqual({});
+    expect(final.myPendingChoice).toBeNull();
   });
 
-  it('hands every drafted card to the collection', async () => {
+  it('keeps drafted cards out of the binder until they are kept', async () => {
     const expected = config.rounds * config.packSize;
     for (const token of [hostToken, guestToken]) {
+      // Nothing a draft dealt is in the binder: the cards sit in the sandbox
+      // until a series win is spent on them.
       const cards = parse<{ cards: { quantity: number }[] }>(await call('GET', '/api/collection', { token })).cards;
-      expect(cards.length).toBeGreaterThan(0);
-      // The same player can come around in a later pack; that copy bumps the
-      // count on the row instead of stacking a duplicate. Field insurance
-      // cards land in the collection like any pick, so copies can exceed the
-      // six picked cards.
-      const copies = cards.reduce((sum, card) => sum + card.quantity, 0);
-      expect(copies).toBeGreaterThanOrEqual(expected);
-      expect(cards.length).toBeLessThanOrEqual(copies);
+      expect(cards).toEqual([]);
+
+      // The drafted team, though, holds every card the seat picked — plus the
+      // field insurance that topped it up — and can take the field.
+      const team = parse<{ team: { cards: unknown[]; suggested: unknown } }>(
+        await call('GET', `/api/drafts/${draftId}/team`, { token }),
+      ).team;
+      expect(team.cards.length).toBeGreaterThanOrEqual(expected);
+      expect(team.suggested).not.toBeNull();
     }
   });
 
@@ -397,7 +416,7 @@ describe('draft rooms', () => {
 
     for (let guard = 0; guard < 100; guard++) {
       const view = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${room.id}`, { token: hostToken })).draft;
-      if (view.phase === 'finished') break;
+      if (view.phase !== 'active') break;
       for (const seat of view.waitingOn) {
         const token = tokens[seat]!;
         expect((await call('POST', `/api/drafts/${room.id}/open`, { token })).statusCode, `seat ${seat}`).toBe(200);
@@ -409,7 +428,7 @@ describe('draft rooms', () => {
 
     for (const token of tokens) {
       const done = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${room.id}`, { token })).draft;
-      expect(done.phase).toBe('finished');
+      expect(done.phase).toBe('assembling');
       // Nine distinct bats plus a starter who is none of them — the engine's
       // own rule — whatever the seat picked from its three cards.
       const distinct = new Map(done.myPicks.map((p) => [p.personId, p]));
@@ -627,10 +646,11 @@ describe('themed packs and draft rules', () => {
       yearTo: CAP_YEAR,
       playableOnly: true,
       themes: ['mixed'],
-      rarityCaps: { rare: 1, chase: 0 },
+      rarityCaps: { rare: 1, star: 0, mythic: 0 },
     });
     const roomId = draft.id;
-    expect(draft.config.rarityCaps).toEqual({ rare: 1, chase: 20 });
+    // A tier left at zero is no cap at all, so only the rare cap is in force.
+    expect(draft.config.rarityCaps).toEqual({ rare: 1, star: 20, mythic: 20 });
 
     // Everyone in this pool is rare, so the first pick uses up the allowance.
     await call('POST', `/api/drafts/${roomId}/open`, { token });
@@ -638,7 +658,7 @@ describe('themed packs and draft rules', () => {
     expect(mine.myPack.every((c) => c.rarity === 'rare')).toBe(true);
     const first = await call('POST', `/api/drafts/${roomId}/pick`, { token, body: { cardId: mine.myPack[0]!.id } });
     expect(first.statusCode, first.body).toBe(200);
-    expect(parse<{ draft: DraftView }>(first).draft.myTally).toEqual({ rare: 1, chase: 0 });
+    expect(parse<{ draft: DraftView }>(first).draft.myTally).toEqual({ rare: 1, star: 0, mythic: 0 });
 
     // The other seat takes one, so the packs pass back around.
     await call('POST', `/api/drafts/${roomId}/open`, { token: other });
@@ -651,5 +671,316 @@ describe('themed packs and draft rules', () => {
     const blocked = await call('POST', `/api/drafts/${roomId}/pick`, { token, body: { cardId: passed.myPack[0]!.id } });
     expect(blocked.statusCode).toBe(400);
     expect(parse<{ error: string }>(blocked).error).toMatch(/already have 1 rare card/i);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// The series: assembling, playing, and what a win pays
+// ---------------------------------------------------------------------------
+
+/** Answer every remaining decision with the engine's bot policy, on the right token. */
+async function playOut(gameId: number, viewerToken: string, tokenForSide: (side: 'home' | 'away', state: GameState) => string): Promise<GameState> {
+  const opened = parse<{ game: { state: GameState | null } }>(await call('GET', `/api/games/${gameId}`, { token: viewerToken }));
+  let state = opened.game.state;
+  expect(state).not.toBeNull();
+
+  if (state!.phase === 'lobby') {
+    for (const side of ['home', 'away'] as const) {
+      const res = await call('POST', `/api/games/${gameId}/actions`, { token: tokenForSide(side, state!), body: { action: { type: 'start-game' } } });
+      expect(res.statusCode, res.body).toBe(200);
+      state = parse<{ game: { state: GameState } }>(res).game.state;
+      if (state.phase !== 'lobby') break;
+    }
+  }
+
+  let steps = 0;
+  while (state!.phase === 'live' && steps++ < 5_000) {
+    const waiting = waitingOn(state!);
+    if (!waiting) throw new Error('Game stalled with no side waiting to act');
+    const action = botAction(state!, waiting.side);
+    if (!action) throw new Error(`No legal move for ${waiting.kind}`);
+    const res = await call('POST', `/api/games/${gameId}/actions`, { token: tokenForSide(waiting.side, state!), body: { action } });
+    if (res.statusCode !== 200) throw new Error(`Action ${action.type} rejected: ${res.body}`);
+    state = parse<{ game: { state: GameState } }>(res).game.state;
+  }
+  expect(steps).toBeLessThan(5_000);
+  return state!;
+}
+
+describe('the draft series', () => {
+  const PACK_SIZE = 8;
+  let tokens: string[] = [];
+  let draftId = 0;
+  let userIds: number[] = [];
+  let gameId = 0;
+  let winnerSeat = 0;
+  let loserSeat = 1;
+
+  const room = async (token: string): Promise<DraftView> =>
+    parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token })).draft;
+
+  const shelf = async (token: string): Promise<PackView[]> =>
+    parse<{ packs: PackView[] }>(await call('GET', '/api/packs', { token })).packs;
+
+  const collectionNames = async (token: string): Promise<string[]> =>
+    parse<{ cards: { card: { name: string } }[] }>(await call('GET', '/api/collection', { token })).cards.map((c) => c.card.name);
+
+  beforeAll(async () => {
+    tokens = [hostToken, guestToken];
+    for (const token of tokens) {
+      const me = parse<{ user: { id: number } }>(await call('GET', '/api/auth/me', { token })).user;
+      userIds.push(me.id);
+    }
+    const created = await call('POST', '/api/drafts', {
+      token: hostToken,
+      body: { rounds: 1, packSize: PACK_SIZE, yearFrom: CARD_YEAR, yearTo: CARD_YEAR, playableOnly: true, regulationInnings: 3 },
+    });
+    expect(created.statusCode, created.body).toBe(200);
+    draftId = parse<{ draft: DraftView }>(created).draft.id;
+    await call('POST', `/api/drafts/${draftId}/join`, { token: guestToken });
+    await call('POST', `/api/drafts/${draftId}/start`, { token: hostToken });
+
+    // Drain the room, one card at a time, until the packs are empty.
+    for (let guard = 0; guard < 200; guard++) {
+      const view = await room(hostToken);
+      if (view.phase !== 'active') break;
+      for (const seat of view.waitingOn) {
+        const token = tokens[seat]!;
+        expect((await call('POST', `/api/drafts/${draftId}/open`, { token })).statusCode).toBe(200);
+        const mine = await room(token);
+        expect((await call('POST', `/api/drafts/${draftId}/pick`, { token, body: { cardId: mine.myPack[0]!.id } })).statusCode).toBe(200);
+      }
+    }
+  });
+
+  it('never deals the same player to two packs in one draft', async () => {
+    const view = await room(hostToken);
+    // The first PACK_SIZE picks of each seat are what the packs dealt; field
+    // insurance is appended after them and may top a seat up from any pool.
+    const dealt = view.seats.flatMap((s) => s.picks.slice(0, PACK_SIZE).map((p) => p.personId));
+    expect(dealt).toHaveLength(PACK_SIZE * 2);
+    expect(new Set(dealt).size).toBe(dealt.length);
+  });
+
+  it('opens assembly with a team for every seat, and offers a lineup in draft card ids', async () => {
+    const view = await room(hostToken);
+    expect(view.phase).toBe('assembling');
+    expect(view.seats.every((s) => s.lineupReady === false)).toBe(true);
+    expect(view.myPicks.length).toBeGreaterThanOrEqual(PACK_SIZE);
+
+    for (const token of tokens) {
+      const team = parse<{ team: { cards: { card: { id: string; name: string }; snapshot: { playable: boolean } }[]; suggested: SavedLineup | null; lineup: SavedLineup | null } }>(
+        await call('GET', `/api/drafts/${draftId}/team`, { token }),
+      ).team;
+      expect(team.cards.length).toBeGreaterThanOrEqual(10);
+      expect(team.suggested).not.toBeNull();
+      // The team arrives with a lineup already filled in, so the suggestion
+      // and the saved lineup agree until the manager changes something.
+      expect(team.lineup).toEqual(team.suggested);
+      // The suggestion speaks the room's language: draft card ids.
+      const ids = new Set(team.cards.map((c) => c.card.id));
+      expect(team.suggested!.lineup).toHaveLength(9);
+      expect(team.suggested!.lineup.every((id) => ids.has(id))).toBe(true);
+      expect(ids.has(team.suggested!.startingPitcherId)).toBe(true);
+    }
+  });
+
+  it('starts the series once both seats have locked a lineup, and the room plays it like any remote game', async () => {
+    // Seat one first: the series waits for the second seat.
+    const first = await call('POST', `/api/drafts/${draftId}/lineup`, { token: tokens[0], body: await suggestedLineup(draftId, tokens[0]!) });
+    expect(first.statusCode, first.body).toBe(200);
+    expect(parse<{ draft: DraftView }>(first).draft.gameId).toBeNull();
+    expect(parse<{ draft: DraftView }>(first).draft.seats[0]!.lineupReady).toBe(true);
+
+    const second = await call('POST', `/api/drafts/${draftId}/lineup`, { token: tokens[1], body: await suggestedLineup(draftId, tokens[1]!) });
+    expect(second.statusCode, second.body).toBe(200);
+    const started = parse<{ draft: DraftView }>(second).draft;
+    expect(started.phase).toBe('playing');
+    expect(started.gameId).not.toBeNull();
+    expect(started.games).toHaveLength(1);
+    expect(started.games[0]!.winnerSeat).toBeNull();
+    // The saved lineup comes back in the room's own id space.
+    expect(started.myLineup).not.toBeNull();
+    gameId = started.gameId!;
+
+    // The series game is an ordinary remote room on the drafted teams.
+    const game = parse<{ game: { id: number; status: string; mode: string; regulationInnings: number; draftId: number | null; match: { outOfPosition?: boolean } } }>(
+      await call('GET', `/api/games/${gameId}`, { token: tokens[0] }),
+    ).game;
+    expect(game.mode).toBe('remote');
+    expect(game.status).toBe('lobby');
+    expect(game.regulationInnings).toBe(3);
+    expect(game.draftId).toBe(draftId);
+    expect(game.match.outOfPosition).toBe(true);
+
+    // A lineup naming a card that is not on the team is refused.
+    const bogus = await call('POST', `/api/drafts/${draftId}/lineup`, {
+      token: tokens[0],
+      body: { ...(await suggestedLineup(draftId, tokens[0]!)), startingPitcherId: 'not-a-card' },
+    });
+    expect(bogus.statusCode).toBe(400);
+  });
+
+  it('pays the loser a consolation pack and leaves the winner a pack and a card to keep', async () => {
+    const tokenForSide = (side: 'home' | 'away', state: GameState) =>
+      tokens[userIds.indexOf(state[side].userId ?? -1)] ?? tokens[0]!;
+    const final = await playOut(gameId, tokens[0]!, tokenForSide);
+    expect(final.phase).toBe('finished');
+
+    const view = await room(hostToken);
+    const result = view.games[0]!;
+    expect(result.winnerSeat).not.toBeNull();
+    winnerSeat = result.winnerSeat!;
+    loserSeat = winnerSeat === 0 ? 1 : 0;
+
+    const winner = await room(tokens[winnerSeat]!);
+    const loser = await room(tokens[loserSeat]!);
+    // The winner's bonus is pending until they choose a wrapper; the keep is
+    // pending until they name a card.
+    expect(winner.myPendingChoice).toBe(gameId);
+    expect(winner.myKeeps[String(gameId)]).toBeNull();
+    expect(loser.myPendingChoice).toBeNull();
+    expect(loser.myKeeps).toEqual({});
+
+    const consolation = (await shelf(tokens[loserSeat]!)).filter((p) => p.source === 'draft-runner-up');
+    expect(consolation).toHaveLength(1);
+    expect(consolation[0]).toMatchObject({ themeId: 'mixed', size: 5 });
+    expect((await shelf(tokens[winnerSeat]!)).filter((p) => p.source === 'draft-win')).toHaveLength(0);
+  });
+
+  it('grants the winner one themed pack, once', async () => {
+    const choose = (themeId: string) => call('POST', `/api/drafts/${draftId}/choose-pack`, { token: tokens[winnerSeat]!, body: { gameId, themeId } });
+
+    expect((await choose('not-a-theme')).statusCode).toBe(400);
+    const chosen = await choose('sluggers');
+    expect(chosen.statusCode, chosen.body).toBe(200);
+    expect(parse<{ draft: DraftView }>(chosen).draft.myPendingChoice).toBeNull();
+
+    const packs = (await shelf(tokens[winnerSeat]!)).filter((p) => p.source === 'draft-win');
+    expect(packs).toHaveLength(1);
+    expect(packs[0]).toMatchObject({ themeId: 'sluggers', size: 5, label: 'Draft game won' });
+
+    // Once per game: a second choice finds the key taken.
+    expect((await choose('aces')).statusCode).toBe(400);
+    expect((await shelf(tokens[winnerSeat]!)).filter((p) => p.source === 'draft-win')).toHaveLength(1);
+
+    // Only the winner chooses.
+    expect((await call('POST', `/api/drafts/${draftId}/choose-pack`, { token: tokens[loserSeat]!, body: { gameId, themeId: 'aces' } })).statusCode).toBe(403);
+  });
+
+  it('moves the card the winner keeps out of the sandbox and into the binder', async () => {
+    const winnerPicks = (await room(tokens[winnerSeat]!)).seats.find((s) => s.seat === winnerSeat)!.picks;
+    const kept = winnerPicks[0]!;
+    // Nothing either manager drafted is in the binder yet.
+    expect(await collectionNames(tokens[winnerSeat]!)).toEqual([]);
+    expect(await collectionNames(tokens[loserSeat]!)).toEqual([]);
+
+    // Only the winner keeps, and only from their own team.
+    expect((await call('POST', `/api/drafts/${draftId}/keep-card`, { token: tokens[loserSeat]!, body: { gameId, cardId: kept.id } })).statusCode).toBe(403);
+    expect((await call('POST', `/api/drafts/${draftId}/keep-card`, { token: tokens[winnerSeat]!, body: { gameId, cardId: 'not-a-card' } })).statusCode).toBe(400);
+
+    const keptRes = await call('POST', `/api/drafts/${draftId}/keep-card`, { token: tokens[winnerSeat]!, body: { gameId, cardId: kept.id } });
+    expect(keptRes.statusCode, keptRes.body).toBe(200);
+    expect(parse<{ draft: DraftView }>(keptRes).draft.myKeeps[String(gameId)]).toBe(kept.id);
+
+    // One card, in the binder; the rest of the team stays in the sandbox.
+    expect(await collectionNames(tokens[winnerSeat]!)).toEqual([kept.name]);
+    expect(await collectionNames(tokens[loserSeat]!)).toEqual([]);
+    // And once per game.
+    expect((await call('POST', `/api/drafts/${draftId}/keep-card`, { token: tokens[winnerSeat]!, body: { gameId, cardId: winnerPicks[1]!.id } })).statusCode).toBe(400);
+  });
+
+  it('deals a rematch with the same teams, and only once the game in front of them is done', async () => {
+    const again = await call('POST', `/api/drafts/${draftId}/rematch`, { token: tokens[0] });
+    expect(again.statusCode, again.body).toBe(200);
+    const { draft, gameId: next } = parse<{ draft: DraftView; gameId: number }>(again);
+    expect(next).not.toBe(gameId);
+    expect(draft.gameId).toBe(next);
+    expect(draft.games).toHaveLength(2);
+    expect(draft.games[0]!.winnerSeat).toBeNull();
+    // Same teams: the rematch's two sides are the same users.
+    const rematch = parse<{ game: { hostUserId: number; guestUserId: number } }>(await call('GET', `/api/games/${next}`, { token: tokens[0] })).game;
+    expect([rematch.hostUserId, rematch.guestUserId].sort()).toEqual([...userIds].sort());
+
+    // The game in front of them has to be finished before another is dealt.
+    expect((await call('POST', `/api/drafts/${draftId}/rematch`, { token: tokens[0] })).statusCode).toBe(400);
+  });
+
+  it('pays a bonus pack per feat, once, and never to a bot side', async () => {
+    const engine = {
+      phase: 'finished',
+      home: { userId: userIds[0]! },
+      away: { userId: userIds[1]! },
+      achievements: [
+        { side: 'home', kind: 'grand-slam' },
+        { side: 'home', kind: 'grand-slam' },
+        { side: 'away', kind: 'no-hitter' },
+        { side: 'home', kind: 'walkoff-hr' },
+      ],
+    } as unknown as GameState;
+
+    await rewardAchievements(db, 4242, engine);
+    const mine = (await shelf(tokens[0]!)).filter((p) => p.rewardKey?.startsWith('achievement:4242:'));
+    expect(mine.map((p) => p.label).sort()).toEqual(['Hit a grand slam', 'Hit a grand slam', 'Walk-off home run']);
+    expect(mine.map((p) => p.size).sort()).toEqual([1, 1, 1]);
+    const theirs = (await shelf(tokens[1]!)).filter((p) => p.rewardKey?.startsWith('achievement:4242:'));
+    expect(theirs).toHaveLength(1);
+    expect(theirs[0]).toMatchObject({ label: 'Pitched a no-hitter', size: 3 });
+
+    // A replay of the same game pays nothing new.
+    await rewardAchievements(db, 4242, engine);
+    expect((await shelf(tokens[0]!)).filter((p) => p.rewardKey?.startsWith('achievement:4242:'))).toHaveLength(3);
+    expect((await shelf(tokens[1]!)).filter((p) => p.rewardKey?.startsWith('achievement:4242:'))).toHaveLength(1);
+  });
+});
+
+/** The auto-lineup the assembly screen suggests for a seat. */
+async function suggestedLineup(draftId: number, token: string): Promise<SavedLineup> {
+  const team = parse<{ team: { suggested: SavedLineup | null } }>(await call('GET', `/api/drafts/${draftId}/team`, { token })).team;
+  if (!team.suggested) throw new Error('the assembly screen offered no lineup');
+  return team.suggested;
+}
+
+/**
+ * A room dealt before the series existed: no teams, no games, no sandbox map —
+ * just picks in the state. It has to keep opening for its managers.
+ */
+describe('a draft from before the series', () => {
+  let draftId = 0;
+  let hostUserId = 0;
+  const oldPick = { id: 'old-card', personId: 1, cardYear: CARD_YEAR, name: 'Draft Player1', teamLabel: 'TST', rarity: 'rare' as const, headline: '20 HR', playable: true };
+
+  beforeAll(async () => {
+    hostUserId = parse<{ user: { id: number } }>(await call('GET', '/api/auth/me', { token: hostToken })).user.id;
+    const [row] = await db
+      .insert(drafts)
+      .values({
+        hostUserId,
+        status: 'finished',
+        config: { rounds: 1, packSize: 3, cardYear: CARD_YEAR, yearFrom: CARD_YEAR, yearTo: CARD_YEAR, playableOnly: true, themes: ['mixed'], rarityCaps: { rare: 1, chase: 0 } },
+        state: { round: 1, waitingOn: [], packs: {}, packThemes: {}, opened: [], picks: { 0: [oldPick] }, log: [{ seq: 1, text: 'Dealt long ago.' }] },
+      })
+      .returning({ id: drafts.id });
+    draftId = row!.id;
+    await db.insert(draftParticipants).values({ draftId, userId: hostUserId, seat: 0 });
+  });
+
+  it('still renders a room, an empty series, and the cards it dealt', async () => {
+    const view = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${draftId}`, { token: hostToken })).draft;
+    expect(view.phase).toBe('finished');
+    expect(view.myPicks.map((c) => c.id)).toEqual(['old-card']);
+    expect(view.seats.map((s) => s.picks.length)).toEqual([1]);
+    expect(view.seats[0]!.lineupReady).toBe(false);
+    expect(view.myLineup).toBeNull();
+    expect(view.gameId).toBeNull();
+    expect(view.games).toEqual([]);
+    expect(view.myKeeps).toEqual({});
+    expect(view.myPendingChoice).toBeNull();
+    // A cap written in the old tiers reads as today's tiers.
+    expect(view.config.rarityCaps).toEqual({ rare: 1, star: 20, mythic: 20 });
+    // The assembly screen still answers with the cards the room dealt.
+    const team = parse<{ team: { cards: { card: { id: string } }[]; suggested: unknown } }>(await call('GET', `/api/drafts/${draftId}/team`, { token: hostToken })).team;
+    expect(team.cards.map((c) => c.card.id)).toEqual(['old-card']);
+    expect(team.suggested).toBeNull();
   });
 });

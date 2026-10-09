@@ -2,14 +2,15 @@ import { creditRun } from './box.js';
 import { pushEvent } from './events.js';
 import type { Rng } from './rng.js';
 import type { EnginePlayer, GameEvent, GameState, Side, TeamState } from './types.js';
+import { otherSide, SIDES } from './types.js';
 import {
-  activeSeason,
-  availablePitchers,
   getDefense,
   getOffense,
+  getTeam,
   isCloserInning,
-  isSeasonInjured,
   pitcherLegalOnMound,
+  playerById,
+  resolveSeason,
   rulesOf,
 } from './queries.js';
 
@@ -44,17 +45,24 @@ export function startHalfInning(state: GameState, events: GameEvent[], rng: Rng)
       );
     }
 
+    // A roll that lands on an unusable season (a cup of coffee, an injury
+    // year) skips to the next-older one, wrapping to the most recent. Say so
+    // once per inning for the players it moves.
+    const rules = rulesOf(state);
     for (const team of [state.away, state.home]) {
       for (const player of team.players) {
-        if (player.status !== 'active' || player.injured) continue;
-        const rules = rulesOf(state);
-        if (isSeasonInjured(player, team.yearRoll, rules)) {
-          player.injured = true;
-          const year = activeSeason(player, team.yearRoll, rules).year;
+        if (player.status !== 'active') continue;
+        let resolution;
+        try {
+          resolution = resolveSeason(player, team.yearRoll, rules);
+        } catch {
+          continue; // a card with no usable window: the manager's problem to see
+        }
+        if (resolution.skippedYear !== null) {
           events.push(
             pushEvent(state, {
-              kind: 'injury',
-              text: `${player.name} (${team.name}) lands on his ${year} season — injured! He leaves after his next plate appearance.`,
+              kind: 'info',
+              text: `${player.name} (${team.name}) lands on his ${resolution.skippedYear} season — not a full year, so he plays his ${resolution.season.year} instead.`,
               refs: { playerId: player.id, side: team.side },
             }),
           );
@@ -69,7 +77,7 @@ export function startHalfInning(state: GameState, events: GameEvent[], rng: Rng)
     events.push(
       pushEvent(state, {
         kind: 'info',
-        text: `${pitcher.name} stays in to close — 1 inning max from here.`,
+        text: `${pitcher.name} stays in to close out the ballgame.`,
         refs: { playerId: pitcher.id, side: defense.side },
       }),
     );
@@ -79,26 +87,15 @@ export function startHalfInning(state: GameState, events: GameEvent[], rng: Rng)
 }
 
 /**
- * Make sure the defense has a legal pitcher. Returns false (and raises a
- * pitcher-change decision) when the manager must make a move.
+ * Make sure the defense has a legal pitcher. Fatigue never forces a change —
+ * a tired pitcher just pitches worse — so this only fires when nobody is on
+ * the mound at all.
  */
 function ensurePitcher(state: GameState, events: GameEvent[]): boolean {
   const defense = getDefense(state);
   const pitcher = defense.players.find((p) => p.id === defense.activePitcherId);
   const reason = pitcher ? pitcherLegalOnMound(state, pitcher) : { ok: false, reason: 'is missing' };
   if (reason.ok) return true;
-
-  if (availablePitchers(state, defense.side).length === 0 && pitcher && pitcher.status === 'active') {
-    pitcher.fatigueWaived = true;
-    events.push(
-      pushEvent(state, {
-        kind: 'info',
-        text: `${defense.name} have nobody left in the bullpen — ${pitcher.name} has to keep pitching.`,
-        refs: { playerId: pitcher.id, side: defense.side },
-      }),
-    );
-    return true;
-  }
 
   state.pendingDecision = {
     kind: 'pitcher-change',
@@ -146,22 +143,12 @@ export function openPlateAppearance(state: GameState, events: GameEvent[]): void
 }
 
 /**
- * Bookkeeping after a plate appearance resolves: injured exits, lineup
- * advance, then open the next PA (or end the half).
+ * Bookkeeping after a plate appearance resolves: lineup advance, then open
+ * the next PA (or end the half).
  */
 export function finishPlateAppearance(state: GameState, events: GameEvent[]): void {
   const pa = state.currentPa;
   state.currentPa = null;
-  const offense = getOffense(state);
-
-  if (pa) {
-    const batter = offense.players.find((p) => p.id === pa.batterId);
-    if (batter && batter.injured && batter.status === 'active') {
-      handleInjuredBatter(state, offense, batter, events);
-    }
-    const pitcher = getDefense(state).players.find((p) => p.id === pa.pitcherId);
-    if (pitcher && pitcher.injured && pitcher.status === 'active') pitcher.exitDue = true;
-  }
 
   if (state.outs >= 3) {
     endHalfInning(state, events);
@@ -170,45 +157,6 @@ export function finishPlateAppearance(state: GameState, events: GameEvent[]): vo
 
   advanceLineupCursor(state);
   openPlateAppearance(state, events);
-}
-
-function handleInjuredBatter(state: GameState, offense: TeamState, batter: EnginePlayer, events: GameEvent[]): void {
-  const hasBench = benchHitters(offense).length > 0;
-  const onBase = batter.base !== null && state.outs < 3;
-
-  if (onBase && hasBench) {
-    state.pendingDecision = {
-      kind: 'pinch-runner',
-      side: offense.side,
-      playerId: batter.id,
-      prompt: `${batter.name} reached base but is injured — choose a pinch-runner.`,
-    };
-    return;
-  }
-
-  // He's done either way: off the bases, out of the game.
-  batter.base = null;
-  batter.status = 'out';
-  events.push(
-    pushEvent(state, {
-      kind: 'injury',
-      text: `${batter.name} is injured and leaves the game.`,
-      refs: { playerId: batter.id, side: offense.side },
-    }),
-  );
-
-  if (hasBench) {
-    state.pendingDecision = {
-      kind: 'lineup-fill',
-      side: offense.side,
-      playerId: batter.id,
-      prompt: `Replace ${batter.name} in the lineup${batter.fieldPosition ? ` (${batter.fieldPosition})` : ''}.`,
-    };
-  } else {
-    const spot = offense.lineup.indexOf(batter.id);
-    if (spot >= 0) offense.lineup[spot] = null;
-    batter.fieldPosition = null;
-  }
 }
 
 export function advanceLineupCursor(state: GameState): void {
@@ -295,6 +243,13 @@ export function finishGame(state: GameState, winner: Side, endedBy: 'score' | 'c
   state.pendingPlay = null;
   state.currentPa = null;
   state.needsHalfStart = false;
+
+  // Feats worth celebrating (and, server-side, bonus packs): read from the
+  // final box score before the curtain call.
+  for (const feat of finalAchievements(state)) {
+    recordAchievement(state, events, feat);
+  }
+
   const w = winner === 'home' ? state.home : state.away;
   const l = winner === 'home' ? state.away : state.home;
   events.push(
@@ -304,6 +259,69 @@ export function finishGame(state: GameState, winner: Side, endedBy: 'score' | 'c
       refs: { side: winner },
     }),
   );
+}
+
+// ---------------------------------------------------------------------------
+// Achievements
+// ---------------------------------------------------------------------------
+
+/** Note a feat the moment it happens, in play code. */
+export function recordAchievement(
+  state: GameState,
+  events: GameEvent[],
+  achievement: { side: Side; kind: string; text: string; playerId?: string },
+): void {
+  // Games saved before feats existed have no list; start one on demand.
+  if (!state.achievements) state.achievements = [];
+  state.achievements.push({ side: achievement.side, kind: achievement.kind });
+  events.push(
+    pushEvent(state, {
+      kind: 'achievement',
+      text: achievement.text,
+      refs: { side: achievement.side, ...(achievement.playerId ? { playerId: achievement.playerId } : {}) },
+    }),
+  );
+}
+
+/**
+ * Feats read from the box score once the last out is recorded: a no-hitter,
+ * a perfect game, a cycle. Only a game that ran its full length counts — a
+ * concession in the third never throws a no-hitter here.
+ */
+function finalAchievements(state: GameState): { side: Side; kind: string; text: string; playerId?: string }[] {
+  if (state.endedBy !== 'score') return [];
+  const box = state.box;
+  if (!box) return [];
+  const out: { side: Side; kind: string; text: string; playerId?: string }[] = [];
+  // A no-hitter needs at least this much work on the mound to be real: every
+  // inning but the last, so a walk-off short start still counts.
+  const minOuts = (state.config.regulationInnings - 1) * 3;
+
+  for (const side of SIDES) {
+    const opponent = otherSide(side);
+    const pitching = Object.values(box[side]?.pitching ?? {});
+    const outs = pitching.reduce((sum, p) => sum + p.outs, 0);
+    const hits = pitching.reduce((sum, p) => sum + p.h, 0);
+    const walks = pitching.reduce((sum, p) => sum + p.bb, 0);
+
+    if (outs >= minOuts) {
+      const team = getTeam(state, side).name;
+      if (hits === 0 && walks === 0) {
+        out.push({ side, kind: 'perfect-game', text: `${team} have thrown a PERFECT GAME!` });
+      } else if (hits === 0) {
+        out.push({ side, kind: 'no-hitter', text: `${team} have thrown a NO-HITTER!` });
+      }
+    }
+
+    for (const [playerId, line] of Object.entries(box[side]?.batting ?? {})) {
+      const singles = line.h - line.doubles - line.triples - line.hr;
+      if (singles >= 1 && line.doubles >= 1 && line.triples >= 1 && line.hr >= 1) {
+        const player = playerById(state, playerId);
+        out.push({ side, kind: 'cycle', text: `${player?.name ?? 'A batter'} has hit for the CYCLE!`, playerId });
+      }
+    }
+  }
+  return out;
 }
 
 export function ordinal(n: number): string {

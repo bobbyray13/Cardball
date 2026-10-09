@@ -12,8 +12,8 @@ const FIELD = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'] as const;
 /**
  * Nine hitters and one starting pitcher: no bench, no bullpen. That is the
  * smallest legal team, and the shape a player with a small collection fields.
- * It exercises the injury (no pinch-runner available) and exhausted-bullpen
- * paths that the deep `randomTeam` roster never reaches.
+ * It exercises the shallow-lineup and exhausted-staff paths that the deep
+ * `randomTeam` roster never reaches.
  */
 function thinTeam(prefix: string): TeamSetup {
   const hitters: PlayerSetup[] = FIELD.map((pos, i) => batter(`${prefix}${i}`, [pos]));

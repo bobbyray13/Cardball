@@ -23,11 +23,14 @@ export const RULES_CONFIG = {
   /** Innings (IP, not outs) pitched in a single MLB season that make a pitcher a starter. */
   starterIpThreshold: 100,
 
-  /** Total innings a pitcher may throw in a Cardball game, by role. */
-  ipCaps: { starter: 4, reliever: 2, closer: 1 },
-
-  /** These regulation innings must be pitched by relievers. */
-  relieverOnlyInnings: [8, 9],
+  /**
+   * THE MOUND, post-fatigue: a pitcher may stay in as long as his manager
+   * will have him, but every fatigued inning costs him on the pitch roll.
+   */
+  /** Innings a starting pitcher works at full strength in a 9-inning game. */
+  starterFreshInnings: 5,
+  /** Pitch-roll penalty per fatigued inning (starters past their fresh innings, relievers after every full inning). */
+  fatiguePerInning: 1,
 
   /** Consecutive tie pitch-rolls that become a walk. */
   walkBalls: 3,
@@ -87,6 +90,23 @@ export const RBI_BONUS_BANDS: readonly MinBand[] = [
   { min: 120, mod: 2 },
   { min: 100, mod: 1 },
 ];
+
+/**
+ * How many innings a starter pitches at full strength in a game this long.
+ * A 9-inning game gives him `starterFreshInnings` (5); a 6-inning game scales
+ * it down (3), a 3-inning game further (2) — so short games fatigue the same
+ * way, just sooner. Takes the rules loosely, so a game snapshotted before the
+ * fatigue rules existed still reads the shipped default.
+ */
+export function freshInningsFor(regulationInnings: number, rules: { starterFreshInnings?: number } = {}): number {
+  const fresh = rules.starterFreshInnings ?? RULES_CONFIG.starterFreshInnings;
+  return Math.max(1, Math.round((fresh * regulationInnings) / 9));
+}
+
+/** The fatigue penalty per fatigued inning, defaulted for pre-fatigue rule snapshots. */
+export function fatiguePerInning(rules: { fatiguePerInning?: number } = {}): number {
+  return rules.fatiguePerInning ?? RULES_CONFIG.fatiguePerInning;
+}
 
 export function rbiBonus(rbi: number, bands: readonly MinBand[] = RBI_BONUS_BANDS): number {
   for (const band of bands) {

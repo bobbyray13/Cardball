@@ -112,8 +112,10 @@
 }
 
 /*
- * Foil finishes for rare and chase cards. Pure CSS on an overlay with
+ * Foil finishes for the printed tiers. Pure CSS on an overlay with
  * pointer-events off, so a shelf of them costs nothing in layout or input.
+ * Rare wears a cool sky sheen, star a gold one, and mythic the strongest
+ * treatment: a crimson-to-violet shimmer.
  */
 @keyframes foil-sweep {
   0% {
@@ -138,18 +140,30 @@
   animation: foil-sweep 6s linear infinite;
 }
 
-@utility foil-chase {
+@utility foil-star {
+  background: linear-gradient(
+    115deg,
+    transparent 28%,
+    rgba(255, 226, 150, 0.32) 44%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 226, 150, 0.32) 56%,
+    transparent 72%
+  );
+  background-size: 200% 100%;
+  mix-blend-mode: screen;
+  animation: foil-sweep 5s linear infinite;
+}
+
+@utility foil-mythic {
   background:
     linear-gradient(
       115deg,
-      rgba(255, 90, 90, 0.18),
-      rgba(255, 220, 90, 0.18),
-      rgba(90, 255, 160, 0.18),
-      rgba(90, 170, 255, 0.18),
-      rgba(220, 110, 255, 0.18),
-      rgba(255, 90, 90, 0.18)
+      rgba(220, 60, 90, 0.24),
+      rgba(190, 90, 220, 0.26),
+      rgba(90, 120, 255, 0.22),
+      rgba(220, 60, 90, 0.24)
     ),
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 6px);
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.06) 0 2px, transparent 2px 6px);
   background-size: 200% 100%, auto;
   mix-blend-mode: overlay;
   animation: foil-sweep 4s linear infinite;
@@ -157,7 +171,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .foil-rare,
-  .foil-chase {
+  .foil-star,
+  .foil-mythic {
     animation: none;
   }
 }

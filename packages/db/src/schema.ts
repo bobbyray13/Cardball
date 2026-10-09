@@ -63,6 +63,12 @@ export const seasons = pgTable(
     pitchIpOuts: integer('pitch_ip_outs').notNull().default(0),
     pitchEra: doublePrecision('pitch_era'),
     pitchBf: integer('pitch_bf').notNull().default(0),
+    pitchSo: integer('pitch_so').notNull().default(0),
+    pitchBb: integer('pitch_bb').notNull().default(0),
+    pitchH: integer('pitch_h').notNull().default(0),
+    pitchW: integer('pitch_w').notNull().default(0),
+    pitchL: integer('pitch_l').notNull().default(0),
+    pitchSv: integer('pitch_sv').notNull().default(0),
 
     primaryPosition: varchar('primary_position', { length: 3 }),
     positionsPlayed: jsonb('positions_played')
@@ -168,6 +174,13 @@ export const userCards = pgTable(
     quantity: integer('quantity').notNull().default(1),
     photoId: integer('photo_id').references(() => photos.id, { onDelete: 'set null' }),
     notes: text('notes'),
+    /**
+     * True while the card lives in a draft's sandbox: drafted, playable on
+     * its draft team, but not part of the manager's collection until they
+     * keep it. Winner-of-a-game keeps flip this off, which is what moves a
+     * card from the sandbox into the binder.
+     */
+    sandbox: boolean('sandbox').notNull().default(false),
     createdAt: timestamp('created_at').notNull().defaultNow(),
   },
   (t) => [index('user_cards_user_idx').on(t.userId), index('user_cards_model_idx').on(t.cardModelId)],
@@ -282,6 +295,8 @@ export const games = pgTable(
     passwordHash: text('password_hash'),
     /** set when a tournament scheduled this game, so its other managers can watch */
     tournamentId: integer('tournament_id').references((): AnyPgColumn => tournaments.id, { onDelete: 'set null' }),
+    /** the draft series this game belongs to, so its room shows the series and pays its rewards */
+    draftId: integer('draft_id').references((): AnyPgColumn => drafts.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },
@@ -477,7 +492,17 @@ export function seasonRowToStats(row: SeasonRow): SeasonStats {
     sb: row.sb,
     pa: row.pa,
     pitching: pitched
-      ? { games: row.pitchGames, ipOuts: row.pitchIpOuts, era: row.pitchEra }
+      ? {
+          games: row.pitchGames,
+          ipOuts: row.pitchIpOuts,
+          era: row.pitchEra,
+          so: row.pitchSo,
+          bb: row.pitchBb,
+          h: row.pitchH,
+          w: row.pitchW,
+          l: row.pitchL,
+          sv: row.pitchSv,
+        }
       : null,
     primaryPosition: (row.primaryPosition as Position | null) ?? null,
     positionsPlayed: row.positionsPlayed ?? [],

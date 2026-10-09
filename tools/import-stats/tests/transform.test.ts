@@ -10,8 +10,8 @@ const BATTING = `playerID,yearID,stint,teamID,lgID,G,AB,R,H,2B,3B,HR,RBI,SB,CS,B
 batte01,1951,1,NY1,NL,120,500,60,150,20,5,20,70,10,5,40,50,,,,3,0
 batte01,1951,2,BSN,NL,10,40,5,10,2,0,1,5,0,0,3,5,,,,0,0`;
 
-const PITCHING = `playerID,yearID,stint,teamID,G,IPouts,ER,BFP
-pitch01,1995,1,ATL,28,600,40,720`;
+const PITCHING = `playerID,yearID,stint,teamID,G,IPouts,ER,BFP,SO,BB,H,W,L,SV
+pitch01,1995,1,ATL,28,600,40,720,180,55,165,21,5,0`;
 
 const FIELDING = `playerID,yearID,stint,teamID,POS,G,InnOuts,PO,A,E,SB,CS
 batte01,1951,1,NY1,OF,120,1050,300,10,5,0,0
@@ -80,6 +80,26 @@ describe('buildDataset', () => {
     expect(row?.pitchIpOuts).toBe(600);
     expect(row?.pitchBf).toBe(720);
     expect(row?.pitchEra).toBeCloseTo(1.8);
+  });
+
+  it('carries the mound counting stats through', () => {
+    const row = season('pitch01', 1995);
+    expect(row?.pitchSo).toBe(180);
+    expect(row?.pitchBb).toBe(55);
+    expect(row?.pitchH).toBe(165);
+    expect(row?.pitchW).toBe(21);
+    expect(row?.pitchL).toBe(5);
+    expect(row?.pitchSv).toBe(0);
+  });
+
+  it('imports zeros when the mirror lacks the counting-stat columns', () => {
+    const bare = files();
+    bare['Pitching.csv'] = `playerID,yearID,stint,teamID,G,IPouts,ER,BFP
+pitch01,1995,1,ATL,28,600,40,720`;
+    const row = buildDataset(bare).seasons.find((s) => s.bbrefId === 'pitch01' && s.year === 1995);
+    expect(row?.pitchSo).toBe(0);
+    expect(row?.pitchW).toBe(0);
+    expect(row?.pitchIpOuts).toBe(600);
   });
 
   it('keeps P in positionsPlayed but leaves a pure pitcher without a primary position', () => {

@@ -8,6 +8,7 @@ const KIND_BADGE: Record<string, { label: string; className: string; accent: boo
   run: { label: 'RUN', className: 'bg-gold/20 text-gold', accent: true },
   'home-run': { label: 'HOME RUN', className: 'bg-gold/25 text-gold', accent: true },
   hit: { label: 'HIT', className: 'bg-gold/15 text-gold', accent: true },
+  achievement: { label: 'FEAT', className: 'bg-gold/30 text-gold', accent: true },
   'game-over': { label: 'FINAL', className: 'bg-gold/25 text-gold', accent: true },
   walk: { label: 'WALK', className: 'bg-navy/70 text-chalk', accent: false },
   steal: { label: 'STEAL', className: 'bg-navy/70 text-chalk', accent: false },
@@ -19,10 +20,10 @@ const KIND_BADGE: Record<string, { label: string; className: string; accent: boo
 const badgeOf = (kind: string) => KIND_BADGE[kind] ?? { label: kind.replace('-', ' ').toUpperCase(), className: 'bg-white/10 text-chalk/70', accent: false };
 
 /**
- * How long each event of a new play holds the strip before the next. A full
- * second, so the call is followable at the table instead of flashing past.
+ * How long each event of a new play holds the strip before the next. A second
+ * and a half, so the call is followable at the table instead of flashing past.
  */
-const REVEAL_MS = 1000;
+const REVEAL_MS = 1500;
 /** The first beat of a fresh play answers the button quickly; the rest pace out. */
 const FIRST_BEAT_MS = 400;
 /** Longer than this since the last beat means the batch is over. */

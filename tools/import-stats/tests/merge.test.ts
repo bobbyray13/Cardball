@@ -44,6 +44,12 @@ function pitchingStint(overrides: Partial<PitchingStint> = {}): PitchingStint {
     ipOuts: 620,
     er: 38,
     bf: 800,
+    so: 210,
+    bb: 60,
+    h: 190,
+    w: 19,
+    l: 8,
+    sv: 0,
     ...overrides,
   };
 }
@@ -84,12 +90,18 @@ describe('mergePitching', () => {
   it('sums stints and converts outs to ERA', () => {
     const merged = mergePitching([
       pitchingStint(),
-      pitchingStint({ stint: 2, teamId: 'NYA', games: 5, ipOuts: 100, er: 10, bf: 120 }),
+      pitchingStint({ stint: 2, teamId: 'NYA', games: 5, ipOuts: 100, er: 10, bf: 120, so: 30, bb: 9, h: 25, w: 2, l: 1, sv: 3 }),
     ]);
     expect(merged.games).toBe(33);
     expect(merged.ipOuts).toBe(720);
     expect(merged.er).toBe(48);
     expect(merged.bf).toBe(920);
+    expect(merged.so).toBe(240);
+    expect(merged.bb).toBe(69);
+    expect(merged.h).toBe(215);
+    expect(merged.w).toBe(21);
+    expect(merged.l).toBe(9);
+    expect(merged.sv).toBe(3);
     // 48 earned runs in 240 innings
     expect(merged.era).toBeCloseTo(1.8);
   });

@@ -35,6 +35,18 @@ export interface SeasonStats {
     ipOuts: number;
     /** earned runs allowed * 27 / ipOuts, or null when ipOuts = 0 */
     era: number | null;
+    /** strikeouts. Seasons saved before this stat was imported read as 0. */
+    so: number;
+    /** walks allowed */
+    bb: number;
+    /** hits allowed (with bb, makes WHIP) */
+    h: number;
+    /** wins */
+    w: number;
+    /** losses */
+    l: number;
+    /** saves */
+    sv: number;
   } | null;
 
   /** primary position that season (most games), null for pure pitchers */
@@ -60,6 +72,15 @@ export function batterSeasonHealthy(s: SeasonStats, minAb = 100): boolean {
 /** A pitcher season is healthy when it reached the required innings. */
 export function pitcherSeasonHealthy(s: SeasonStats, minIpOuts = 120): boolean {
   return (s.pitching?.ipOuts ?? 0) >= minIpOuts;
+}
+
+/** WHIP the way a card back prints it, or "—" with no innings. */
+export function whipOf(s: SeasonStats): string {
+  const p = s.pitching;
+  if (!p || p.ipOuts === 0) return '—';
+  const walks = p.bb ?? 0;
+  const hits = p.h ?? 0;
+  return ((walks + hits) / (p.ipOuts / 3)).toFixed(2);
 }
 
 /**

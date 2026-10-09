@@ -26,6 +26,7 @@ import {
   formatLabel,
   packTheme,
   packThemesForYears,
+  resolveMatchRules,
   scheduleMatches,
   slotSeat,
   standingsFrom,
@@ -66,6 +67,12 @@ import { loadTeam, photoMap, rosterCards, teamSetupFor } from './roster.js';
 /** The per-tournament state kept in `tournaments.state`. */
 interface TournamentState {
   draftId: number | null;
+  /**
+   * Seats, carried only by a rematch: the unique index on `tournaments.draft_id`
+   * lets one row own a draft room, so a rematch row keeps its seats here and
+   * reuses the teams the original draft built.
+   */
+  seats?: { userId: number; seat: number }[];
   /** seat → the team built from that manager's draft picks */
   teams: Record<string, number>;
   matches: TournamentMatch[];
@@ -99,12 +106,13 @@ function seatedNames(ctx: Ctx, seats: { userId: number }[], hostUserId: number):
 }
 
 /** The seated managers, in seat order: seats are the draft room's seats. */
-async function seatRows(ctx: Ctx, draftId: number | null): Promise<{ userId: number; seat: number }[]> {
-  if (draftId === null) return [];
+async function seatRows(ctx: Ctx, state: TournamentState): Promise<{ userId: number; seat: number }[]> {
+  // A rematch row has no draft of its own; its seats came along in its state.
+  if (state.draftId === null) return state.seats ?? [];
   return ctx.db
     .select({ userId: draftParticipants.userId, seat: draftParticipants.seat })
     .from(draftParticipants)
-    .where(eq(draftParticipants.draftId, draftId))
+    .where(eq(draftParticipants.draftId, state.draftId))
     .orderBy(draftParticipants.seat);
 }
 
@@ -171,7 +179,7 @@ async function teamName(ctx: Ctx, teamId: number): Promise<string | null> {
 async function toView(ctx: Ctx, row: TournamentRow): Promise<TournamentView> {
   const state = stored(row);
   const config = configOf(row);
-  const seats = await seatRows(ctx, state.draftId);
+  const seats = await seatRows(ctx, state);
   const names = await seatedNames(ctx, seats, row.hostUserId);
   const scores = await matchScores(ctx, state.matches);
   const table = standingsFrom(config.seats, state.matches, (id) => scores[id] ?? null);
@@ -227,7 +235,7 @@ export interface CreateTournamentInput {
     yearFrom: number;
     yearTo: number;
     themes?: readonly string[];
-    rarityCaps?: { rare: number; chase: number } | null;
+    rarityCaps?: { rare: number; star: number; mythic: number } | null;
   };
 }
 
@@ -269,8 +277,12 @@ function validateConfig(input: CreateTournamentInput): TournamentConfig {
 
   const rawCaps = input.draft.rarityCaps ?? null;
   const caps =
-    rawCaps && (rawCaps.rare > 0 || rawCaps.chase > 0)
-      ? { rare: rawCaps.rare > 0 ? rawCaps.rare : DRAFT_LIMITS.maxRare, chase: rawCaps.chase > 0 ? rawCaps.chase : DRAFT_LIMITS.maxChase }
+    rawCaps && (rawCaps.rare > 0 || rawCaps.star > 0 || rawCaps.mythic > 0)
+      ? {
+          rare: rawCaps.rare > 0 ? rawCaps.rare : DRAFT_LIMITS.maxRare,
+          star: rawCaps.star > 0 ? rawCaps.star : DRAFT_LIMITS.maxStar,
+          mythic: rawCaps.mythic > 0 ? rawCaps.mythic : DRAFT_LIMITS.maxMythic,
+        }
       : null;
 
   return {
@@ -278,7 +290,20 @@ function validateConfig(input: CreateTournamentInput): TournamentConfig {
     seats: input.seats,
     regulationInnings: input.regulationInnings,
     autoSimulate: input.autoSimulate,
-    draft: { rounds, packSize, yearFrom, yearTo, themes: themes.length > 0 ? themes : ['mixed'], rarityCaps: caps },
+    // `TournamentConfig` still types the caps as the pre-Mythic `{ rare, chase }`
+    // shape (that shared file is frozen); today's tiers are what is stored.
+    draft: { rounds, packSize, yearFrom, yearTo, themes: themes.length > 0 ? themes : ['mixed'], rarityCaps: caps as unknown as TournamentConfig['draft']['rarityCaps'] },
+  };
+}
+
+/**
+ * The draft's caps read in today's tiers, mapped through the shared resolver so
+ * a row capped back when the top tier was "chase" still plays the same cards.
+ */
+function draftMatch(config: TournamentConfig): MatchRules {
+  return {
+    ...resolveMatchRules({ yearFrom: config.draft.yearFrom, yearTo: config.draft.yearTo, rarityCaps: config.draft.rarityCaps }),
+    outOfPosition: true,
   };
 }
 
@@ -292,7 +317,8 @@ function draftConfig(config: TournamentConfig): CreateDraftInput {
     yearTo: d.yearTo,
     playableOnly: true,
     themes: d.themes,
-    rarityCaps: d.rarityCaps,
+    rarityCaps: d.rarityCaps as unknown as CreateDraftInput['rarityCaps'],
+    regulationInnings: config.regulationInnings,
   };
 }
 
@@ -361,7 +387,7 @@ export function joinTournament(ctx: Ctx, user: AuthUser, id: number): Promise<To
     const row = await loadRow(ctx, id);
     if (row.status !== 'lobby') throw badRequest('That tournament already started');
     const config = configOf(row);
-    const seats = await seatRows(ctx, stored(row).draftId);
+    const seats = await seatRows(ctx, stored(row));
     if (seats.some((s) => s.userId === user.id)) return toView(ctx, row);
     if (seats.length >= config.seats) throw badRequest(`All ${config.seats} seats are taken`);
 
@@ -381,9 +407,20 @@ export function startTournament(ctx: Ctx, user: AuthUser, id: number): Promise<T
 
     const config = configOf(row);
     const state = stored(row);
-    const seats = await seatRows(ctx, state.draftId);
+    const seats = await seatRows(ctx, state);
     if (seats.length < config.seats) throw badRequest(`This tournament needs ${config.seats} managers — ${seats.length} seated`);
-    if (state.draftId === null) throw badRequest('The draft room is missing');
+
+    // A rematch: the teams are already built from the first run's draft, so
+    // there is nothing to deal — only a fresh bracket to schedule.
+    if (state.draftId === null) {
+      if (Object.keys(state.teams).length < config.seats) throw badRequest('The teams from that tournament are gone');
+      state.matches = scheduleMatches(config.format, config.seats);
+      state.log.push({
+        seq: state.log.length + 1,
+        text: `Same teams, fresh bracket — ${formatLabel(config.format)}. Play ball.`,
+      });
+      return toView(ctx, await save(ctx, row, state, 'playing'));
+    }
 
     // Everyone is seated: deal the packs and let the draft room take over.
     await startDraft(ctx, user, state.draftId);
@@ -416,6 +453,40 @@ export function simulateTournament(ctx: Ctx, user: AuthUser, id: number): Promis
   });
 }
 
+/**
+ * Run the same tournament again with the same drafted teams: a new row, the
+ * same config, and the same teams — no second draft. The seats come along in
+ * the new row's state, because the unique index on `tournaments.draft_id`
+ * lets one row own a draft room and the original still owns this one.
+ */
+export function rematchTournament(ctx: Ctx, user: AuthUser, id: number): Promise<TournamentView> {
+  return withLock(id, async () => {
+    const row = await loadRow(ctx, id);
+    if (row.hostUserId !== user.id) throw forbidden('Only the host can run a rematch');
+    if (row.status !== 'finished') throw badRequest('That tournament is still going');
+    const config = configOf(row);
+    const state = stored(row);
+    if (Object.keys(state.teams).length < config.seats) throw badRequest('The teams from that tournament are gone');
+    const seats = await seatRows(ctx, state);
+
+    const suffix = ' (rematch)';
+    const name = row.name.length + suffix.length <= 40 ? `${row.name}${suffix}` : `${row.name.slice(0, 40 - suffix.length)}${suffix}`;
+    const fresh: TournamentState = {
+      draftId: null,
+      seats: seats.map((s) => ({ ...s })),
+      teams: { ...state.teams },
+      matches: [],
+      championSeat: null,
+      log: [{ seq: 1, text: `Rematch of ${row.name} — same teams, fresh bracket.` }],
+    };
+    const [created] = await ctx.db
+      .insert(tournaments)
+      .values({ hostUserId: row.hostUserId, name, status: 'lobby', config, state: fresh, draftId: null })
+      .returning();
+    return toView(ctx, created!);
+  });
+}
+
 export function deleteTournament(ctx: Ctx, user: AuthUser, id: number): Promise<void> {
   return withLock(id, async () => {
     const row = await loadRow(ctx, id);
@@ -442,7 +513,7 @@ async function sync(ctx: Ctx, row: TournamentRow): Promise<TournamentRow> {
   let current = row;
   const config = configOf(current);
   const state = stored(current);
-  const seated = await seatRows(ctx, state.draftId);
+  const seated = await seatRows(ctx, state);
   const names = await seatedNames(ctx, seated, current.hostUserId);
   const label = (seat: number | null) => {
     if (seat === null) return 'nobody';
@@ -581,7 +652,7 @@ async function buildTeams(
   const [draft] = await ctx.db.select().from(drafts).where(eq(drafts.id, state.draftId)).limit(1);
   if (!draft) return;
   const picks = (draft.state as { picks: Record<string, DraftCard[]> }).picks;
-  const seats = await seatRows(ctx, state.draftId);
+  const seats = await seatRows(ctx, state);
 
   for (const { userId, seat } of seats) {
     const built = await teamFromPicks(ctx, row, userId, label(seat), picks[String(seat)] ?? []);
@@ -614,7 +685,10 @@ async function teamFromPicks(
     .select({ id: userCards.id, personId: cardModels.personId, cardYear: cardModels.cardYear })
     .from(userCards)
     .innerJoin(cardModels, eq(cardModels.id, userCards.cardModelId))
-    .where(eq(userCards.userId, userId));
+    // Drafted cards are sandbox rows; when the manager also owns a real copy of
+    // the same card, the sandbox row is the one on the team, so it wins here.
+    .where(eq(userCards.userId, userId))
+    .orderBy(userCards.sandbox);
   const byPair = new Map(owned.map((o) => [`${o.personId}:${o.cardYear}`, o.id]));
 
   // The same card can come up twice in a draft; a team carries one of each.
@@ -674,12 +748,7 @@ async function createMatchGame(
   const away = awaySide!.loaded;
   // The tournament's era and caps ride along so the room prints the terms;
   // drafted rosters may field out of position.
-  const match: MatchRules = {
-    yearFrom: config.draft.yearFrom,
-    yearTo: config.draft.yearTo,
-    rarityCaps: config.draft.rarityCaps,
-    outOfPosition: true,
-  };
+  const match: MatchRules = draftMatch(config);
 
   let engine: ReturnType<typeof createGame>;
   try {

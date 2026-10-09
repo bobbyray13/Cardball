@@ -71,17 +71,27 @@ export function HouseRulesEditor({ initial, onSaved }: { initial: HouseRules; on
 
         <Group title="The mound">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <NumberField label="Starter cap" hint="innings" value={draft.ipCaps.starter} min={0} max={12} onChange={(v) => set('ipCaps', { ...draft.ipCaps, starter: v })} />
-            <NumberField label="Reliever cap" hint="innings" value={draft.ipCaps.reliever} min={0} max={12} onChange={(v) => set('ipCaps', { ...draft.ipCaps, reliever: v })} />
-            <NumberField label="Closer cap" hint="innings" value={draft.ipCaps.closer} min={0} max={12} onChange={(v) => set('ipCaps', { ...draft.ipCaps, closer: v })} />
-            <Field label="Reliever-only innings" hint="comma-separated, e.g. 8, 9">
-              <input
-                className={inputClass}
-                value={draft.relieverOnlyInnings.join(', ')}
-                onChange={(e) => set('relieverOnlyInnings', numberList(e.target.value, 1, 30))}
-              />
-            </Field>
+            <NumberField
+              label="Starter fresh innings"
+              hint="full-strength innings for a starter in a 9-inning game"
+              value={draft.starterFreshInnings}
+              min={0}
+              max={12}
+              onChange={(v) => set('starterFreshInnings', v)}
+            />
+            <NumberField
+              label="Fatigue per inning"
+              hint="pitch-roll penalty per fatigued inning"
+              value={draft.fatiguePerInning}
+              min={0}
+              max={5}
+              onChange={(v) => set('fatiguePerInning', v)}
+            />
           </div>
+          <p className="mt-3 text-xs text-chalk/50">
+            A pitcher stays in as long as his manager will have him — every fatigued inning just costs him on the pitch roll. The
+            fresh-innings allowance scales down for shorter games.
+          </p>
         </Group>
 
         <Group title="At the plate and on the bases">
