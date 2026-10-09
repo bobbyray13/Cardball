@@ -1,0 +1,44 @@
+# Continuous integration: install once, typecheck every package, run every
+# test suite. The server suites create throwaway databases against the service
+# container (they derive an admin URL from TEST_DATABASE_URL and drop what
+# they create), which is why the credentials here are the Postgres superuser.
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: cardball
+          POSTGRES_PASSWORD: cardball
+          POSTGRES_DB: cardball
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U cardball -d cardball"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgres://cardball:cardball@localhost:5432/cardball_test_ci
+    steps:
+      - uses: actions/checkout@v4
+      # pnpm/action-setup reads the pinned version from package.json's packageManager field.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm -r typecheck
+      - name: Test
+        run: pnpm -r test
