@@ -20,6 +20,8 @@ import {
   runnersOn,
 } from '@cardball/engine';
 import { teamColors } from './BallCard.js';
+import { PlayerSilhouette } from './Silhouette.js';
+import type { SilhouettePose } from './Silhouette.js';
 
 /**
  * The season a player is using right now, or his most recent one before the
@@ -55,54 +57,58 @@ const NEUTRAL_SEASON: SeasonStats = {
 
 /**
  * The mat's coordinate system: a 100×75 viewBox (a 4:3 box, the same aspect
- * the container keeps). Everything below — the painted diamond and every chip —
- * is expressed in these units. Because the viewBox is 75 tall but CSS `top`
- * runs 0–100%, the chips convert y on the way out (see `pctY`), or they would
- * sit a quarter of the field too high.
+ * the container keeps, so the diamond stays square). Everything below — the
+ * painted field and every token — is expressed in these units. Because the
+ * viewBox is 75 tall but CSS `top` runs 0–100%, tokens convert y on the way
+ * out (see `pctY`), or they would sit a quarter of the field too high.
  */
 const VIEW_H = 75;
 const pctY = (y: number) => (y / VIEW_H) * 100;
 
-/** Home plate, second base, and the two bases on the foul lines. */
+/**
+ * The diamond: a true square seen from above, home at the bottom. `BASE_GAP`
+ * is the horizontal (and vertical) offset from one base to the next, so a
+ * basepath is BASE_GAP·√2 long.
+ */
+const BASE_GAP = 17;
 const HOME_PLATE = { x: 50, y: 64 };
 const BASE_SPOTS: Record<1 | 2 | 3, { x: number; y: number }> = {
-  1: { x: 70, y: 44 },
-  2: { x: 50, y: 24 },
-  3: { x: 30, y: 44 },
+  1: { x: HOME_PLATE.x + BASE_GAP, y: HOME_PLATE.y - BASE_GAP },
+  2: { x: HOME_PLATE.x, y: HOME_PLATE.y - BASE_GAP * 2 },
+  3: { x: HOME_PLATE.x - BASE_GAP, y: HOME_PLATE.y - BASE_GAP },
 };
+/** The rubber sits just short of the line between first and third, as on a real field. */
+const MOUND = { x: 50, y: HOME_PLATE.y - BASE_GAP * 0.95 };
+/** The outfield fence, an arc around home plate. */
+const FENCE_R = 58;
 
 /**
- * Where a runner stands while he holds a base. Nudged a few units off the base
- * spot along the basepath toward home, so the white base and its glow ring
- * stay visible under the chip.
+ * Where each defender plays. Every spot is in fair territory and clear of the
+ * bags and basepaths, so a runner on base never hides under a fielder: the
+ * corner men play behind their bags, the middle infielders back on the dirt
+ * either side of second, the outfielders in their gaps.
  */
-const RUNNER_SPOTS: Record<1 | 2 | 3, { x: number; y: number }> = {
-  1: { x: 66.5, y: 40.5 },
-  2: { x: 50, y: 30.5 },
-  3: { x: 33.5, y: 40.5 },
-};
-
-/** Where each defender stands: on the infield skin, outfielders in the grass. */
 const FIELDER_SPOTS: Record<string, { x: number; y: number }> = {
-  C: { x: 50, y: 70 },
-  '1B': { x: 66, y: 43 },
-  '2B': { x: 59, y: 36 },
-  '3B': { x: 34, y: 43 },
-  SS: { x: 41, y: 36 },
-  LF: { x: 26, y: 22 },
+  C: { x: 50, y: 69.6 },
+  '1B': { x: 70, y: 37.5 },
+  '2B': { x: 61, y: 32 },
+  SS: { x: 39, y: 32 },
+  '3B': { x: 30, y: 37.5 },
+  LF: { x: 24, y: 22 },
   CF: { x: 50, y: 12 },
-  RF: { x: 74, y: 22 },
-  P: { x: 50, y: 45 },
+  RF: { x: 76, y: 22 },
 };
 
-/** Where the batter waits, in the left-hand batter's box beside the plate. */
-const BATTER_BOX = { x: 42, y: 65 };
+/** The batter's box on the third-base side of the plate. */
+const BATTER_BOX = { x: 44.5, y: 62.6 };
 
 export type ZoomPlayer = (side: Side, player: EnginePlayer) => void;
 
 /**
- * The mat. Runners slide along the basepaths between bases as the plays
- * resolve, the batter stands in the box, and occupied bases glow.
+ * The mat. Defenders are tokens in their team color marked with their
+ * position; the batting side wears cream with a gold ring, so a glance tells
+ * who is in the field and who is trying to score. Runners stand on the bag
+ * they hold and slide along the basepaths as plays resolve.
  */
 export const Field = memo(function Field({ state, photos, onZoom }: { state: GameState; photos: Record<string, number>; onZoom?: ZoomPlayer }) {
   const defense = getDefense(state);
@@ -119,7 +125,7 @@ export const Field = memo(function Field({ state, photos, onZoom }: { state: Gam
   }
 
   const fielders = defense.players.filter(
-    (p): p is EnginePlayer & { fieldPosition: string } => p.status === 'active' && !!p.fieldPosition && p.fieldPosition !== 'DH',
+    (p): p is EnginePlayer & { fieldPosition: string } => p.status === 'active' && !!p.fieldPosition && p.fieldPosition !== 'DH' && p.fieldPosition !== 'P',
   );
   const pitcher = defense.players.find((p) => p.id === defense.activePitcherId) ?? null;
   const onBase = runnersOn(offense);
@@ -134,60 +140,82 @@ export const Field = memo(function Field({ state, photos, onZoom }: { state: Gam
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl ring-1 ring-black/40">
+      <div className="@container relative aspect-[4/3] w-full overflow-hidden rounded-2xl ring-1 ring-black/40" style={{ containerType: 'inline-size' }}>
         <FieldArt occupied={occupied} />
+        <Scorebug state={state} />
+        <Legend defense={defense.name} offense={offense.name} defenseColor={defenseColors.primary} offenseColor={offenseColors.primary} />
 
         {/* defense */}
         {fielders.map((fielder) => {
           const spot = FIELDER_SPOTS[fielder.fieldPosition];
           if (!spot) return null;
+          const rating = fmtMod(fieldingRating(fielder, fielder.fieldPosition));
           return (
-            <Chip
+            <Token
               key={fielder.id}
               x={spot.x}
               y={spot.y}
+              kind="defense"
               color={defenseColors.primary}
-              title={`${fielder.fieldPosition} · ${fielder.name}`}
+              mark={fielder.fieldPosition}
+              label={shortName(fielder.name)}
+              detail={rating}
+              title={`${fielder.fieldPosition} · ${fielder.name} · fielding ${rating}`}
               photoId={photos[fielder.id]}
               onClick={onZoom ? () => onZoom(defense.side, fielder) : undefined}
-              lines={[fielder.fieldPosition, shortName(fielder.name), fmtMod(fieldingRating(fielder, fielder.fieldPosition))]}
             />
           );
         })}
-
-        {/* the batter, standing in */}
-        {batter ? (
-          <Chip
-            key={`at-bat-${batter.id}`}
-            x={BATTER_BOX.x}
-            y={BATTER_BOX.y}
-            color={offenseColors.primary}
-            title={`At bat · ${batter.name}`}
-            photoId={photos[batter.id]}
-            onClick={onZoom ? () => onZoom(offense.side, batter) : undefined}
-            lines={['AB', shortName(batter.name)]}
-            ring
+        {pitcher ? (
+          <Token
+            key={pitcher.id}
+            x={MOUND.x}
+            y={MOUND.y}
+            kind="defense"
+            color={defenseColors.primary}
+            mark="P"
+            label={shortName(pitcher.name)}
+            title={`Pitching · ${pitcher.name}`}
+            photoId={photos[pitcher.id]}
+            onClick={onZoom ? () => onZoom(defense.side, pitcher) : undefined}
           />
         ) : null}
 
-        {/* runners, sliding between bases as plays resolve */}
+        {/* the batter, standing in */}
+        {batter ? (
+          <Token
+            key={`at-bat-${batter.id}`}
+            x={BATTER_BOX.x}
+            y={BATTER_BOX.y}
+            kind="offense"
+            color={offenseColors.primary}
+            pose="Stance"
+            label={shortName(batter.name)}
+            title={`At bat · ${batter.name}`}
+            photoId={photos[batter.id]}
+            onClick={onZoom ? () => onZoom(offense.side, batter) : undefined}
+          />
+        ) : null}
+
+        {/* runners, on the bag they hold, sliding between bases as plays resolve */}
         {onBase.map((runner) => {
-          const spot = RUNNER_SPOTS[runner.base as 1 | 2 | 3];
+          const spot = BASE_SPOTS[runner.base as 1 | 2 | 3];
           if (!spot) return null;
+          const sb = fmtMod(runnerSbMod(seasonNow(runner, offense.yearRoll, state.config.rules) ?? NEUTRAL_SEASON, state.config.rules).mod);
           return (
-            <Chip
+            <Token
               key={runner.id}
               x={spot.x}
               y={spot.y}
               from={firstPaint.current ? undefined : HOME_PLATE}
+              kind="offense"
               color={offenseColors.primary}
-              title={`${runner.name} on ${runner.base === 1 ? 'first' : runner.base === 2 ? 'second' : 'third'}`}
+              pose="OF"
+              label={shortName(runner.name)}
+              detail={`SB ${sb}`}
+              title={`${runner.name} on ${runner.base === 1 ? 'first' : runner.base === 2 ? 'second' : 'third'} · SB ${sb}`}
               photoId={photos[runner.id]}
               onClick={onZoom ? () => onZoom(offense.side, runner) : undefined}
-              lines={[
-                shortName(runner.name),
-                `SB ${fmtMod(runnerSbMod(seasonNow(runner, offense.yearRoll, state.config.rules) ?? NEUTRAL_SEASON, state.config.rules).mod)}`,
-              ]}
             />
           );
         })}
@@ -198,78 +226,122 @@ export const Field = memo(function Field({ state, photos, onZoom }: { state: Gam
   );
 });
 
-function Chip({
+/**
+ * One player on the mat: a round token with a name tag hanging under it.
+ * Sized in `cqw` against the field's width, so the spacing worked out in
+ * field units holds from a phone to a desktop.
+ */
+function Token({
   x,
   y,
   from,
+  kind,
   color,
-  lines,
+  mark,
+  pose,
+  label,
+  detail,
   title,
   photoId,
-  ring = false,
   onClick,
 }: {
   x: number;
   y: number;
   /** where a runner springs in from (home plate); omit to appear in place */
-  from?: { x: number; y: number };
+  from?: { x: number; y: number } | undefined;
+  kind: 'defense' | 'offense';
   color: string;
-  lines: string[];
+  /** the position printed on a defender's token */
+  mark?: string;
+  /** the silhouette on a batter's or runner's token */
+  pose?: SilhouettePose;
+  label: string;
+  detail?: string;
   title: string;
-  photoId?: number | null;
-  ring?: boolean;
+  photoId?: number | null | undefined;
   onClick?: (() => void) | undefined;
 }) {
-  const label = (
-    <>
-      {photoId ? (
-        <img src={`/api/photos/${photoId}`} alt="" className="h-6 w-4 rounded object-cover" />
-      ) : (
-        <span className="grid h-6 w-4 place-items-center rounded bg-black/30 font-mono text-[9px] font-bold text-chalk/80">{lines[0]}</span>
-      )}
-      <span className="flex flex-col leading-tight">
-        <span className="text-[10px] font-semibold text-chalk">{lines[1]}</span>
-        {lines[2] ? <span className="font-mono text-[9px] text-chalk/70">{lines[2]}</span> : null}
-      </span>
-    </>
+  const offense = kind === 'offense';
+  const face = photoId ? (
+    <img src={`/api/photos/${photoId}`} alt="" className="h-full w-full rounded-full object-cover" />
+  ) : pose ? (
+    <PlayerSilhouette pose={pose} className="h-[78%] w-[78%]" />
+  ) : (
+    <span className="font-mono text-[clamp(8px,1.9cqw,14px)] leading-none font-bold">{mark}</span>
   );
-
-  if (from) {
-    return (
-      <motion.button
-        type="button"
-        disabled={!onClick}
-        onClick={onClick}
-        className={`absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left shadow-lg ring-1 ring-black/40 enabled:cursor-zoom-in enabled:hover:brightness-125 ${
-          ring ? 'ring-2 ring-gold/70' : ''
-        }`}
-        style={{ background: color }}
-        title={title}
-        aria-label={title}
-        initial={{ left: `${from.x}%`, top: `${pctY(from.y)}%`, opacity: 0, scale: 0.6 }}
-        animate={{ left: `${x}%`, top: `${pctY(y)}%`, opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 180, damping: 22 }}
-      >
-        {label}
-      </motion.button>
-    );
-  }
 
   return (
     <motion.button
       type="button"
       disabled={!onClick}
       onClick={onClick}
-      className={`absolute flex -translate-x-1/2 -translate-y-1/2 items-center gap-1.5 rounded-lg px-1.5 py-1 text-left shadow-lg ring-1 ring-black/40 enabled:cursor-zoom-in enabled:hover:brightness-125 ${
-        ring ? 'ring-2 ring-gold/70' : ''
-      }`}
-      style={{ background: color, left: `${x}%`, top: `${pctY(y)}%` }}
       title={title}
       aria-label={title}
-      initial={false}
+      // Centered on the token itself, not the token plus its tag.
+      className="group absolute z-10 flex -translate-x-1/2 flex-col items-center enabled:cursor-zoom-in"
+      style={{ marginTop: '-2.6cqw' }}
+      initial={from ? { left: `${from.x}%`, top: `${pctY(from.y)}%`, opacity: 0, scale: 0.6 } : false}
+      animate={{ left: `${x}%`, top: `${pctY(y)}%`, opacity: 1, scale: 1 }}
+      transition={{ type: 'spring', stiffness: 180, damping: 22 }}
     >
-      {label}
+      <span
+        className={`grid h-[5.2cqw] w-[5.2cqw] min-h-5 min-w-5 place-items-center rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.55)] transition group-enabled:group-hover:scale-110 ${
+          offense ? 'border-[0.45cqw] border-gold bg-chalk ring-[0.5cqw] ring-gold/30' : 'border-[0.35cqw] border-chalk/90 text-chalk'
+        }`}
+        style={offense ? { color } : { background: color }}
+      >
+        {face}
+      </span>
+      <span
+        className={`mt-[0.4cqw] max-w-[13cqw] truncate rounded-full px-[1cqw] py-[0.15cqw] text-[clamp(7px,1.55cqw,12px)] leading-tight font-semibold whitespace-nowrap shadow ${
+          offense ? 'bg-gold text-ink' : 'bg-black/65 text-chalk'
+        }`}
+      >
+        {label}
+        {detail ? <span className={`pl-[0.6cqw] font-mono font-normal ${offense ? 'text-ink/70' : 'text-chalk/65'}`}>{detail}</span> : null}
+      </span>
     </motion.button>
+  );
+}
+
+/** The inning, the outs, and the score, painted in the corner like a broadcast bug. */
+function Scorebug({ state }: { state: GameState }) {
+  const half = state.half === 'top' ? '▲' : '▼';
+  return (
+    <div className="pointer-events-none absolute top-[2cqw] left-[2cqw] z-20 overflow-hidden rounded-[1.2cqw] bg-black/70 font-mono text-[clamp(8px,1.7cqw,13px)] text-chalk shadow-lg ring-1 ring-white/10">
+      {[state.away, state.home].map((team) => (
+        <div key={team.side} className={`flex items-center justify-between gap-[2cqw] px-[1.6cqw] py-[0.5cqw] ${getOffense(state).side === team.side ? 'bg-white/10' : ''}`}>
+          <span className="max-w-[16cqw] truncate font-sans font-semibold">{team.name}</span>
+          <span className="font-bold tabular-nums">{team.score}</span>
+        </div>
+      ))}
+      <div className="flex items-center justify-between gap-[2cqw] border-t border-white/10 px-[1.6cqw] py-[0.5cqw] text-chalk/80">
+        <span>
+          {half} {state.inning}
+        </span>
+        <span className="flex items-center gap-[0.6cqw]" aria-label={`${state.outs} out${state.outs === 1 ? '' : 's'}`}>
+          {[0, 1, 2].map((i) => (
+            <span key={i} className={`h-[1.3cqw] min-h-1.5 w-[1.3cqw] min-w-1.5 rounded-full ${i < state.outs ? 'bg-gold' : 'bg-white/20'}`} />
+          ))}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Which team is which, in the opposite corner. */
+function Legend({ defense, offense, defenseColor, offenseColor }: { defense: string; offense: string; defenseColor: string; offenseColor: string }) {
+  return (
+    <div className="pointer-events-none absolute top-[2cqw] right-[2cqw] z-20 space-y-[0.6cqw] rounded-[1.2cqw] bg-black/55 px-[1.6cqw] py-[1cqw] text-[clamp(7px,1.5cqw,12px)] text-chalk/85">
+      <div className="flex items-center gap-[1cqw]">
+        <span className="h-[1.8cqw] min-h-2 w-[1.8cqw] min-w-2 rounded-full border border-chalk/90" style={{ background: defenseColor }} />
+        <span className="max-w-[18cqw] truncate">In the field · {defense}</span>
+      </div>
+      <div className="flex items-center gap-[1cqw]">
+        <span className="h-[1.8cqw] min-h-2 w-[1.8cqw] min-w-2 rounded-full border-2 border-gold bg-chalk" style={{ color: offenseColor }} />
+        <span className="max-w-[18cqw] truncate">At bat · {offense}</span>
+      </div>
+    </div>
   );
 }
 
@@ -440,68 +512,105 @@ const shortName = (name: string) => {
 };
 
 /**
- * The mat itself: mown outfield grass, the infield skin inside the foul lines,
- * a grass diamond between the bases, chalk lines through first and third, and
+ * The field itself, from the press box: stands behind the fence, mown
+ * outfield grass, darker foul ground, the infield skin, the grass square
+ * inside the basepaths, chalk foul lines and batter's boxes, the mound, and
  * the bases. Occupied bases glow so a glance answers "who's on?".
  */
 function FieldArt({ occupied }: { occupied: (1 | 2 | 3)[] }) {
+  const { x: hx, y: hy } = HOME_PLATE;
+  // Where the foul lines meet the fence, 45° out from the plate.
+  const pole = FENCE_R / Math.SQRT2;
+  const fence = `M${hx - pole} ${hy - pole} A${FENCE_R} ${FENCE_R} 0 0 1 ${hx + pole} ${hy - pole}`;
+  const b1 = BASE_SPOTS[1];
+  const b2 = BASE_SPOTS[2];
+  const b3 = BASE_SPOTS[3];
+  // The grass square, inset from the basepaths so a ribbon of dirt shows.
+  const inset = 2.4;
+  const grassSquare = `M${hx} ${hy - inset * 1.6} L${b1.x - inset * 1.6} ${b1.y} L${b2.x} ${b2.y + inset * 1.6} L${b3.x + inset * 1.6} ${b3.y} Z`;
+
   return (
-    <svg viewBox="0 0 100 75" preserveAspectRatio="none" className="absolute inset-0 h-full w-full" aria-hidden="true">
+    <svg viewBox="0 0 100 75" className="absolute inset-0 h-full w-full" aria-hidden="true">
       <defs>
         <linearGradient id="mat-grass" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#1d6a47" />
-          <stop offset="100%" stopColor="#124a33" />
+          <stop offset="0%" stopColor="#1f7049" />
+          <stop offset="100%" stopColor="#175c3c" />
         </linearGradient>
-        <pattern id="mat-mow" width="8" height="75" patternUnits="userSpaceOnUse">
-          <rect width="4" height="75" fill="#ffffff" opacity="0.03" />
+        <pattern id="mat-mow" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="3.5" height="7" fill="#ffffff" opacity="0.045" />
         </pattern>
+        <radialGradient id="mat-dirt" cx="50%" cy="60%" r="60%">
+          <stop offset="0%" stopColor="#c4935d" />
+          <stop offset="100%" stopColor="#a8784a" />
+        </radialGradient>
+        <clipPath id="mat-fair">
+          <path d={`M${hx} ${hy} L${hx - pole - 20} ${hy - pole - 20} L${hx + pole + 20} ${hy - pole - 20} Z`} />
+        </clipPath>
       </defs>
 
-      {/* outfield grass, mown in stripes */}
-      <rect width="100" height="75" fill="url(#mat-grass)" />
-      <rect width="100" height="75" fill="url(#mat-mow)" />
-
-      {/* outfield wall, pushed back behind the foul poles so they sit in front */}
-      <path d="M0 24 Q50 -2 100 24 L100 0 L0 0 Z" fill="#0b2f21" opacity="0.85" />
-      <path d="M0 24 Q50 -2 100 24" fill="none" stroke="#f6f2e6" strokeOpacity="0.5" strokeWidth="0.5" />
-
-      {/* the infield skin: the area inside the foul lines, rounded behind second */}
-      <path
-        d="M50 64 L78 36 Q74 20 50 18 Q26 20 22 36 Z"
-        fill="#b4834f"
-        opacity="0.95"
-      />
-
-      {/* the grass diamond between the bases; its edges ARE the basepaths */}
-      <path d="M50 64 L70 44 L50 24 L30 44 Z" fill="#1a6344" />
-
-      {/* foul lines run from the plate through first and third into the outfield */}
-      <path d="M50 64 L94 20" stroke="#f6f2e6" strokeOpacity="0.75" strokeWidth="0.4" />
-      <path d="M50 64 L6 20" stroke="#f6f2e6" strokeOpacity="0.75" strokeWidth="0.4" />
-      {/* the basepaths themselves, chalked over the grass diamond */}
-      <path d="M50 64 L70 44 L50 24 L30 44 Z" fill="none" stroke="#f6f2e6" strokeOpacity="0.45" strokeWidth="0.3" />
-
-      {/* the mound */}
-      <ellipse cx="50" cy="45" rx="4.5" ry="2.4" fill="#c08c56" />
-      <ellipse cx="50" cy="45" rx="4.5" ry="2.4" fill="none" stroke="#f6f2e6" strokeOpacity="0.25" strokeWidth="0.25" />
-
-      {/* bases: first and third on the foul lines, second on the centre line */}
-      {(
-        [
-          [70, 44],
-          [50, 24],
-          [30, 44],
-        ] as const
-      ).map(([x, y], i) => (
-        <rect key={i} x={x - 1.7} y={y - 1.7} width="3.4" height="3.4" fill="#f6f2e6" transform={`rotate(45 ${x} ${y})`} />
+      {/* the stands, all the way around */}
+      <rect width="100" height="75" fill="#0c2a1e" />
+      {Array.from({ length: 6 }, (_, i) => (
+        <path
+          key={i}
+          d={`M${hx - pole - 6 - i * 2} ${hy - pole + 2 - i * 2} A${FENCE_R + 3 + i * 2.6} ${FENCE_R + 3 + i * 2.6} 0 0 1 ${hx + pole + 6 + i * 2} ${hy - pole + 2 - i * 2}`}
+          fill="none"
+          stroke="#ffffff"
+          strokeOpacity={0.05}
+          strokeWidth="1"
+          strokeDasharray="1.4 1"
+        />
       ))}
-      {/* occupied bases glow */}
+
+      {/* foul ground, then the fair outfield inside the fence */}
+      <path d={`M0 75 L0 ${hy - pole + 8} L${hx - pole} ${hy - pole} ${fence.slice(fence.indexOf('A'))} L100 ${hy - pole + 8} L100 75 Z`} fill="#155236" />
+      <path d={`M${hx} ${hy} L${hx - pole} ${hy - pole} ${fence.slice(fence.indexOf('A'))} Z`} fill="url(#mat-grass)" />
+      <path d={`M${hx} ${hy} L${hx - pole} ${hy - pole} ${fence.slice(fence.indexOf('A'))} Z`} fill="url(#mat-mow)" />
+      {/* warning track and the wall */}
+      <path d={fence} fill="none" stroke="#a8784a" strokeOpacity="0.55" strokeWidth="2.4" />
+      <path d={fence} fill="none" stroke="#f6f2e6" strokeOpacity="0.7" strokeWidth="0.6" transform={`translate(0 -1.2)`} />
+
+      {/* the infield skin: an arc around the mound, plus the dirt at the plate */}
+      <circle cx={MOUND.x} cy={MOUND.y} r={BASE_GAP * 1.42} fill="url(#mat-dirt)" clipPath="url(#mat-fair)" />
+      <circle cx={hx} cy={hy} r="5.4" fill="url(#mat-dirt)" />
+      <path d={grassSquare} fill="#1f7049" />
+
+      {/* dirt cutouts around the bags */}
+      {[b1, b2, b3].map((b, i) => (
+        <circle key={i} cx={b.x} cy={b.y} r="2.8" fill="#b7864f" />
+      ))}
+
+      {/* foul lines from the plate out to the poles, and the batter's boxes */}
+      <path d={`M${hx} ${hy} L${hx - pole} ${hy - pole}`} stroke="#f6f2e6" strokeOpacity="0.85" strokeWidth="0.45" />
+      <path d={`M${hx} ${hy} L${hx + pole} ${hy - pole}`} stroke="#f6f2e6" strokeOpacity="0.85" strokeWidth="0.45" />
+      <rect x={hx - 5.4} y={hy - 2.4} width="3.2" height="4.8" fill="none" stroke="#f6f2e6" strokeOpacity="0.55" strokeWidth="0.3" />
+      <rect x={hx + 2.2} y={hy - 2.4} width="3.2" height="4.8" fill="none" stroke="#f6f2e6" strokeOpacity="0.55" strokeWidth="0.3" />
+      {/* foul poles */}
+      <circle cx={hx - pole} cy={hy - pole} r="0.9" fill="#f2c94c" />
+      <circle cx={hx + pole} cy={hy - pole} r="0.9" fill="#f2c94c" />
+
+      {/* the mound and rubber */}
+      <circle cx={MOUND.x} cy={MOUND.y} r="3.2" fill="#c99863" />
+      <circle cx={MOUND.x} cy={MOUND.y} r="3.2" fill="none" stroke="#000" strokeOpacity="0.15" strokeWidth="0.3" />
+      <rect x={MOUND.x - 1} y={MOUND.y - 0.3} width="2" height="0.6" fill="#f6f2e6" />
+
+      {/* occupied bases glow, under the runner standing on them */}
       {occupied.map((base) => {
         const spot = BASE_SPOTS[base];
-        return <circle key={base} cx={spot.x} cy={spot.y} r="3.6" fill="none" stroke="#d8a83c" strokeWidth="0.7" opacity="0.9" />;
+        return (
+          <g key={base}>
+            <circle cx={spot.x} cy={spot.y} r="4.6" fill="#d8a83c" opacity="0.22" />
+            <circle cx={spot.x} cy={spot.y} r="4.6" fill="none" stroke="#d8a83c" strokeWidth="0.6" opacity="0.9" />
+          </g>
+        );
       })}
+
+      {/* bases */}
+      {[b1, b2, b3].map((b, i) => (
+        <rect key={i} x={b.x - 1.3} y={b.y - 1.3} width="2.6" height="2.6" fill="#f6f2e6" transform={`rotate(45 ${b.x} ${b.y})`} />
+      ))}
       {/* home plate */}
-      <path d="M48.6 62.6 L51.4 62.6 L51.4 64.6 L50 65.6 L48.6 64.6 Z" fill="#f6f2e6" />
+      <path d={`M${hx - 1.3} ${hy - 1.1} L${hx + 1.3} ${hy - 1.1} L${hx + 1.3} ${hy + 0.3} L${hx} ${hy + 1.4} L${hx - 1.3} ${hy + 0.3} Z`} fill="#f6f2e6" />
     </svg>
   );
 }

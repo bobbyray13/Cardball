@@ -1,13 +1,16 @@
 import type { CardSnapshot, DraftRarity } from '@cardball/shared';
 import { activeHouseRules, hitMod, pitMod, sbMod, scoutingNotes, whipOf } from '@cardball/shared';
 import { formatIp } from '@cardball/engine';
+import { ROLE_LABEL, ROLE_POSE, SilhouetteGroup, silhouetteRole } from './Silhouette.js';
+import type { SilhouetteRole } from './Silhouette.js';
 
 /**
  * The Ball Card, drawn from real stats.
  *
- * The front is a card face: a team-color header, the player's own photo when he
- * has one, and otherwise original procedural art (a ballpark built from the
- * team's colors). The back carries the six-season stat window that the rules
+ * The front is a framed card face in the team's colors: the player's own photo
+ * when he has one, and otherwise original art (his position's silhouette
+ * against a sunburst and a grandstand), a name ribbon, and a home-plate stamp
+ * showing his role. The back carries the six-season stat window that the rules
  * actually read, with each season's dice modifier shown.
  *
  * Everything is sized in `cqw` units against the card's own width, so one
@@ -40,7 +43,9 @@ const RING: Record<DraftRarity, string> = {
 const FOIL: Partial<Record<DraftRarity, string>> = { rare: 'foil-rare', star: 'foil-star', mythic: 'foil-mythic' };
 
 /** Deterministic team colors, so the same franchise always looks the same. */
-export function teamColors(label: string): { primary: string; secondary: string; accent: string } {
+export type TeamColors = { primary: string; secondary: string; accent: string; glow: string };
+
+export function teamColors(label: string): TeamColors {
   let hash = 0;
   const key = label || 'Cardball';
   for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) % 360;
@@ -49,6 +54,8 @@ export function teamColors(label: string): { primary: string; secondary: string;
     primary: `hsl(${hue} 52% 30%)`,
     secondary: `hsl(${(hue + 28) % 360} 46% 22%)`,
     accent: `hsl(${(hue + 190) % 360} 60% 62%)`,
+    /** a light tint of the team's own hue, for the sunburst behind a player */
+    glow: `hsl(${(hue + 14) % 360} 58% 70%)`,
   };
 }
 
@@ -85,130 +92,153 @@ function CardFront({
   photoId?: number | null;
   rarity?: string | null;
   tier: DraftRarity | null;
-  colors: { primary: string; secondary: string; accent: string };
+  colors: TeamColors;
 }) {
-  return (
-    <div className="flex h-full flex-col">
-      <header
-        className="flex items-baseline justify-between px-[4cqw] pt-[3cqw] pb-[2.2cqw] text-chalk"
-        style={{ background: `linear-gradient(100deg, ${colors.primary}, ${colors.secondary})` }}
-      >
-        <span className="truncate text-[3.6cqw] font-semibold tracking-[0.18em] uppercase">{card.teamLabel || 'Cardball'}</span>
-        <span className="shrink-0 pl-[2cqw] font-mono text-[3.6cqw] tabular-nums opacity-90">{card.cardYear}</span>
-      </header>
+  const role = silhouetteRole(card);
+  const fieldPositions = card.positions.filter((p) => p !== 'DH');
+  const posLine = card.pitcherClass
+    ? card.pitcherClass === 'SP'
+      ? 'Starting pitcher'
+      : 'Relief pitcher'
+    : fieldPositions.length
+      ? fieldPositions.slice(0, 4).join(' · ')
+      : 'Designated hitter';
 
-      <div className="relative min-h-0 flex-1">
+  return (
+    // The team-color frame around everything, the way a printed border sits
+    // inside the card's white edge.
+    <div className="flex h-full flex-col p-[3.2cqw]" style={{ background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})` }}>
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-[2.4cqw] ring-[0.8cqw] ring-chalk/85">
         {photoId ? (
           <img src={`/api/photos/${photoId}`} alt={`${card.name} card`} className="h-full w-full object-cover" loading="lazy" />
         ) : (
-          <ProceduralArt name={card.name} colors={colors} />
+          <CardArt name={card.name} role={role} colors={colors} />
         )}
+
+        {/* team and year across the top of the art */}
+        <div className="absolute inset-x-0 top-0 flex items-start justify-between p-[2.4cqw]">
+          <span
+            className="max-w-[62%] truncate rounded-[1cqw] px-[2cqw] py-[0.6cqw] font-display text-[4.2cqw] leading-none font-bold tracking-[0.12em] text-chalk uppercase italic shadow-sm"
+            style={{ background: colors.secondary }}
+          >
+            {card.teamLabel || 'Cardball'}
+          </span>
+          <span className="rounded-[1cqw] bg-black/45 px-[1.6cqw] py-[0.6cqw] font-mono text-[3.4cqw] leading-none font-bold text-chalk tabular-nums">
+            {card.cardYear}
+          </span>
+        </div>
+
         {rarity ? (
           <span
-            className="absolute top-[2cqw] right-[2cqw] z-10 rounded-full px-[2.4cqw] py-[0.8cqw] text-[2.6cqw] font-bold tracking-wider text-ink uppercase"
-            style={{ background: 'var(--color-gold)' }}
+            className="absolute top-[10cqw] right-[2.4cqw] z-10 rounded-full px-[2.4cqw] py-[0.8cqw] text-[2.6cqw] font-bold tracking-wider text-ink uppercase shadow"
+            style={{ background: tier === 'mythic' ? 'linear-gradient(120deg,#e79ab4,#8a5fc4)' : 'var(--color-gold)' }}
           >
+            {tier === 'mythic' ? '✦ ' : tier === 'star' ? '★ ' : ''}
             {rarity}
           </span>
         ) : null}
-        {/* The mark the two top tiers wear on their face, matching their badge. */}
-        {tier === 'star' || tier === 'mythic' ? (
-          <span
-            aria-hidden
-            className="absolute top-[2cqw] left-[2cqw] z-10 grid place-items-center rounded-full px-[1.8cqw] py-[0.6cqw] text-[3cqw] leading-none font-bold text-ink"
-            style={{ background: tier === 'mythic' ? 'linear-gradient(120deg,#e79ab4,#8a5fc4)' : 'var(--color-gold)' }}
-          >
-            {tier === 'mythic' ? '✦' : '★'}
-          </span>
-        ) : null}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[30%] bg-gradient-to-t from-black/45 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 flex flex-wrap gap-[1.2cqw] px-[3.4cqw] pb-[2.4cqw]">
-          {(card.positions.length ? card.positions : ['DH']).slice(0, 5).map((pos) => (
-            <span
-              key={pos}
-              className="rounded-[0.4cqw] border border-chalk/50 bg-black/35 px-[1.6cqw] py-[0.4cqw] font-mono text-[2.8cqw] font-bold text-chalk"
-            >
-              {pos}
-            </span>
-          ))}
-        </div>
       </div>
 
-      <footer className="border-t border-ink/10 bg-stock-dark/40 px-[4cqw] py-[2.6cqw]">
-        <div className="truncate font-display text-[6.4cqw] leading-none font-semibold">{card.name}</div>
-        <div className="mt-[1.4cqw] flex items-center justify-between font-mono text-[2.9cqw] text-ink-soft">
-          <span>{card.bats || card.throws ? `B/T ${card.bats ?? '?'}/${card.throws ?? '?'}` : card.positions.slice(0, 3).join(' · ')}</span>
-          <span>
-            {card.pitcherClass ? `${card.pitcherClass} · ` : ''}
-            {card.canBat ? 'hits' : 'no bat'}
-          </span>
+      {/* the name ribbon, with the role badge breaking into it */}
+      <div className="relative mt-[2.4cqw] flex items-center gap-[2.4cqw]">
+        <RoleBadge role={role} colors={colors} />
+        <div className="min-w-0 flex-1">
+          <div className="truncate font-display text-[6.6cqw] leading-none font-bold text-chalk drop-shadow-[0_1px_0_rgba(0,0,0,0.5)]">{card.name}</div>
+          <div className="mt-[1.2cqw] flex items-center justify-between gap-[2cqw] font-mono text-[2.8cqw] leading-none text-chalk/80">
+            <span className="truncate uppercase">{posLine}</span>
+            <span className="shrink-0">{card.bats || card.throws ? `B/T ${card.bats ?? '?'}/${card.throws ?? '?'}` : card.canBat ? 'hits' : 'no bat'}</span>
+          </div>
         </div>
-      </footer>
+      </div>
     </div>
   );
 }
 
-/** Original art: a ballpark drawn from the team's colors, seeded by the name. */
-function ProceduralArt({ name, colors }: { name: string; colors: { primary: string; secondary: string; accent: string } }) {
+/** The position stamp on the card front: a home-plate shield with the role. */
+function RoleBadge({ role, colors }: { role: SilhouetteRole; colors: { primary: string; accent: string } }) {
+  return (
+    <svg viewBox="0 0 40 44" className="h-[12cqw] w-[11cqw] shrink-0 drop-shadow" aria-label={`${ROLE_LABEL[role]} card`} role="img">
+      <path d="M3 3 H37 V27 L20 41 L3 27 Z" fill="#f6f2e6" />
+      <path d="M6.5 6.5 H33.5 V25.4 L20 36.6 L6.5 25.4 Z" fill={colors.primary} />
+      <text x="20" y="25" textAnchor="middle" fontFamily="ui-serif, Georgia, serif" fontSize={ROLE_LABEL[role].length > 1 ? 15 : 19} fontWeight="800" fill="#f6f2e6">
+        {ROLE_LABEL[role]}
+      </text>
+    </svg>
+  );
+}
+
+/**
+ * Original art for a card without a photo: the player's position silhouette
+ * against a sunburst in his team's colors, a grandstand behind him and the
+ * dirt under his spikes. The name seeds small variations so two cards from
+ * one team don't look stamped from the same plate.
+ */
+function CardArt({ name, role, colors }: { name: string; role: SilhouetteRole; colors: TeamColors }) {
   let seed = 0;
   for (let i = 0; i < name.length; i++) seed = (seed * 17 + name.charCodeAt(i)) % 997;
-  const standHeight = 30 + (seed % 14);
-  const wallDepth = 62 + (seed % 9);
-  const initial = (name.trim()[0] ?? '?').toUpperCase();
+  const id = `art-${seed}-${role}`;
+  const rayTilt = (seed % 12) - 6;
+  const standTop = 68 + (seed % 6);
+  const rays = 18;
 
   return (
-    <svg viewBox="0 0 100 140" preserveAspectRatio="xMidYMid slice" className="h-full w-full" role="img" aria-label={`${name} artwork`}>
+    <svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMax slice" className="h-full w-full" role="img" aria-label={`${name}, ${ROLE_LABEL[role]}`}>
       <defs>
-        <linearGradient id={`sky-${seed}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={colors.accent} stopOpacity="0.55" />
-          <stop offset="100%" stopColor={colors.primary} stopOpacity="0.15" />
-        </linearGradient>
-        <linearGradient id={`grass-${seed}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#2f7d55" />
-          <stop offset="100%" stopColor="#1b5638" />
+        <radialGradient id={`${id}-sky`} cx="50%" cy="48%" r="70%">
+          <stop offset="0%" stopColor={colors.glow} />
+          <stop offset="55%" stopColor={colors.primary} />
+          <stop offset="100%" stopColor={colors.secondary} />
+        </radialGradient>
+        <linearGradient id={`${id}-dirt`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#c99863" />
+          <stop offset="100%" stopColor="#8f6236" />
         </linearGradient>
       </defs>
 
-      <rect width="100" height="140" fill={`url(#sky-${seed})`} />
-      {/* stands */}
-      <path d={`M0 ${standHeight} L100 ${standHeight - 6} L100 46 L0 52 Z`} fill={colors.secondary} opacity="0.9" />
-      {Array.from({ length: 9 }, (_, i) => (
-        <rect key={i} x={2 + i * 11} y={standHeight + 4} width="6" height="4" fill="#ffffff" opacity="0.16" rx="1" />
+      <rect width="100" height="120" fill={`url(#${id}-sky)`} />
+      {/* sunburst */}
+      <g transform={`rotate(${rayTilt} 50 58)`} opacity="0.16">
+        {Array.from({ length: rays }, (_, i) => {
+          const a0 = (i / rays) * Math.PI * 2;
+          const a1 = a0 + Math.PI / rays;
+          return (
+            <path
+              key={i}
+              d={`M50 58 L${50 + Math.cos(a0) * 140} ${58 + Math.sin(a0) * 140} L${50 + Math.cos(a1) * 140} ${58 + Math.sin(a1) * 140} Z`}
+              fill="#f6f2e6"
+            />
+          );
+        })}
+      </g>
+      {/* the grandstand and its light towers */}
+      <path d={`M0 ${standTop} Q50 ${standTop - 10} 100 ${standTop} L100 98 L0 98 Z`} fill={colors.secondary} opacity="0.9" />
+      {Array.from({ length: 3 }, (_, row) => (
+        <path
+          key={row}
+          d={`M0 ${standTop + 4 + row * 5} Q50 ${standTop - 6 + row * 5} 100 ${standTop + 4 + row * 5}`}
+          stroke="#f6f2e6"
+          strokeOpacity="0.14"
+          strokeWidth="1.2"
+          strokeDasharray="2 1.6"
+          fill="none"
+        />
       ))}
-      {/* outfield wall + grass */}
-      <path d={`M-4 52 C 30 ${wallDepth - 12} 70 ${wallDepth - 12} 104 52 L104 140 L-4 140 Z`} fill={`url(#grass-${seed})`} />
-      <path d={`M-4 52 C 30 ${wallDepth - 12} 70 ${wallDepth - 12} 104 52`} fill="none" stroke="#f6f2e6" strokeOpacity="0.5" strokeWidth="1.6" />
-      {/* infield diamond, seen from behind the plate */}
-      <path d="M50 126 L86 98 L50 70 L14 98 Z" fill="#c08c56" />
-      <path d="M50 118 L78 98 L50 78 L22 98 Z" fill="#2f7d55" />
-      <circle cx="50" cy="98" r="7" fill="#c08c56" />
-      <path d="M50 126 L86 98" stroke="#f6f2e6" strokeWidth="1.2" />
-      <path d="M50 126 L14 98" stroke="#f6f2e6" strokeWidth="1.2" />
-      <circle cx="50" cy="124" r="2.6" fill="#f6f2e6" />
-      {/* bases */}
-      {[
-        [50, 118],
-        [78, 98],
-        [50, 78],
-        [22, 98],
-      ].map(([x, y], i) => (
-        <rect key={i} x={x! - 3} y={y! - 3} width="6" height="6" fill="#f6f2e6" rx="0.8" transform={`rotate(45 ${x} ${y})`} />
+      {[12, 88].map((x) => (
+        <g key={x} opacity="0.55">
+          <rect x={x - 0.6} y={standTop - 26} width="1.2" height="26" fill={colors.secondary} />
+          <rect x={x - 4.5} y={standTop - 30} width="9" height="5" rx="0.8" fill="#f6f2e6" opacity="0.9" />
+        </g>
       ))}
-      {/* monogram */}
-      <text
-        x="50"
-        y={standHeight - 8}
-        textAnchor="middle"
-        fontFamily="ui-serif, Georgia, serif"
-        fontSize="30"
-        fontWeight="700"
-        fill="#f6f2e6"
-        opacity="0.82"
-      >
-        {initial}
-      </text>
-      <circle cx="88" cy="34" r="7" fill="#f6f2e6" />
-      <path d="M81 30 q7 4 14 0 M81 38 q7 -4 14 0" stroke="#b3241f" strokeWidth="1" fill="none" />
+      {/* the grass, then the dirt he stands on */}
+      <path d="M0 92 Q50 84 100 92 L100 120 L0 120 Z" fill="#1d6a47" />
+      <ellipse cx="50" cy="112" rx="46" ry="11" fill={`url(#${id}-dirt)`} />
+      <ellipse cx="50" cy="111" rx="26" ry="4" fill="#000" opacity="0.18" />
+
+      {/* the player: a chalk rim, then the silhouette in deep ink */}
+      <g transform="translate(5 18) scale(0.92)">
+        <SilhouetteGroup pose={ROLE_POSE[role]} fill="#f6f2e6" grow={1.6} />
+        <SilhouetteGroup pose={ROLE_POSE[role]} fill="#15140f" />
+      </g>
     </svg>
   );
 }
