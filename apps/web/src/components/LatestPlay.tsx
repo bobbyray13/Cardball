@@ -30,21 +30,25 @@ const FIRST_BEAT_MS = 400;
 const BATCH_GAP_MS = 1600;
 
 /**
- * The broadcast line on the mat. A new play arrives as a batch of events —
- * pitch, contact, the throw, the call — and this strip tells them one at a
- * time, so the outcome lands with the same suspense as dice on a table. The
- * full ledger lives in the play-by-play; this is the call on the air.
+ * The reveal clock for a play-by-play ledger. A new play arrives as a batch
+ * of events — pitch, contact, the throw, the call — and this paces them one
+ * at a time, so the outcome lands with the same suspense as dice on a table.
+ * The mat shares one clock: the broadcast strip, the ball on the field, and
+ * the sounds all follow the same beat. Whatever is already on the ledger when
+ * the page opens is old news and never replays.
  */
-export function LatestPlay({ events }: { events: GameEvent[] }) {
+export function usePlayReveal(events: GameEvent[]): GameEvent | null {
   const [revealedSeq, setRevealedSeq] = useState<number | null>(null);
-  // Whatever is already on the ledger when the page opens is old news.
   const primed = useRef(false);
   const lastBeatAt = useRef(0);
 
   useEffect(() => {
-    if (!primed.current && events.length > 0) {
+    if (!primed.current) {
       primed.current = true;
-      setRevealedSeq(events[events.length - 1]!.seq);
+      // Mat mounts only after the initial game snapshot is loaded. An empty
+      // ledger is a real baseline too, so the first live event still gets a
+      // reveal instead of being mistaken for old history.
+      if (events.length > 0) setRevealedSeq(events[events.length - 1]!.seq);
     }
   }, [events]);
 
@@ -64,7 +68,15 @@ export function LatestPlay({ events }: { events: GameEvent[] }) {
     return () => clearTimeout(timer);
   }, [nextSeq]);
 
-  const showing = revealedSeq === null ? null : events.find((e) => e.seq === revealedSeq) ?? null;
+  return revealedSeq === null ? null : (events.find((e) => e.seq === revealedSeq) ?? null);
+}
+
+/**
+ * The broadcast line on the mat: the beat currently on the air, from
+ * usePlayReveal. The full ledger lives in the play-by-play; this is the call.
+ */
+export function LatestPlay({ beat }: { beat: GameEvent | null }) {
+  const showing = beat;
 
   return (
     <div className="mb-3 min-h-[3.25rem]" aria-live="polite">
@@ -93,7 +105,7 @@ export function LatestPlay({ events }: { events: GameEvent[] }) {
         </AnimatePresence>
       ) : (
         <p className="rounded-xl border border-white/10 bg-black/20 px-3 py-2.5 text-sm text-chalk/45">
-          {events.length === 0 ? 'The first pitch is coming up.' : '…'}
+          {beat === null ? 'The first pitch is coming up.' : '…'}
         </p>
       )}
     </div>
