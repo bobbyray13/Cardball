@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { io } from 'socket.io-client';
@@ -80,6 +80,25 @@ export function DraftPage() {
   const join = useAction(async () => setDraft((await api.joinDraft(draftId)).draft));
   const start = useAction(async () => setDraft((await api.startDraft(draftId)).draft));
   const openPack = useAction(async () => setDraft((await api.openDraftPack(draftId)).draft));
+  // Packs that come back to you open themselves. The very first deal keeps
+  // its tear-open ceremony — after that, a wrapper landing in front of you
+  // is revealed the moment it arrives, not on the next click.
+  const autoTried = useRef('');
+  const totalPicks = useMemo(
+    () => Object.values(draft?.pickCounts ?? {}).reduce((sum, n) => sum + n, 0),
+    [draft?.pickCounts],
+  );
+  const firstDeal = (draft?.round ?? 0) === 1 && totalPicks === 0;
+  useEffect(() => {
+    if (!draft || draft.phase !== 'active' || draft.myPack.length === 0 || draft.myPackOpened) return;
+    if (draft.round === 1 && totalPicks === 0) return; // the once-a-draft ceremony
+    // One auto-open per wrapper: a failure falls back to the button, not a loop.
+    const packKey = `${draft.round}:${draft.myPack.map((c) => c.id).join(',')}`;
+    if (autoTried.current === packKey || openPack.busy) return;
+    autoTried.current = packKey;
+    void openPack.execute();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- openPack is a useAction handle; packKey guards the calls
+  }, [draft, totalPicks, openPack]);
   const pick = useAction(async (cardId: string) => {
     const taken = draft?.myPack.find((c) => c.id === cardId) ?? null;
     const round = draft?.round;
@@ -88,11 +107,10 @@ export function DraftPage() {
     if (taken) {
       pushCardToast({
         title: taken.name,
-        detail: `Drafted${round ? ` in round ${round}` : ''} · filed in your collection`,
+        detail: `Drafted${round ? ` in round ${round}` : ''} · a draft card until you keep it`,
         rarity: taken.rarity,
         headline: taken.headline,
         year: taken.cardYear,
-        href: '/collection',
       });
     }
   });
@@ -142,8 +160,9 @@ export function DraftPage() {
   const selected = draft.myPack.find((c) => c.id === selectedId) ?? null;
   const myTheme = draft.myPackTheme ? packTheme(draft.myPackTheme) : null;
   const sealed = draft.myPack.length > 0 && !draft.myPackOpened;
-  // The tear is a first-pack ceremony: round 1 only. Later rounds open quietly.
-  const firstPack = draft.round === 1;
+  // The tear happens once per draft, on the opening deal; after that, packs
+  // that pass back to you reveal themselves (see the auto-open above).
+  const firstPack = firstDeal;
   const era = config.yearFrom === config.yearTo ? `${config.yearFrom}` : `${config.yearFrom}–${config.yearTo}`;
   const capsLabel = draftCapsLabel(config.rarityCaps);
   const team = roomTeam.data?.team ?? null;
@@ -238,7 +257,7 @@ export function DraftPage() {
               title={sealed ? 'Your pack' : myTurn ? 'Your pick' : `Waiting on ${stillPicking.map((p) => p.name).join(', ') || '…'}`}
               subtitle={
                 sealed
-                  ? `${myTheme?.name ?? 'A pack'} is in front of you.${firstPack ? ' Tear it open.' : ' Open it and pick.'}`
+                  ? `${myTheme?.name ?? 'A pack'} is in front of you.${firstPack ? ' Tear it open.' : ' Opening it…'}`
                   : myTurn
                     ? `Tap a card to look at it, then take it. The rest pass ${draft.passDirection} once everyone has picked.`
                     : `You've taken your card. The packs pass ${draft.passDirection} when everyone has picked.`
@@ -393,16 +412,7 @@ export function DraftPage() {
             {draft.myPicks.length === 0 ? (
               <p className="text-sm text-chalk/55">Nothing yet.</p>
             ) : (
-              <ol className="space-y-1.5">
-                {draft.myPicks.map((card, i) => (
-                  <li key={card.id} className="flex items-center gap-2 text-sm">
-                    <span className="w-6 font-mono text-xs text-chalk/40">{i + 1}.</span>
-                    <span className="text-chalk">{card.name}</span>
-                    <RarityBadge rarity={card.rarity} />
-                    <span className="ml-auto truncate text-xs text-chalk/50">{card.headline}</span>
-                  </li>
-                ))}
-              </ol>
+              <PositionalRundown picks={draft.myPicks} onPeek={setPeek} />
             )}
           </Panel>
         ) : null}
@@ -451,7 +461,7 @@ function SeatStrip({ draft }: { draft: DraftView }) {
 /** Every seat's construction, as it emerges — both teams visible during the draft. */
 function TheTable({ draft, meSeat, onPeek }: { draft: DraftView; meSeat: number; onPeek: (card: DraftCard) => void }) {
   return (
-    <Panel title="The table" subtitle="Every seat's build, as it comes together. Tap a card to read it.">
+    <Panel title="The table" subtitle="Every seat's build, position by position. Tap a name to read the card.">
       <ul className="grid gap-3 sm:grid-cols-2">
         {(draft.seats ?? []).map((seat) => (
           <li
@@ -466,15 +476,7 @@ function TheTable({ draft, meSeat, onPeek }: { draft: DraftView; meSeat: number;
               {seat.lineupReady ? <span className="text-[10px] tracking-wide text-gold uppercase">ready</span> : null}
               <span className="ml-auto font-mono text-xs text-chalk/45">{seat.picks.length} picked</span>
             </div>
-            {seat.picks.length === 0 ? (
-              <p className="text-xs text-chalk/45">Nothing yet.</p>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {seat.picks.map((card) => (
-                  <PickChip key={card.id} card={card} onClick={() => onPeek(card)} />
-                ))}
-              </div>
-            )}
+            <PositionalRundown picks={seat.picks} onPeek={onPeek} />
           </li>
         ))}
       </ul>
@@ -482,32 +484,67 @@ function TheTable({ draft, meSeat, onPeek }: { draft: DraftView; meSeat: number;
   );
 }
 
-/** A small chip for one drafted card, positions and all. */
-function PickChip({ card, onClick }: { card: DraftCard; onClick: () => void }) {
-  const positions = card.positions ?? [];
+/** The slots a rundown reads off: the eight field positions, the DH, and the staff. */
+const RUNDOWN: readonly (Position | 'SP' | 'RP')[] = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF', 'DH', 'SP', 'RP'];
+
+/**
+ * One seat's picks, slotted by position. Pitchers never fill a bat slot — the
+ * engine counts a card as either — and scarcer bats (fewer eligible positions)
+ * claim their spots first, so a multi-position pick never strands a slot a
+ * specialist could have covered. Whatever is left piles onto the DH, the way
+ * a real bench does. An empty field slot reads "open": the position a manager
+ * still has to take care of.
+ */
+function rundownOf(picks: DraftCard[]): Record<string, DraftCard[]> {
+  const slots = Object.fromEntries(RUNDOWN.map((slot) => [slot, [] as DraftCard[]]));
+  for (const card of picks) {
+    if (card.starter) slots.SP!.push(card);
+    else if (card.reliever) slots.RP!.push(card);
+  }
+  const bats = picks
+    .filter((card) => !card.starter && !card.reliever && (card.positions ?? []).length > 0)
+    .sort((a, b) => (a.positions ?? []).length - (b.positions ?? []).length);
+  for (const card of bats) {
+    const open = (card.positions ?? []).find((pos) => pos !== 'DH' && (slots[pos] ?? []).length === 0);
+    const home = open ? slots[open] : slots.DH;
+    (home ?? []).push(card);
+  }
+  return slots;
+}
+
+function PositionalRundown({ picks, onPeek }: { picks: DraftCard[]; onPeek: (card: DraftCard) => void }) {
+  if (picks.length === 0) return <p className="text-xs text-chalk/45">Nothing yet.</p>;
+  const slots = rundownOf(picks);
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={`${card.name} — ${card.headline}`}
-      className="rounded-lg border border-white/10 bg-black/25 px-2 py-1 text-left transition-colors hover:border-white/30"
-    >
-      <span className="flex items-center gap-1.5">
-        <span className="text-xs text-chalk">{card.name}</span>
-        <RarityBadge rarity={card.rarity} />
-      </span>
-      <span className="mt-0.5 flex flex-wrap items-center gap-1">
-        {positions.length > 0 ? (
-          positions.map((pos) => (
-            <span key={pos} className="rounded border border-white/15 px-1 font-mono text-[9px] text-chalk/60">
-              {pos}
-            </span>
-          ))
-        ) : (
-          <span className="font-mono text-[9px] text-chalk/40">{card.starter ? 'SP' : card.reliever ? 'RP' : '—'}</span>
-        )}
-      </span>
-    </button>
+    <div className="grid grid-cols-1 gap-x-4 gap-y-1 min-[420px]:grid-cols-2 sm:grid-cols-3">
+      {RUNDOWN.map((slot) => {
+        const names = slots[slot] ?? [];
+        // Only a missing fielder or starter is a real hole to fill.
+        const missing = names.length === 0 && slot !== 'DH' && slot !== 'RP';
+        return (
+          <div key={slot} className="flex items-baseline gap-2">
+            <span className="w-7 shrink-0 font-mono text-[10px] font-bold text-chalk/45">{slot}</span>
+            {names.length === 0 ? (
+              <span className={`text-xs ${missing ? 'text-gold/80' : 'text-chalk/30'}`}>{missing ? 'open' : '—'}</span>
+            ) : (
+              <span className="flex min-w-0 flex-wrap gap-x-2">
+                {names.map((card) => (
+                  <button
+                    key={card.id}
+                    type="button"
+                    onClick={() => onPeek(card)}
+                    title={`${card.name} — ${card.headline}`}
+                    className="truncate text-xs text-chalk hover:text-gold hover:underline"
+                  >
+                    {card.name}
+                  </button>
+                ))}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -873,6 +910,7 @@ function PackCardButton({
   capped: boolean;
   onSelect: () => void;
 }) {
+  const positions = card.positions ?? [];
   return (
     <button
       type="button"
@@ -889,7 +927,24 @@ function PackCardButton({
         </span>
       </span>
       <span className="mt-0.5 block text-xs text-chalk/55">{card.teamLabel}</span>
-      <span className="mt-1 block font-mono text-xs text-chalk/75">{card.headline}</span>
+      {/* Where he plays, read at a glance while the pack is in hand. */}
+      <span className="mt-1.5 flex flex-wrap items-center gap-1">
+        {positions.length > 0 ? (
+          positions.map((pos) => (
+            <span
+              key={pos}
+              className="rounded border border-chalk/50 bg-black/35 px-1.5 py-0.5 font-mono text-[10px] font-bold text-chalk"
+            >
+              {pos}
+            </span>
+          ))
+        ) : (
+          <span className="rounded border border-chalk/50 bg-black/35 px-1.5 py-0.5 font-mono text-[10px] font-bold text-chalk">
+            {card.starter ? 'SP' : card.reliever ? 'RP' : '—'}
+          </span>
+        )}
+      </span>
+      <span className="mt-1.5 block font-mono text-xs text-chalk/75">{card.headline}</span>
       {capped ? <span className="mt-1 block text-xs text-crimson">At your {card.rarity} cap for this draft</span> : null}
     </button>
   );

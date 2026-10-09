@@ -20,10 +20,10 @@ const KIND_BADGE: Record<string, { label: string; className: string; accent: boo
 const badgeOf = (kind: string) => KIND_BADGE[kind] ?? { label: kind.replace('-', ' ').toUpperCase(), className: 'bg-white/10 text-chalk/70', accent: false };
 
 /**
- * How long each event of a new play holds the strip before the next. A second
- * and a half, so the call is followable at the table instead of flashing past.
+ * How long each event of a new play holds the strip before the next. Two full
+ * seconds, so the call is followable at the table instead of flashing past.
  */
-const REVEAL_MS = 1500;
+const REVEAL_MS = 2000;
 /** The first beat of a fresh play answers the button quickly; the rest pace out. */
 const FIRST_BEAT_MS = 400;
 /** Longer than this since the last beat means the batch is over. */
