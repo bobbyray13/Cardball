@@ -35,9 +35,7 @@ export function requiredSide(state: GameState, action: GameAction): Side | null 
     case 'start-game':
       return null;
     case 'substitute':
-      return state.pendingDecision?.kind === 'pinch-runner' || state.pendingDecision?.kind === 'lineup-fill'
-        ? state.pendingDecision.side
-        : substituteSide(state, action.outPlayerId);
+      return substituteSide(state, action.outPlayerId);
     case 'pitcher-change':
     case 'dp-attempt':
       return getDefense(state).side;
@@ -75,9 +73,11 @@ export function applyAction(input: GameState, action: GameAction, actor: Actor, 
       (pending.kind === 'dp-attempt' && action.type === 'dp-attempt') ||
       (pending.kind === 'send-runner' && action.type === 'send-runner') ||
       (pending.kind === 'pitcher-change' && action.type === 'pitcher-change') ||
-      (pending.kind === 'batter-roll' && action.type === 'roll-bat') ||
-      ((pending.kind === 'pinch-runner' || pending.kind === 'lineup-fill') && action.type === 'substitute');
-    if (!resolves) throw new GameError(`Waiting on a decision: ${pending.prompt}`);
+      (pending.kind === 'batter-roll' && action.type === 'roll-bat');
+    // While the pitcher's die is in the air the offense may also steal —
+    // the window the pitcher's roll opens cannot be pitched past.
+    const alongside = pending.kind === 'batter-roll' && action.type === 'attempt-steal';
+    if (!resolves && !alongside) throw new GameError(`Waiting on a decision: ${pending.prompt}`);
   }
 
   let events: GameEvent[];

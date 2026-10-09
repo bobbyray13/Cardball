@@ -1,9 +1,10 @@
-import { hitMod, sbMod } from '@cardball/shared';
+import { sbMod } from '@cardball/shared';
 import type { GameAction } from '@cardball/shared';
-import { benchHitters } from './flow.js';
+import { canSteal } from './steal.js';
 import { canSubstituteNow } from './subs.js';
 import {
   availablePitchers,
+  fielderAt,
   fieldingRating,
   getDefense,
   getOffense,
@@ -11,9 +12,11 @@ import {
   pitcherFatigue,
   pitcherTotalMod,
   rulesOf,
+  runnerSbMod,
+  runnersOn,
   seasonForPlayer,
 } from './queries.js';
-import type { EnginePlayer, GameState, Side, TeamState } from './types.js';
+import type { GameState, Side } from './types.js';
 
 /** Average d6 with 1s re-rolled. */
 const SEND_EXPECTED_ROLL = 4;
@@ -22,11 +25,15 @@ const D20_EXPECTED = 10.5;
 
 /**
  * A simple, honest auto-manager: answers every forced decision sensibly,
- * takes calculated DP and send gambles, never steals. Returns null when the
- * bot has nothing to do for this side right now.
+ * takes calculated DP, send, and steal gambles. Returns null when the bot
+ * has nothing to do for this side right now.
  */
 export function botAction(state: GameState, side: Side): GameAction | null {
   if (state.phase !== 'live') return null;
+  // A steal goes first: before the pitch, or while the pitcher's die is in
+  // the air, whenever the situation demands it.
+  const stealAction = botSteal(state, side);
+  if (stealAction) return stealAction;
   const rules = rulesOf(state);
   const team = getTeam(state, side);
   const pending = state.pendingDecision;
@@ -47,13 +54,6 @@ export function botAction(state: GameState, side: Side): GameAction | null {
         const rMod = sbMod(seasonForPlayer(state, runner).sb, rules.sbBands) + (pending.detail?.runnerAdvantage ?? 0);
         const tMod = thrower ? fieldingRating(thrower, thrower.fieldPosition ?? 'CF') : 0;
         return { type: 'send-runner', send: SEND_EXPECTED_ROLL + rMod >= D6_EXPECTED + tMod };
-      }
-      case 'pinch-runner':
-      case 'lineup-fill': {
-        const out = team.players.find((p) => p.id === pending.playerId);
-        const pick = bestBench(state, team, out ?? null, pending.kind === 'pinch-runner' ? 'speed' : 'bat');
-        if (!pick || !pending.playerId) return null;
-        return { type: 'substitute', outPlayerId: pending.playerId, inPlayerId: pick.id };
       }
       case 'pitcher-change': {
         const options = availablePitchers(state, side);
@@ -78,13 +78,15 @@ export function botAction(state: GameState, side: Side): GameAction | null {
 }
 
 /**
- * A move a bot manager makes off the clock: when his tired pitcher is a
- * worse bet than the best fresh arm in the bullpen, he goes to it. Callers
- * decide which sides they drive — a live game only drives its bot teams, a
- * simulation drives both.
+ * A move a bot manager makes off the clock: stealing a base when the
+ * situation demands it, or going to the bullpen when his tired pitcher is a
+ * worse bet than the best fresh arm. Callers decide which sides they drive —
+ * a live game only drives its bot teams, a simulation drives both.
  */
 export function botOffClockAction(state: GameState, side: Side): GameAction | null {
   if (state.phase !== 'live') return null;
+  const stealAction = botSteal(state, side);
+  if (stealAction) return stealAction;
   if (getDefense(state).side !== side) return null;
   if (!canSubstituteNow(state)) return null;
 
@@ -98,17 +100,37 @@ export function botOffClockAction(state: GameState, side: Side): GameAction | nu
   return { type: 'pitcher-change', inPlayerId: best.id };
 }
 
-function bestBench(state: GameState, team: TeamState, out: EnginePlayer | null, by: 'speed' | 'bat'): EnginePlayer | null {
+/**
+ * When the bot's offense risks a steal: d6 + SB vs d6 + the catcher's arm,
+ * with the situation setting the bar. Nothing to gain early or in a blowout;
+ * down to the last chances in a close one, the bot goes on a coin flip.
+ */
+function botSteal(state: GameState, side: Side): GameAction | null {
+  const offense = getTeam(state, side);
+  if (getOffense(state).side !== side) return null;
+  const defense = getDefense(state);
   const rules = rulesOf(state);
-  const bench = benchHitters(team);
-  const pos = out?.fieldPosition ?? null;
-  return maxBy(bench, (p) => {
-    const season = seasonForPlayer(state, p);
-    const value = by === 'speed' ? sbMod(season.sb, rules.sbBands) : hitMod(season.avg, rules.hitBands);
-    // Strongly prefer someone who can actually play the vacated position.
-    const fits = !pos || pos === 'DH' || p.positions.includes(pos) ? 10 : 0;
-    return value + fits;
-  });
+
+  const deficit = defense.score - offense.score;
+  const late = state.inning >= Math.max(2, state.config.regulationInnings - 1);
+  const close = Math.abs(deficit) <= 2;
+  if (!late && !close) return null; // nothing to gain yet
+  if (deficit <= -3) return null; // a big lead doesn't need the gamble
+  // Down late the bot takes a coin flip; any other time it wants a full run
+  // of speed over the catcher's arm.
+  const needed = late && deficit >= 1 ? 0 : 1;
+
+  const catcher = fielderAt(state, defense.side, 'C');
+  const cArm = catcher ? fieldingRating(catcher, 'C') : 0;
+  for (const runner of runnersOn(offense)) {
+    if (runner.base === null || runner.base >= 3) continue;
+    if (!canSteal(state, runner.id).ok) continue;
+    const target = runner.base + 1;
+    const cBonus = target === 3 ? rules.stealThirdCatcherBonus : 0;
+    const rMod = runnerSbMod(seasonForPlayer(state, runner), rules).mod;
+    if (rMod - cArm - cBonus >= needed) return { type: 'attempt-steal', runnerId: runner.id };
+  }
+  return null;
 }
 
 function maxBy<T>(items: T[], score: (item: T) => number): T | null {

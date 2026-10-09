@@ -7,10 +7,17 @@ import { fielderAt, fieldingRating, fmtMod, getDefense, getOffense, rulesOf, run
 import type { Rng } from './rng.js';
 import type { GameEvent, GameState } from './types.js';
 
-/** Can this runner try to steal right now? (2nd or 3rd, next base open, before the pitch) */
+/**
+ * Can this runner try to steal right now? (2nd or 3rd, next base open,
+ * before the pitch). In a paced game the window stays open while the
+ * pitcher's die is in the air, waiting on the batter's roll — otherwise a
+ * quick pitcher could deal before the runner ever had the chance.
+ */
 export function canSteal(state: GameState, runnerId: string): { ok: boolean; reason: string } {
   if (state.phase !== 'live') return { ok: false, reason: 'The game is not in progress' };
-  if (state.pendingDecision || state.pendingPlay) return { ok: false, reason: 'A decision is pending' };
+  if (state.pendingPlay) return { ok: false, reason: 'A play is in flight' };
+  const pending = state.pendingDecision;
+  if (pending && pending.kind !== 'batter-roll') return { ok: false, reason: 'A decision is pending' };
   if (!state.currentPa || state.currentPa.balls > 0) return { ok: false, reason: 'Steals happen before the at-bat starts' };
   const offense = getOffense(state);
   const runner = offense.players.find((p) => p.id === runnerId);

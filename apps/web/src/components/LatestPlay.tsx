@@ -13,7 +13,6 @@ const KIND_BADGE: Record<string, { label: string; className: string; accent: boo
   walk: { label: 'WALK', className: 'bg-navy/70 text-chalk', accent: false },
   steal: { label: 'STEAL', className: 'bg-navy/70 text-chalk', accent: false },
   send: { label: 'SEND', className: 'bg-navy/70 text-chalk', accent: false },
-  injury: { label: 'INJURY', className: 'bg-crimson/80 text-chalk', accent: false },
   concede: { label: 'CONCEDE', className: 'bg-crimson/80 text-chalk', accent: false },
 };
 

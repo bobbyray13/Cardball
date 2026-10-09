@@ -54,6 +54,7 @@ describe('bot vs bot simulation', () => {
   it('plays 300 complete games without breaking the rules', () => {
     let totalRuns = 0;
     let extraInningGames = 0;
+    let stealAttempts = 0;
     for (let seed = 1; seed <= 300; seed++) {
       const innings = [3, 6, 9][seed % 3]!;
       const { state, events } = simulate(seed, innings);
@@ -70,11 +71,14 @@ describe('bot vs bot simulation', () => {
 
       if (state.inning > innings) extraInningGames++;
       totalRuns += state.home.score + state.away.score;
+      stealAttempts += events.filter((e) => e.kind === 'steal').length;
     }
-    console.log(`300 sims: ${(totalRuns / 300).toFixed(1)} runs/game, ${extraInningGames} went to extras`);
+    console.log(`300 sims: ${(totalRuns / 300).toFixed(1)} runs/game, ${extraInningGames} went to extras, ${stealAttempts} steal attempts`);
     // Sanity: offense actually happens, and games aren't absurd.
     expect(totalRuns).toBeGreaterThan(300);
     expect(extraInningGames).toBeLessThan(150);
+    // The running game is alive: the bots do go when the situation demands.
+    expect(stealAttempts).toBeGreaterThan(0);
   }, 120_000);
 
   it('is deterministic for a given seed', () => {

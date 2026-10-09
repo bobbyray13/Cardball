@@ -573,8 +573,6 @@ const WAITING_LABEL: Record<string, string> = {
   'dp-attempt': 'double-play call',
   'send-runner': 'send the runner?',
   'pitcher-change': 'new pitcher?',
-  'pinch-runner': 'pinch runner?',
-  'lineup-fill': 'lineup call',
 };
 
 /**

@@ -341,8 +341,10 @@ function resolveContact(
       stage: 'finish',
     };
 
-    // Double play chance: grounder, force at first, fewer than two outs.
-    if (info.type === 'grounder' && leadForcedBase(state) > 0 && outsBefore < 2) {
+    // Double play chance: grounder to an infielder, force at first, fewer than two outs.
+    // An outfielder fielding a grounder is too far from the bag to turn two —
+    // that play is the sure out.
+    if (info.type === 'grounder' && defenderCanTurnTwo(defender) && leadForcedBase(state) > 0 && outsBefore < 2) {
       const dpFactors = dpFactorPreview(state, ctx);
       state.pendingPlay = { ...ctx, stage: 'await-dp' };
       state.pendingDecision = {
@@ -739,6 +741,12 @@ export function applyAdvancesForHit(
 
 function defenderIsOutfielder(player: EnginePlayer): boolean {
   return player.fieldPosition === 'LF' || player.fieldPosition === 'CF' || player.fieldPosition === 'RF';
+}
+
+/** Only the four infield spots can turn a grounder into two. */
+function defenderCanTurnTwo(player: EnginePlayer): boolean {
+  const pos = player.fieldPosition;
+  return pos === '1B' || pos === '2B' || pos === '3B' || pos === 'SS';
 }
 
 function baseName(base: number): string {
