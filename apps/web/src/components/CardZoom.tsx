@@ -9,6 +9,7 @@ import { api } from '../api.js';
 import { BallCard } from './BallCard.js';
 import type { CardFace } from './BallCard.js';
 import { ErrorNote, Spinner, useFocusTrap } from './ui.js';
+import { teamAbbr } from '../lib/teams.js';
 
 export interface ZoomTarget {
   card: CardSnapshot;
@@ -109,7 +110,7 @@ export function CardZoom({ target, onClose }: { target: ZoomTarget | null; onClo
                 <div>
                   <h2 className="font-display text-2xl font-bold text-chalk">{target.card.name}</h2>
                   <p className="text-sm text-chalk/60">
-                    {target.card.cardYear} card · {target.card.teamLabel || 'Cardball'} · {target.card.positions.join(', ') || 'no position'}
+                    {target.card.cardYear} card · {teamAbbr(target.card.teamLabel) || 'Cardball'} · {target.card.positions.join(', ') || 'no position'}
                   </p>
                 </div>
                 {target.details}

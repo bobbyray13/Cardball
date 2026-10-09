@@ -1,22 +1,25 @@
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import type { SyntheticEvent } from 'react';
 import type { CardSnapshot, DraftRarity } from '@cardball/shared';
 import { activeHouseRules, hitMod, pitMod, sbMod, scoutingNotes, whipOf } from '@cardball/shared';
 import { formatIp } from '@cardball/engine';
+import { PAPER, mix, teamAbbr, teamPalette } from '../lib/teams.js';
+import type { TeamPalette } from '../lib/teams.js';
 import { ROLE_LABEL, ROLE_POSE, SilhouetteGroup, silhouetteRole } from './Silhouette.js';
 import type { SilhouetteRole } from './Silhouette.js';
 
 /**
  * The Ball Card, drawn from real stats.
  *
- * The front is a framed card face in the team's colors: the player's own photo
- * when he has one, and otherwise original art (his position's silhouette
- * against a sunburst and a grandstand), a name ribbon, and a home-plate stamp
- * showing his role. The back carries the six-season stat window that the rules
- * actually read, with each season's dice modifier shown.
+ * The front is the photo of the real card when someone has uploaded one, and
+ * otherwise a vintage-style face printed in the club's colors: an inked frame
+ * with corner ornaments, the player's name on an arched ribbon, his
+ * position's silhouette in a ballpark scene, his positions on a lower ribbon,
+ * and the team and year in the corners. The back carries the six-season stat
+ * window that the rules actually read, with each season's dice modifier shown.
  *
- * Everything is sized in `cqw` units against the card's own width, so one
- * component scales from a thumbnail to a tabletop card.
+ * Everything scales with the card's own width (an SVG face, `cqw` units on the
+ * back), so one component serves from a thumbnail to a tabletop card.
  */
 
 export type CardFace = 'front' | 'back';
@@ -44,22 +47,9 @@ const RING: Record<DraftRarity, string> = {
 /** The foil finish on the front, one per tier; common and uncommon stay plain. */
 const FOIL: Partial<Record<DraftRarity, string>> = { rare: 'foil-rare', star: 'foil-star', mythic: 'foil-mythic' };
 
-/** Deterministic team colors, so the same franchise always looks the same. */
-export type TeamColors = { primary: string; secondary: string; accent: string; glow: string };
-
-export function teamColors(label: string): TeamColors {
-  let hash = 0;
-  const key = label || 'Cardball';
-  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) % 360;
-  const hue = hash;
-  return {
-    primary: `hsl(${hue} 52% 30%)`,
-    secondary: `hsl(${(hue + 28) % 360} 46% 22%)`,
-    accent: `hsl(${(hue + 190) % 360} 60% 62%)`,
-    /** a light tint of the team's own hue, for the sunburst behind a player */
-    glow: `hsl(${(hue + 14) % 360} 58% 70%)`,
-  };
-}
+/** Team colors: the club's real ones when we know the club, otherwise stable ones derived from the label. */
+export type TeamColors = TeamPalette;
+export const teamColors = teamPalette;
 
 const fmtAvg = (avg: number | null) => (avg === null ? '—' : avg.toFixed(3).replace(/^0/, ''));
 const fmtMod = (mod: number) => (mod > 0 ? `+${mod}` : String(mod));
@@ -104,6 +94,36 @@ function CardPhoto({ photoId, alt }: { photoId: number; alt: string }) {
   );
 }
 
+const POSITION_NAME: Record<string, string> = {
+  C: 'Catcher',
+  '1B': 'First Base',
+  '2B': 'Second Base',
+  '3B': 'Third Base',
+  SS: 'Shortstop',
+  LF: 'Left Field',
+  CF: 'Center Field',
+  RF: 'Right Field',
+  DH: 'Designated Hitter',
+};
+
+/** The lower ribbon: his role spelled out, or his positions when he plays several. */
+export function positionLine(card: Pick<CardSnapshot, 'pitcherClass' | 'positions'>): string {
+  if (card.pitcherClass === 'SP') return 'Starting Pitcher';
+  if (card.pitcherClass === 'RP') return 'Relief Pitcher';
+  const field = card.positions.filter((p) => p !== 'DH' && p !== 'P');
+  if (field.length === 0) return POSITION_NAME.DH!;
+  if (field.length === 1) return POSITION_NAME[field[0]!] ?? field[0]!;
+  return field.slice(0, 4).join(' · ');
+}
+
+const SEPIA = '#b9a37f';
+
+const SLAB = "'Rockwell Extra Bold', 'Rockwell', 'Roboto Slab', 'Clarendon', Georgia, 'Times New Roman', serif";
+
+/** Lettering that fits a ribbon: big for short names, smaller as they grow. */
+const fitSize = (text: string, room: number, max: number, min: number, perChar = 0.7) =>
+  Math.max(min, Math.min(max, room / (perChar * Math.max(1, text.length))));
+
 function CardFront({
   card,
   photoId,
@@ -118,150 +138,255 @@ function CardFront({
   colors: TeamColors;
 }) {
   const role = silhouetteRole(card);
-  const fieldPositions = card.positions.filter((p) => p !== 'DH');
-  const posLine = card.pitcherClass
-    ? card.pitcherClass === 'SP'
-      ? 'Starting pitcher'
-      : 'Relief pitcher'
-    : fieldPositions.length
-      ? fieldPositions.slice(0, 4).join(' · ')
-      : 'Designated hitter';
+  const rarityPill = rarity ? (
+    <span
+      className="absolute top-[3cqw] right-[3cqw] z-10 rounded-full px-[2.4cqw] py-[0.8cqw] text-[2.6cqw] font-bold tracking-wider text-ink uppercase shadow"
+      style={{ background: tier === 'mythic' ? 'linear-gradient(120deg,#e79ab4,#8a5fc4)' : 'var(--color-gold)' }}
+    >
+      {tier === 'mythic' ? '✦ ' : tier === 'star' ? '★ ' : ''}
+      {rarity}
+    </span>
+  ) : null;
+
+  // A photographed card already is the card: show it edge to edge.
+  if (photoId) {
+    return (
+      <div className="relative h-full w-full overflow-hidden bg-black">
+        <CardPhoto photoId={photoId} alt={`${card.name} card`} />
+        {rarityPill}
+      </div>
+    );
+  }
 
   return (
-    // The team-color frame around everything, the way a printed border sits
-    // inside the card's white edge.
-    <div className="flex h-full flex-col p-[3.2cqw]" style={{ background: `linear-gradient(160deg, ${colors.primary}, ${colors.secondary})` }}>
-      <div className="relative min-h-0 flex-1 overflow-hidden rounded-[2.4cqw] ring-[0.8cqw] ring-chalk/85">
-        {photoId ? (
-          <CardPhoto photoId={photoId} alt={`${card.name} card`} />
-        ) : (
-          <CardArt name={card.name} role={role} colors={colors} />
-        )}
-
-        {/* team and year across the top of the art */}
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between p-[2.4cqw]">
-          <span
-            className="max-w-[62%] truncate rounded-[1cqw] px-[2cqw] py-[0.6cqw] font-display text-[4.2cqw] leading-none font-bold tracking-[0.12em] text-chalk uppercase italic shadow-sm"
-            style={{ background: colors.secondary }}
-          >
-            {card.teamLabel || 'Cardball'}
-          </span>
-          <span className="rounded-[1cqw] bg-black/45 px-[1.6cqw] py-[0.6cqw] font-mono text-[3.4cqw] leading-none font-bold text-chalk tabular-nums">
-            {card.cardYear}
-          </span>
-        </div>
-
-        {rarity ? (
-          <span
-            className="absolute top-[10cqw] right-[2.4cqw] z-10 rounded-full px-[2.4cqw] py-[0.8cqw] text-[2.6cqw] font-bold tracking-wider text-ink uppercase shadow"
-            style={{ background: tier === 'mythic' ? 'linear-gradient(120deg,#e79ab4,#8a5fc4)' : 'var(--color-gold)' }}
-          >
-            {tier === 'mythic' ? '✦ ' : tier === 'star' ? '★ ' : ''}
-            {rarity}
-          </span>
-        ) : null}
-      </div>
-
-      {/* the name ribbon, with the role badge breaking into it */}
-      <div className="relative mt-[2.4cqw] flex items-center gap-[2.4cqw]">
-        <RoleBadge role={role} colors={colors} />
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-display text-[6.6cqw] leading-none font-bold text-chalk drop-shadow-[0_1px_0_rgba(0,0,0,0.5)]">{card.name}</div>
-          <div className="mt-[1.2cqw] flex items-center justify-between gap-[2cqw] font-mono text-[2.8cqw] leading-none text-chalk/80">
-            <span className="truncate uppercase">{posLine}</span>
-            <span className="shrink-0">{card.bats || card.throws ? `B/T ${card.bats ?? '?'}/${card.throws ?? '?'}` : card.canBat ? 'hits' : 'no bat'}</span>
-          </div>
-        </div>
-      </div>
+    <div className="relative h-full w-full">
+      <VintageFront card={card} role={role} colors={colors} />
+      {rarityPill}
     </div>
   );
 }
 
-/** The position stamp on the card front: a home-plate shield with the role. */
-function RoleBadge({ role, colors }: { role: SilhouetteRole; colors: { primary: string; accent: string } }) {
+/** One corner flourish, drawn for the top-left and mirrored into the others. */
+function CornerOrnament({ ink, paper }: { ink: string; paper: string }) {
   return (
-    <svg viewBox="0 0 40 44" className="h-[12cqw] w-[11cqw] shrink-0 drop-shadow" aria-label={`${ROLE_LABEL[role]} card`} role="img">
-      <path d="M3 3 H37 V27 L20 41 L3 27 Z" fill="#f6f2e6" />
-      <path d="M6.5 6.5 H33.5 V25.4 L20 36.6 L6.5 25.4 Z" fill={colors.primary} />
-      <text x="20" y="25" textAnchor="middle" fontFamily="ui-serif, Georgia, serif" fontSize={ROLE_LABEL[role].length > 1 ? 15 : 19} fontWeight="800" fill="#f6f2e6">
-        {ROLE_LABEL[role]}
-      </text>
-    </svg>
+    <g>
+      <path d="M0 0 H22 Q13 3 9.5 9.5 Q3 13 0 22 Z" fill={ink} />
+      <path d="M4.2 11.5 Q4 4 11.5 4.2 Q8.4 6 8.6 8.6 Q6 8.4 4.2 11.5 Z" fill={paper} />
+      <circle cx="9.6" cy="9.6" r="1.5" fill={paper} />
+      <path d="M13.5 3.2 Q17 2.6 19 4.4 M3.2 13.5 Q2.6 17 4.4 19" stroke={paper} strokeWidth="0.9" fill="none" strokeLinecap="round" />
+    </g>
   );
 }
 
+const star = (cx: number, cy: number, r: number) => {
+  const pts: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const a = -Math.PI / 2 + (i * Math.PI) / 5;
+    const rr = i % 2 === 0 ? r : r * 0.45;
+    pts.push(`${(cx + Math.cos(a) * rr).toFixed(2)},${(cy + Math.sin(a) * rr).toFixed(2)}`);
+  }
+  return pts.join(' ');
+};
+
 /**
- * Original art for a card without a photo: the player's position silhouette
- * against a sunburst in his team's colors, a grandstand behind him and the
- * dirt under his spikes. The name seeds small variations so two cards from
- * one team don't look stamped from the same plate.
+ * The stock card face for a player without a photo, after the pre-war
+ * tobacco and gum cards: an ornate inked frame, pinstriped side panels, an
+ * arched name ribbon, and the player's silhouette on the mound of a sepia
+ * ballpark, all inked and tinted in his club's colors. The name seeds small
+ * variations (clouds, light towers) so a team's cards don't look stamped from
+ * one plate.
  */
-function CardArt({ name, role, colors }: { name: string; role: SilhouetteRole; colors: TeamColors }) {
+function VintageFront({ card, role, colors }: { card: CardSnapshot; role: SilhouetteRole; colors: TeamColors }) {
+  const uid = useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  const id = (part: string) => `vc${uid}-${part}`;
   let seed = 0;
-  for (let i = 0; i < name.length; i++) seed = (seed * 17 + name.charCodeAt(i)) % 997;
-  const id = `art-${seed}-${role}`;
-  const rayTilt = (seed % 12) - 6;
-  const standTop = 68 + (seed % 6);
-  const rays = 18;
+  for (let i = 0; i < card.name.length; i++) seed = (seed * 31 + card.name.charCodeAt(i)) % 9973;
+  const rand = (n: number) => {
+    const x = Math.sin(seed * 12.9898 + n * 78.233) * 43758.5453;
+    return x - Math.floor(x);
+  };
+
+  const ink = colors.ink;
+  const paper = PAPER;
+  const paperDeep = mix(PAPER, colors.primary, 0.08);
+  const tailFill = mix(PAPER, colors.primary, 0.22);
+  // A sepia ballpark, warmed or cooled a touch toward the club's color.
+  const haze = mix(mix(SEPIA, ink, 0.45), colors.primary, 0.15);
+  const skyTop = mix(mix(SEPIA, colors.primary, 0.16), ink, 0.08);
+  const skyMid = mix(mix(PAPER, SEPIA, 0.45), colors.glow, 0.12);
+  const ground = mix(mix(SEPIA, colors.primary, 0.12), ink, 0.18);
+
+  const name = card.name.toUpperCase();
+  const nameSize = fitSize(name, 132, 20, 8.5, 0.72);
+  const positions = positionLine(card).toUpperCase();
+  const posSize = fitSize(positions, 92, 10.5, 6, 0.74);
+  const team = teamAbbr(card.teamLabel) || 'CBL';
+  const teamSize = fitSize(team, 26, 8.6, 5, 0.75);
+
+  // Scene window and the figure's place in it.
+  const scene = { x: 30, y: 60, w: 190, h: 224 };
+  const moundY = 278;
+  const figScale = 2.0;
+  const leftTower = { x: 52 + rand(1) * 10, top: 148 + rand(2) * 22 };
+  const rightTower = { x: 186 + rand(3) * 12, top: 112 + rand(4) * 20 };
+  const clouds = Array.from({ length: 7 }, (_, i) => ({
+    cx: 30 + rand(10 + i) * 190,
+    cy: 92 + rand(20 + i) * 90,
+    rx: 22 + rand(30 + i) * 30,
+    ry: 6 + rand(40 + i) * 8,
+    o: 0.18 + rand(50 + i) * 0.22,
+  }));
 
   return (
-    <svg viewBox="0 0 100 120" preserveAspectRatio="xMidYMax slice" className="h-full w-full" role="img" aria-label={`${name}, ${ROLE_LABEL[role]}`}>
+    <svg viewBox="0 0 250 350" className="block h-full w-full" role="img" aria-label={`${card.name}, ${ROLE_LABEL[role]}, ${team} ${card.cardYear}`}>
       <defs>
-        <radialGradient id={`${id}-sky`} cx="50%" cy="48%" r="70%">
-          <stop offset="0%" stopColor={colors.glow} />
-          <stop offset="55%" stopColor={colors.primary} />
-          <stop offset="100%" stopColor={colors.secondary} />
+        <radialGradient id={id('age')} cx="50%" cy="45%" r="75%">
+          <stop offset="60%" stopColor="#7a5a2c" stopOpacity="0" />
+          <stop offset="100%" stopColor="#7a5a2c" stopOpacity="0.32" />
         </radialGradient>
-        <linearGradient id={`${id}-dirt`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#c99863" />
-          <stop offset="100%" stopColor="#8f6236" />
+        <pattern id={id('stripe')} width="2.6" height="10" patternUnits="userSpaceOnUse">
+          <rect width="2.6" height="10" fill={paperDeep} />
+          <rect width="0.85" height="10" fill={ink} opacity="0.42" />
+        </pattern>
+        <linearGradient id={id('sky')} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={skyTop} />
+          <stop offset="55%" stopColor={skyMid} />
+          <stop offset="100%" stopColor={mix(PAPER, '#ffffff', 0.25)} />
         </linearGradient>
+        <radialGradient id={id('sun')} cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stopColor="#fffaf0" stopOpacity="0.75" />
+          <stop offset="100%" stopColor="#fffaf0" stopOpacity="0" />
+        </radialGradient>
+        <pattern id={id('fence')} width="4" height="4" patternUnits="userSpaceOnUse">
+          <path d="M0 0 L4 4 M4 0 L0 4" stroke={ink} strokeWidth="0.35" opacity="0.5" />
+        </pattern>
+        <clipPath id={id('scene')}>
+          <rect x={scene.x} y={scene.y} width={scene.w} height={scene.h} />
+        </clipPath>
+        <path id={id('nameArc')} d="M48 63 Q125 31 202 63" />
+        <path id={id('posArc')} d="M62 301 Q125 309 188 301" />
       </defs>
 
-      <rect width="100" height="120" fill={`url(#${id}-sky)`} />
-      {/* sunburst */}
-      <g transform={`rotate(${rayTilt} 50 58)`} opacity="0.16">
-        {Array.from({ length: rays }, (_, i) => {
-          const a0 = (i / rays) * Math.PI * 2;
-          const a1 = a0 + Math.PI / rays;
-          return (
-            <path
-              key={i}
-              d={`M50 58 L${50 + Math.cos(a0) * 140} ${58 + Math.sin(a0) * 140} L${50 + Math.cos(a1) * 140} ${58 + Math.sin(a1) * 140} Z`}
-              fill="#f6f2e6"
-            />
-          );
-        })}
-      </g>
-      {/* the grandstand and its light towers */}
-      <path d={`M0 ${standTop} Q50 ${standTop - 10} 100 ${standTop} L100 98 L0 98 Z`} fill={colors.secondary} opacity="0.9" />
-      {Array.from({ length: 3 }, (_, row) => (
-        <path
-          key={row}
-          d={`M0 ${standTop + 4 + row * 5} Q50 ${standTop - 6 + row * 5} 100 ${standTop + 4 + row * 5}`}
-          stroke="#f6f2e6"
-          strokeOpacity="0.14"
-          strokeWidth="1.2"
-          strokeDasharray="2 1.6"
-          fill="none"
-        />
-      ))}
-      {[12, 88].map((x) => (
-        <g key={x} opacity="0.55">
-          <rect x={x - 0.6} y={standTop - 26} width="1.2" height="26" fill={colors.secondary} />
-          <rect x={x - 4.5} y={standTop - 30} width="9" height="5" rx="0.8" fill="#f6f2e6" opacity="0.9" />
-        </g>
-      ))}
-      {/* the grass, then the dirt he stands on */}
-      <path d="M0 92 Q50 84 100 92 L100 120 L0 120 Z" fill="#1d6a47" />
-      <ellipse cx="50" cy="112" rx="46" ry="11" fill={`url(#${id}-dirt)`} />
-      <ellipse cx="50" cy="111" rx="26" ry="4" fill="#000" opacity="0.18" />
+      {/* card stock and frame */}
+      <rect width="250" height="350" fill={paper} />
+      <rect x="9" y="9" width="232" height="332" rx="5" fill={ink} />
+      <rect x="13.5" y="13.5" width="223" height="323" rx="2.5" fill={paperDeep} />
+      <rect x="18" y="18" width="214" height="314" fill={`url(#${id('stripe')})`} />
+      <rect x="18" y="18" width="214" height="314" fill="none" stroke={ink} strokeWidth="0.9" />
+      <rect x="23" y="23" width="204" height="304" fill="none" stroke={ink} strokeWidth="0.5" opacity="0.7" />
 
-      {/* the player: a chalk rim, then the silhouette in deep ink */}
-      <g transform="translate(5 18) scale(0.92)">
-        <SilhouetteGroup pose={ROLE_POSE[role]} fill="#f6f2e6" grow={1.6} />
-        <SilhouetteGroup pose={ROLE_POSE[role]} fill="#15140f" />
+      {/* the ballpark */}
+      <g clipPath={`url(#${id('scene')})`}>
+        <rect x={scene.x} y={scene.y} width={scene.w} height={scene.h} fill={`url(#${id('sky')})`} />
+        <ellipse cx="125" cy="170" rx="90" ry="70" fill={`url(#${id('sun')})`} />
+        {clouds.map((c, i) => (
+          <ellipse key={i} cx={c.cx} cy={c.cy} rx={c.rx} ry={c.ry} fill={i % 3 === 0 ? ink : '#fffaf0'} opacity={i % 3 === 0 ? c.o * 0.35 : c.o} />
+        ))}
+
+        {/* light towers */}
+        {[leftTower, rightTower].map((t, i) => (
+          <g key={i} fill={haze} opacity="0.9">
+            <rect x={t.x - 0.9} y={t.top} width="1.8" height={252 - t.top} />
+            <rect x={t.x - 11} y={t.top - 12} width="22" height="13" rx="1" />
+            {Array.from({ length: 12 }, (_, k) => (
+              <circle key={k} cx={t.x - 8.2 + (k % 4) * 5.5} cy={t.top - 9 + Math.floor(k / 4) * 3.6} r="1.3" fill="#fffaf0" opacity="0.85" />
+            ))}
+          </g>
+        ))}
+
+        {/* grandstand and its railing, off to the right */}
+        <path d="M140 252 L220 226 L220 252 Z" fill={haze} opacity="0.85" />
+        {[0, 1, 2, 3].map((k) => (
+          <path key={k} d={`M${150 + k * 18} ${249 - k * 6} V${243 - k * 6}`} stroke={haze} strokeWidth="0.8" />
+        ))}
+        <path d="M146 245 L220 221" stroke={haze} strokeWidth="0.9" />
+        <rect x="211" y="208" width="0.8" height="16" fill={haze} />
+        <path d="M211.8 208 L218 210.5 L211.8 213 Z" fill={haze} />
+
+        {/* outfield fence */}
+        <rect x={scene.x} y="238" width={scene.w} height="14" fill={mix(haze, PAPER, 0.35)} opacity="0.8" />
+        <rect x={scene.x} y="238" width={scene.w} height="14" fill={`url(#${id('fence')})`} />
+        <rect x={scene.x} y="237" width={scene.w} height="1.2" fill={haze} />
+        {Array.from({ length: 9 }, (_, k) => (
+          <rect key={k} x={scene.x + 4 + k * 23} y="236" width="1.1" height="16" fill={haze} />
+        ))}
+
+        {/* the field */}
+        <rect x={scene.x} y="252" width={scene.w} height="40" fill={ground} />
+        <rect x={scene.x} y="252" width={scene.w} height="1" fill={ink} opacity="0.35" />
+        <rect x={scene.x} y="259" width={scene.w} height="4" fill={mix(ground, PAPER, 0.25)} opacity="0.7" />
+        <ellipse cx="125" cy={moundY} rx="80" ry="10" fill={ink} />
+
+        {/* the player */}
+        <g transform={`translate(${125 - 50 * figScale} ${moundY + 1 - 98 * figScale}) scale(${figScale})`}>
+          <SilhouetteGroup pose={ROLE_POSE[role]} fill={ink} />
+        </g>
+
+        <rect x={scene.x} y={scene.y} width={scene.w} height={scene.h} fill={`url(#${id('age')})`} />
       </g>
+      <rect x={scene.x} y={scene.y} width={scene.w} height={scene.h} fill="none" stroke={ink} strokeWidth="1.8" />
+      <rect x={scene.x + 2.6} y={scene.y + 2.6} width={scene.w - 5.2} height={scene.h - 5.2} fill="none" stroke={paper} strokeWidth="0.7" opacity="0.8" />
+
+      {/* corner ornaments */}
+      <g transform="translate(13.5 13.5)">
+        <CornerOrnament ink={ink} paper={paperDeep} />
+      </g>
+      <g transform="translate(236.5 13.5) scale(-1 1)">
+        <CornerOrnament ink={ink} paper={paperDeep} />
+      </g>
+      <g transform="translate(13.5 336.5) scale(1 -1)">
+        <CornerOrnament ink={ink} paper={paperDeep} />
+      </g>
+      <g transform="translate(236.5 336.5) scale(-1 -1)">
+        <CornerOrnament ink={ink} paper={paperDeep} />
+      </g>
+
+      {/* the name ribbon: tails tucked behind, folds, then the arched face */}
+      <g stroke={ink} strokeWidth="1.3" strokeLinejoin="round">
+        <path d="M54 58 L22 66 L31 78 L22 92 L54 84 Z" fill={tailFill} />
+        <path d="M196 58 L228 66 L219 78 L228 92 L196 84 Z" fill={tailFill} />
+        <path d="M48 76 L54 84 L54 74 Z" fill={ink} />
+        <path d="M202 76 L196 84 L196 74 Z" fill={ink} />
+        <path d="M48 47 Q125 15 202 47 L202 76 Q125 44 48 76 Z" fill={paper} />
+      </g>
+      <path d="M52 50.5 Q125 19.5 198 50.5 M52 72.5 Q125 41.5 198 72.5" stroke={ink} strokeWidth="0.5" fill="none" opacity="0.7" />
+      <text fontFamily={SLAB} fontWeight="900" fontSize={nameSize} fill={ink} letterSpacing="0.6" dominantBaseline="central">
+        <textPath href={`#${id('nameArc')}`} startOffset="50%" textAnchor="middle">
+          {name}
+        </textPath>
+      </text>
+
+      {/* the position ribbon */}
+      <g stroke={ink} strokeWidth="1.2" strokeLinejoin="round">
+        <path d="M66 287 L28 283 L37 295 L28 307 L66 311 Z" fill={tailFill} />
+        <path d="M184 287 L222 283 L213 295 L222 307 L184 311 Z" fill={tailFill} />
+        <path d="M60 312 L66 311 L66 304 Z" fill={ink} />
+        <path d="M190 312 L184 311 L184 304 Z" fill={ink} />
+        <path d="M60 289 Q125 297 190 289 L190 312 Q125 320 60 312 Z" fill={paper} />
+      </g>
+      <polygon points={star(46, 295.5, 4.2)} fill={colors.primary} opacity="0.8" />
+      <polygon points={star(204, 295.5, 4.2)} fill={colors.primary} opacity="0.8" />
+      <polygon points={star(68, 301, 2.4)} fill={colors.primary} />
+      <polygon points={star(182, 301, 2.4)} fill={colors.primary} />
+      <text fontFamily={SLAB} fontWeight="800" fontSize={posSize} fill={ink} letterSpacing="0.5" dominantBaseline="central">
+        <textPath href={`#${id('posArc')}`} startOffset="50%" textAnchor="middle">
+          {positions}
+        </textPath>
+      </text>
+
+      {/* team and year in the bottom corners */}
+      <g fontFamily={SLAB} fontWeight="800" textAnchor="middle" dominantBaseline="central">
+        <rect x="36" y="314" width="34" height="13" rx="2" fill={colors.primary} stroke={ink} strokeWidth="0.8" />
+        <text x="53" y="320.8" fontSize={teamSize} fill={paper} letterSpacing="0.5">
+          {team}
+        </text>
+        <rect x="180" y="314" width="34" height="13" rx="2" fill={paper} stroke={ink} strokeWidth="0.8" />
+        <text x="197" y="320.8" fontSize="8" fill={ink} letterSpacing="0.4">
+          {card.cardYear}
+        </text>
+      </g>
+
+      <rect width="250" height="350" fill={`url(#${id('age')})`} pointerEvents="none" />
     </svg>
   );
 }

@@ -26,6 +26,7 @@ import { RarityBadge } from '../components/RarityBadge.js';
 import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useFocusTrap, useLoad } from '../components/ui.js';
 import { pushCardToast } from '../components/Toasts.js';
 import { useSession } from '../session.js';
+import { teamAbbr } from '../lib/teams.js';
 
 /** "3 rare / 2 star / 1 mythic", or null when nothing is capped. */
 function draftCapsLabel(caps: DraftConfig['rarityCaps']): string | null {
@@ -611,7 +612,7 @@ function PickPeekModal({ card, onClose }: { card: DraftCard | null; onClose: () 
           <div>
             <h3 className="font-display text-xl font-semibold text-chalk">{card.name}</h3>
             <p className="text-sm text-chalk/60">
-              {card.cardYear} · {card.teamLabel || 'Cardball'}
+              {card.cardYear} · {teamAbbr(card.teamLabel) || 'Cardball'}
             </p>
           </div>
           <RarityBadge rarity={card.rarity} />
@@ -699,9 +700,9 @@ function AssemblyPanel({
         ) : (
           <>
             <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-              {team.cards.map(({ card, snapshot }) => (
+              {team.cards.map(({ card, snapshot, artPhotoId }) => (
                 <div key={card.id}>
-                  <BallCard card={snapshot} rarity={card.rarity === 'common' ? null : card.rarity} tier={card.rarity} />
+                  <BallCard card={snapshot} photoId={artPhotoId ?? null} rarity={card.rarity === 'common' ? null : card.rarity} tier={card.rarity} />
                   <p className="mt-1 truncate font-mono text-[11px] text-chalk/50">{card.headline}</p>
                 </div>
               ))}
@@ -972,7 +973,7 @@ function PackCardButton({
           <RarityBadge rarity={card.rarity} />
         </span>
       </span>
-      <span className="mt-0.5 block text-xs text-chalk/55">{card.teamLabel}</span>
+      <span className="mt-0.5 block text-xs text-chalk/55">{teamAbbr(card.teamLabel)}</span>
       {/* Where he plays, read at a glance while the pack is in hand. */}
       <span className="mt-1.5 flex flex-wrap items-center gap-1">
         {positions.length > 0 ? (
@@ -1038,6 +1039,7 @@ function overCap(draft: DraftView, card: DraftCard): boolean {
 
 function CardPreview({ card }: { card: DraftCard }) {
   const [snapshot, setSnapshot] = useState<CardSnapshot | null>(null);
+  const [artPhotoId, setArtPhotoId] = useState<number | null>(null);
   const [face, setFace] = useState<'front' | 'back'>('front');
   const [zoomed, setZoomed] = useState(false);
   const [error, setError] = useState<unknown>(null);
@@ -1048,7 +1050,11 @@ function CardPreview({ card }: { card: DraftCard }) {
     setError(null);
     api
       .previewCard(card.personId, card.cardYear)
-      .then((res) => !cancelled && setSnapshot(res.card))
+      .then((res) => {
+        if (cancelled) return;
+        setSnapshot(res.card);
+        setArtPhotoId(res.artPhotoId);
+      })
       .catch((err: unknown) => !cancelled && setError(err));
     return () => {
       cancelled = true;
@@ -1060,7 +1066,7 @@ function CardPreview({ card }: { card: DraftCard }) {
   return (
     <div className="space-y-2">
       <button type="button" className="mx-auto block w-full max-w-[260px]" onClick={() => setFace((f) => (f === 'front' ? 'back' : 'front'))}>
-        <BallCard card={snapshot} rarity={card.rarity === 'common' ? null : card.rarity} tier={card.rarity} face={face} />
+        <BallCard card={snapshot} photoId={artPhotoId} rarity={card.rarity === 'common' ? null : card.rarity} tier={card.rarity} face={face} />
       </button>
       <p className="text-center text-xs text-chalk/45">
         Tap the card to flip it, or{' '}
@@ -1069,7 +1075,10 @@ function CardPreview({ card }: { card: DraftCard }) {
         </button>{' '}
         to read it.
       </p>
-      <CardZoom target={zoomed ? { card: snapshot, rarity: card.rarity === 'common' ? null : card.rarity, tier: card.rarity } : null} onClose={() => setZoomed(false)} />
+      <CardZoom
+        target={zoomed ? { card: snapshot, photoId: artPhotoId, rarity: card.rarity === 'common' ? null : card.rarity, tier: card.rarity } : null}
+        onClose={() => setZoomed(false)}
+      />
     </div>
   );
 }

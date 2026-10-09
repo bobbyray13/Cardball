@@ -10,6 +10,7 @@ import { PackShelf } from '../components/PackShelf.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { PhotoUploader } from '../components/PhotoUploader.js';
 import { Button, Chip, ConfirmDialog, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useFocusTrap, useLoad } from '../components/ui.js';
+import { teamAbbr } from '../lib/teams.js';
 
 type SortKey = 'rarity' | 'newest' | 'name' | 'year-desc' | 'year-asc';
 type RoleFilter = 'all' | 'hitters' | 'pitchers';
@@ -363,7 +364,7 @@ function CardDetail({
             <div>
               <h2 className="font-display text-2xl font-bold text-chalk">{entry.card.name}</h2>
               <p className="text-sm text-chalk/60">
-                {entry.setLabel || 'Cardball'} · {entry.card.cardYear} · {entry.card.teamLabel}
+                {entry.setLabel || 'Cardball'} · {entry.card.cardYear} · {teamAbbr(entry.card.teamLabel)}
               </p>
               {entry.card.ineligibleReason ? <p className="mt-2 text-sm text-crimson">{entry.card.ineligibleReason}</p> : null}
             </div>

@@ -22,6 +22,7 @@ import type { Side, TeamSetup } from '@cardball/engine';
 import { cardModels, draftParticipants, drafts, gameEvents, games, people, teamCards, teams, tournaments, userCards } from '@cardball/db';
 import type { DraftRow } from '@cardball/db';
 import { autoLineup } from './autoLineup.js';
+import { cardArtKey, loadCardArt } from './cardArt.js';
 import { buildCard, loadWindowSeasons } from './cards.js';
 import { fileCardIntoCollection, keepSandboxCard } from './cardFiling.js';
 import { dealFieldInsurance, dealPack } from './packDeal.js';
@@ -1206,7 +1207,8 @@ async function draftTeamCards(ctx: Ctx, state: DraftState, seat: number): Promis
   const picks = state.picks[String(seat)] ?? [];
   if (picks.length === 0) return [];
   const personRows = await ctx.db.select().from(people).where(inArray(people.id, [...new Set(picks.map((p) => p.personId))]));
-  const seasonRows = await loadWindowSeasons(ctx, picks.map((p) => ({ personId: p.personId, cardYear: p.cardYear })));
+  const keys = picks.map((p) => ({ personId: p.personId, cardYear: p.cardYear }));
+  const [seasonRows, art] = await Promise.all([loadWindowSeasons(ctx, keys), loadCardArt(ctx, keys)]);
   const byId = new Map(personRows.map((p) => [p.id, p]));
 
   const out: DraftTeamCard[] = [];
@@ -1217,7 +1219,7 @@ async function draftTeamCards(ctx: Ctx, state: DraftState, seat: number): Promis
     seen.add(pair);
     const person = byId.get(card.personId);
     if (!person) continue;
-    out.push({ card, snapshot: buildCard(person, seasonRows, card.cardYear) });
+    out.push({ card, snapshot: buildCard(person, seasonRows, card.cardYear), artPhotoId: art.get(cardArtKey(card)) ?? null });
   }
   return out;
 }

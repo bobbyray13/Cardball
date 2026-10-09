@@ -434,6 +434,8 @@ export interface DraftView {
 export interface DraftTeamCard {
   card: DraftCard;
   snapshot: CardSnapshot;
+  /** an uploaded photo of this player and year, if anyone has shot one */
+  artPhotoId?: number | null;
 }
 
 /** The assembly screen's answer: this seat's cards and a suggested lineup. */

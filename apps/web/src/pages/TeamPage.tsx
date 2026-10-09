@@ -7,6 +7,7 @@ import { api } from '../api.js';
 import { ZoomableCard } from '../components/CardZoom.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { Button, ConfirmDialog, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { teamAbbr } from '../lib/teams.js';
 
 const FIELD: readonly { pos: string; label: string }[] = [
   { pos: 'C', label: 'Catcher' },
@@ -331,7 +332,7 @@ export function TeamPage() {
                               <RarityBadge rarity={rating.rarity} />
                             </p>
                             <p className="truncate font-mono text-xs text-chalk/45">
-                              {card.card.teamLabel ? `${card.card.teamLabel} · ` : ''}
+                              {card.card.teamLabel ? `${teamAbbr(card.card.teamLabel)} · ` : ''}
                               {card.card.positions.join(' ')}
                               {card.card.pitcherClass ? ` · ${card.card.pitcherClass}` : ''}
                               {card.card.playable ? '' : ' · not game-legal'}
