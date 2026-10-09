@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { GameError, applyAction, botAction, botOffClockAction, createGame, cryptoRng, sidesFor, waitingOn } from '@cardball/engine';
 import type { GameEvent, GameMode, GameState, Side } from '@cardball/engine';
 import { activeHouseRules, MATCH_LIMITS, matchProblem, openMatch } from '@cardball/shared';
@@ -430,32 +430,56 @@ export async function unlockGame(ctx: Ctx, user: AuthUser, gameId: number, passw
   return getGame(ctx, user, gameId);
 }
 
-/** The lobby: every game in the league, newest first. */
+/** The lobby: every game in the league, newest first.
+ *
+ * This used to load 100 full engine states — every player card and stat line
+ * in every game — just to print lobby rows. Only the fields a row shows are
+ * selected now, pulled out of the state JSONB inside Postgres, so the wire
+ * shape of GameListItem is unchanged while the payload stops scaling with
+ * game size. */
 export async function listGames(ctx: Ctx, user: AuthUser) {
-  const rows = await ctx.db.select().from(games).orderBy(desc(games.updatedAt)).limit(100);
+  const s = games.state;
+  const rows = await ctx.db
+    .select({
+      id: games.id,
+      mode: games.mode,
+      regulationInnings: games.regulationInnings,
+      updatedAt: games.updatedAt,
+      matchRules: games.matchRules,
+      locked: sql<boolean>`${games.passwordHash} is not null`,
+      hostUserId: sql<number>`(${s}->>'hostUserId')::int`,
+      guestUserId: sql<number | null>`(${s}->>'guestUserId')::int`,
+      status: sql<string | null>`${s}->'engine'->>'phase'`,
+      homeName: sql<string | null>`${s}->'engine'->'home'->>'name'`,
+      homeScore: sql<number | null>`(${s}->'engine'->'home'->>'score')::int`,
+      awayName: sql<string | null>`${s}->'engine'->'away'->>'name'`,
+      awayScore: sql<number | null>`(${s}->'engine'->'away'->>'score')::int`,
+      inning: sql<number | null>`(${s}->'engine'->>'inning')::int`,
+      half: sql<string | null>`${s}->'engine'->>'half'`,
+      winner: sql<string | null>`${s}->'engine'->>'winner'`,
+    })
+    .from(games)
+    .orderBy(desc(games.updatedAt))
+    .limit(100);
   // Names for exactly the managers with a game on the board — not the whole league.
-  const names = await namesFor(ctx, rows.flatMap((r) => [stored(r).hostUserId, stored(r).guestUserId]));
-  return rows
-    .map((r) => {
-      const v = toView(r);
-      return {
-        id: v.id,
-        mode: v.mode,
-        status: v.status,
-        regulationInnings: v.regulationInnings,
-        match: matchOf(r),
-        updatedAt: v.updatedAt,
-        hostName: names.get(v.hostUserId) ?? '?',
-        guestName: v.guestUserId ? (names.get(v.guestUserId) ?? '?') : null,
-        isMine: v.hostUserId === user.id || v.guestUserId === user.id,
-        locked: v.locked,
-        home: v.state ? { name: v.state.home.name, score: v.state.home.score } : null,
-        away: v.state ? { name: v.state.away.name, score: v.state.away.score } : null,
-        inning: v.state?.inning ?? null,
-        half: v.state?.half ?? null,
-        winner: v.state?.winner ?? null,
-      };
-    });
+  const names = await namesFor(ctx, rows.flatMap((r) => [r.hostUserId, r.guestUserId]));
+  return rows.map((r) => ({
+    id: r.id,
+    mode: r.mode as GameMode,
+    status: (r.status ?? 'open') as GameStatus,
+    regulationInnings: r.regulationInnings,
+    match: (r.matchRules ? (r.matchRules as MatchRules) : openMatch()) satisfies MatchRules,
+    updatedAt: r.updatedAt.toISOString(),
+    hostName: names.get(r.hostUserId) ?? '?',
+    guestName: r.guestUserId ? (names.get(r.guestUserId) ?? '?') : null,
+    isMine: r.hostUserId === user.id || r.guestUserId === user.id,
+    locked: r.locked,
+    home: r.homeName !== null ? { name: r.homeName, score: r.homeScore ?? 0 } : null,
+    away: r.awayName !== null ? { name: r.awayName, score: r.awayScore ?? 0 } : null,
+    inning: r.inning ?? null,
+    half: (r.half ?? null) as 'top' | 'bottom' | null,
+    winner: (r.winner ?? null) as 'home' | 'away' | null,
+  }));
 }
 
 // ---------------------------------------------------------------------------

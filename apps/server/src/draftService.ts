@@ -570,11 +570,25 @@ export async function listDrafts(ctx: Ctx, user: AuthUser): Promise<DraftListIte
       .map((t) => t.draftId)
       .filter((id): id is number => id !== null),
   );
-  const names = await namesFor(ctx, rows.map((r) => r.hostUserId));
+  const names = await namesFor(ctx, rows.filter((r) => !owned.has(r.id)).map((r) => r.hostUserId));
+  // Every seat on every listed room in one query, instead of one query per row.
+  const listed = rows.filter((r) => !owned.has(r.id));
+  const seatRows = listed.length
+    ? await ctx.db
+        .select({ draftId: draftParticipants.draftId, userId: draftParticipants.userId })
+        .from(draftParticipants)
+        .where(inArray(draftParticipants.draftId, listed.map((r) => r.id)))
+        .orderBy(asc(draftParticipants.seat))
+    : [];
+  const seatsByDraft = new Map<number, { userId: number }[]>();
+  for (const seat of seatRows) {
+    const list = seatsByDraft.get(seat.draftId) ?? [];
+    list.push(seat);
+    seatsByDraft.set(seat.draftId, list);
+  }
   const items: DraftListItem[] = [];
-  for (const row of rows) {
-    if (owned.has(row.id)) continue;
-    const seats = await loadParticipants(ctx, row.id);
+  for (const row of listed) {
+    const seats = seatsByDraft.get(row.id) ?? [];
     const config = parseConfig(row);
     items.push({
       id: row.id,

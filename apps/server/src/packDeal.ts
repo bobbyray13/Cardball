@@ -9,7 +9,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
-import { and, between, gt, inArray, sql } from 'drizzle-orm';
+import { and, between, gt, inArray } from 'drizzle-orm';
 import { activeHouseRules, packTheme, rateCard } from '@cardball/shared';
 import type { DraftCard, PackTheme, PackThemeId } from '@cardball/shared';
 import { people, seasons } from '@cardball/db';
@@ -30,6 +30,50 @@ const dbOf = (handle: DealDb) => handle.db;
 const FIELD_POSITIONS = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'] as const;
 
 /**
+ * Candidate person ids for one stat window: every player who appeared in it.
+ *
+ * Sampling used to run `GROUP BY person_id ORDER BY random() LIMIT n` on
+ * every pack dealt — a sort of the whole window each time, the heaviest query
+ * on a draft night, once per seat per round plus a fail-fast deal per theme.
+ * Instead the window's candidates are fetched once and cached for the life of
+ * the process; the stats tables only change when the importer runs (which
+ * restarts the server), so a cached window can never go stale. Sampling then
+ * shuffles in memory, which is the same uniform draw without the sort.
+ */
+const windowCandidates = new Map<string, number[]>();
+const WINDOW_CACHE_MAX = 256;
+
+async function candidateIds(db: Executor, from: number, to: number): Promise<number[]> {
+  const key = `${from}:${to}`;
+  const cached = windowCandidates.get(key);
+  if (cached) return cached;
+  const rows = await db
+    .select({ id: seasons.personId })
+    .from(seasons)
+    .where(and(between(seasons.year, from, to), gt(seasons.games, 0)))
+    .groupBy(seasons.personId);
+  const ids = rows.map((r) => r.id);
+  // Bounded and FIFO: a league only ever drafts a handful of eras per season.
+  if (windowCandidates.size >= WINDOW_CACHE_MAX) {
+    const oldest = windowCandidates.keys().next().value;
+    if (oldest !== undefined) windowCandidates.delete(oldest);
+  }
+  windowCandidates.set(key, ids);
+  return ids;
+}
+
+/** A uniform random sample of `n` items, without sorting the pool. */
+function pickRandom<T>(pool: readonly T[], n: number): T[] {
+  const copy = [...pool];
+  const take = Math.min(n, copy.length);
+  for (let i = 0; i < take; i++) {
+    const j = i + Math.floor(Math.random() * (copy.length - i));
+    [copy[i], copy[j]] = [copy[j]!, copy[i]!];
+  }
+  return copy.slice(0, take);
+}
+
+/**
  * Sample `sample` players who appeared in `cardYear`'s stat window and build
  * their cards, in random order. Over-fetches on purpose: callers keep only a
  * fraction of the sample, and some candidates turn out to have no usable card.
@@ -39,16 +83,8 @@ async function sampleCards(handle: DealDb, cardYear: number, sample: number, pla
   const rules = activeHouseRules();
   const { from, to } = windowRange(cardYear, rules);
 
-  const candidates = await db
-    .select({ id: seasons.personId })
-    .from(seasons)
-    .where(and(between(seasons.year, from, to), gt(seasons.games, 0)))
-    .groupBy(seasons.personId)
-    .orderBy(sql`random()`)
-    .limit(sample);
-  if (candidates.length === 0) return [];
-
-  const ids = candidates.map((c) => c.id);
+  const ids = pickRandom(await candidateIds(db, from, to), sample);
+  if (ids.length === 0) return [];
   const personRows = await db.select().from(people).where(inArray(people.id, ids));
   const seasonRows = await db.select().from(seasons).where(and(inArray(seasons.personId, ids), between(seasons.year, from, to)));
 
