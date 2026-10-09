@@ -35,6 +35,7 @@ const createSchema = z.object({
       })
       .nullable()
       .default(null),
+    pickClockSeconds: z.union([z.literal(0), z.literal(60), z.literal(120), z.literal(180)]).default(0),
   }),
 });
 

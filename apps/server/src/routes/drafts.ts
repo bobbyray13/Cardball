@@ -38,6 +38,8 @@ const createSchema = z.object({
     .default(null),
   /** regulation innings the series' games are played to */
   regulationInnings: z.number().int().min(1).max(30).default(9),
+  /** host's per-pass pick clock in seconds; 0 means no clock */
+  pickClockSeconds: z.union([z.literal(0), z.literal(60), z.literal(120), z.literal(180)]).default(0),
 });
 
 /** A lineup in draft card ids — the ids the room itself works in. */

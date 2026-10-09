@@ -303,7 +303,14 @@ export interface DraftConfig {
   rarityCaps: { rare: number; star: number; mythic: number } | null;
   /** regulation innings the series' games are played to */
   regulationInnings: number;
+  /** host's per-pass pick clock in seconds: 0 means no clock, any other value
+   *  is the time the whole table gets before the server auto-picks any seat
+   *  that hasn't chosen. */
+  pickClockSeconds: number;
 }
+
+/** The host's clock choices for a room. 0 = no clock. */
+export const PICK_CLOCK_CHOICES = [0, 60, 120, 180] as const;
 
 /** Draft room limits, shared so the client and server agree on them. */
 export const DRAFT_LIMITS = {
@@ -418,6 +425,8 @@ export interface DraftView {
   log: { seq: number; text: string }[];
   /** the tournament this room drafts for, if any: picks become its roster */
   tournamentId: number | null;
+  /** epoch ms of when this round's picks must be in, or null when no clock is running */
+  pickDeadlineAt: number | null;
   updatedAt: string;
 }
 

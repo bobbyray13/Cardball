@@ -319,6 +319,7 @@ function draftConfig(config: TournamentConfig): CreateDraftInput {
     themes: d.themes,
     rarityCaps: d.rarityCaps as unknown as CreateDraftInput['rarityCaps'],
     regulationInnings: config.regulationInnings,
+    pickClockSeconds: d.pickClockSeconds ?? 0,
   };
 }
 

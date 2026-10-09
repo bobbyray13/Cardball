@@ -298,3 +298,36 @@ export function RoundSizeFields({
     </div>
   );
 }
+
+/**
+ * The host's per-pass pick clock in seconds: 0 turns it off, otherwise the
+ * table shares the clock on every pass. The same choices apply to drafts
+ * and the draft a tournament runs, so the field is reusable across pages.
+ */
+export function PickClockField({
+  value,
+  onChange,
+  label = 'Pick clock',
+  hint = 'How long each full pass gets before the server auto-picks for any seat that has not chosen. 0 means no clock.',
+}: {
+  value: number;
+  onChange: (value: number) => void;
+  label?: string;
+  hint?: string;
+}) {
+  return (
+    <Field label={label} hint={hint}>
+      <SegmentedToggle
+        namePrefix="pickClock"
+        value={value}
+        options={[
+          { value: 0, label: 'Off' },
+          { value: 60, label: '60s' },
+          { value: 120, label: '2 min' },
+          { value: 180, label: '3 min' },
+        ]}
+        onChange={onChange}
+      />
+    </Field>
+  );
+}

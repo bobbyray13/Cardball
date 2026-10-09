@@ -5,7 +5,7 @@ import type { DraftListItem, PackThemeId } from '@cardball/shared';
 import { api } from '../api.js';
 import { eraById } from '../eras.js';
 import { PackArt } from '../components/PackArt.js';
-import { EraRangePicker, PackThemePicker, RarityCapFields, RoundSizeFields, chosenThemes } from '../components/RoomConfig.js';
+import { EraRangePicker, PackThemePicker, PickClockField, RarityCapFields, RoundSizeFields, chosenThemes } from '../components/RoomConfig.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 import { useLiveListUpdates } from '../lib/liveList.js';
 
@@ -32,6 +32,7 @@ export function DraftsPage() {
   const [maxRare, setMaxRare] = useState(0);
   const [maxStar, setMaxStar] = useState(0);
   const [maxMythic, setMaxMythic] = useState(0);
+  const [pickClockSeconds, setPickClockSeconds] = useState(0);
 
   const chosen = chosenThemes(themes, yearFrom, yearTo);
 
@@ -62,6 +63,7 @@ export function DraftsPage() {
       themes: chosen,
       rarityCaps: maxRare > 0 || maxStar > 0 || maxMythic > 0 ? { rare: maxRare, star: maxStar, mythic: maxMythic } : null,
       regulationInnings: innings,
+      pickClockSeconds,
     });
     navigate(`/drafts/${draft.id}`);
   });
@@ -185,6 +187,8 @@ export function DraftsPage() {
                 ))}
               </select>
             </Field>
+
+            <PickClockField value={pickClockSeconds} onChange={setPickClockSeconds} />
 
             <p className="text-xs text-chalk/50">
               Each manager ends with {rounds * packSize} cards. Rooms seat {DRAFT_LIMITS.minSeats}–{DRAFT_LIMITS.maxSeats} managers.

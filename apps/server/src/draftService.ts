@@ -16,7 +16,7 @@ import type {
   Position,
   SavedLineup,
 } from '@cardball/shared';
-import { DRAFT_LIMITS, PACK_THEME_IDS, WINNER_PACK_THEMES, activeHouseRules, packTheme, packThemesForYears, themeForRound } from '@cardball/shared';
+import { DRAFT_LIMITS, PACK_THEME_IDS, PICK_CLOCK_CHOICES, WINNER_PACK_THEMES, activeHouseRules, packTheme, packThemesForYears, themeForRound } from '@cardball/shared';
 import { createGame, cryptoRng } from '@cardball/engine';
 import type { Side, TeamSetup } from '@cardball/engine';
 import { cardModels, draftParticipants, drafts, gameEvents, games, people, teamCards, teams, tournaments, userCards } from '@cardball/db';
@@ -89,6 +89,8 @@ interface DraftState {
   keeps: Record<string, { userId: number; cardId: string; userCardId: number }>;
   /** game id → the wrapper the winner chose */
   packChoices: Record<string, PackThemeId>;
+  /** epoch ms of the deadline for the current pass, or null when no clock is running */
+  pickDeadlineAt: number | null;
 }
 
 const stored = (row: DraftRow) => row.state as DraftState;
@@ -216,9 +218,203 @@ function themesForSeats(config: DraftConfig, seats: number, round: number): Reco
 
 const passDirection = (round: number): 'left' | 'right' => (round % 2 === 1 ? 'left' : 'right');
 
+/** Higher is rarer; used to rank auto-picks. */
+const RARITY_RANK: Record<DraftRarity, number> = { common: 0, uncommon: 1, rare: 2, star: 3, mythic: 4 };
+const rarityRank = (c: DraftCard) => RARITY_RANK[c.rarity] ?? 0;
+
+/**
+ * Start a brand-new pass's countdown — or clear the deadline if the room's
+ * clock is off. The host picks a clock at room creation; a 0 means no clock,
+ * and the same `null` value covers both "no clock" and "every seat has picked".
+ */
+function setClockDeadline(state: DraftState, config: DraftConfig, now = Date.now()): void {
+  state.pickDeadlineAt = config.pickClockSeconds > 0 ? now + config.pickClockSeconds * 1000 : null;
+}
+
+/**
+ * The card the server should auto-pick for a stuck seat, deterministic so
+ * every client that watches the same draft sees the same answer. The priority
+ * is "what the seat still needs", with rarity the close runner-up:
+ *
+ *   1. A starter — the seat must name one pitcher.
+ *   2. A non-DH position the seat has not yet covered.
+ *   3. Highest available rarity; common < uncommon < rare < star < mythic.
+ *   4. Lowest personId, so a stickier pack doesn't bounce between two equals.
+ *
+ * Caps already count: a card that would push the seat over any cap is
+ * skipped, so a stuck seat with no legal card simply passes without taking.
+ */
+function autoPickSuggestion(picks: DraftCard[], pack: DraftCard[], caps: DraftConfig['rarityCaps']): DraftCard | null {
+  if (pack.length === 0) return null;
+  let hasStarter = false;
+  const covered = new Set<Position>();
+  for (const p of picks) {
+    if (p.starter) hasStarter = true;
+    for (const pos of p.positions ?? []) if (pos !== 'DH') covered.add(pos);
+  }
+  let best: DraftCard | null = null;
+  let bestScore = -1;
+  for (const card of pack) {
+    if (capBlocks(caps, picks, card)) continue;
+    const fillsStarter = !hasStarter && card.starter;
+    const fillsHole = (card.positions ?? []).some((pos) => pos !== 'DH' && !covered.has(pos));
+    // Score weights positional need much more than rarity, so an out-of-position
+    // SP is preferable to a common 2B in a draft that's already short a starter.
+    const score = (fillsStarter ? 1e6 : 0) + (fillsHole ? 1e3 : 0) + rarityRank(card) * 10;
+    if (score > bestScore || (score === bestScore && best && card.personId < best.personId)) {
+      best = card;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
 /** Seats holding cards; they all pick before the packs move. */
 function seatsWithCards(packs: Record<string, DraftCard[]>, seatCount: number): number[] {
   return Array.from({ length: seatCount }, (_, seat) => seat).filter((seat) => (packs[String(seat)] ?? []).length > 0);
+}
+
+/**
+ * What one pick — manual or automatic — leaves the board in. The advancing
+ * logic (pass / next round / finish) only depends on `waitingOn` being empty,
+ * so it is shared between the human `pickCard` command and the clock expirer's
+ * batch of auto-picks. Returns whether the draft finished or moves on, plus
+ * any field insurance that came with the final pick.
+ */
+async function applyAfterAllPicks(
+  ctx: Ctx,
+  row: DraftRow,
+  state: DraftState,
+  seats: { userId: number; seat: number }[],
+): Promise<{ status: string; insurance: { userId: number; card: DraftCard }[]; assembling: boolean; changed: boolean }> {
+  const seatCount = seats.length;
+  let status = row.status;
+  let insurance: { userId: number; card: DraftCard }[] = [];
+  let assembling = false;
+  let changed = false;
+
+  if (state.waitingOn.length === 0) {
+    changed = true;
+    // Everyone has picked: pass every pack one seat along together, wrapper and all.
+    const step = passDirection(state.round) === 'left' ? 1 : seatCount - 1;
+    const passed: Record<string, DraftCard[]> = {};
+    const passedThemes: Record<string, PackThemeId> = {};
+    for (let seat = 0; seat < seatCount; seat++) {
+      const target = (seat + step) % seatCount;
+      passed[String(target)] = state.packs[String(seat)] ?? [];
+      passedThemes[String(target)] = state.packThemes[String(seat)] ?? 'mixed';
+    }
+    state.packs = passed;
+    state.packThemes = passedThemes;
+    state.opened = [];
+    state.waitingOn = seatsWithCards(state.packs, seatCount);
+
+    if (state.waitingOn.length === 0) {
+      const config = parseConfig(row);
+      if (state.round >= config.rounds) {
+        state.packs = {};
+        state.packThemes = {};
+        state.log.push({ seq: state.log.length + 1, text: "That's the last pack — draft complete." });
+        insurance = await topUpForFielding(ctx, row, seats, state);
+        state.dealtPersonIds.push(...insurance.map((deal) => deal.card.personId));
+        if (await draftOwner(ctx, row.id)) {
+          status = 'finished';
+        } else {
+          status = 'assembling';
+          assembling = true;
+          state.log.push({ seq: state.log.length + 1, text: 'Cards drafted — build your lineup.' });
+        }
+        state.pickDeadlineAt = null;
+      } else {
+        state.round += 1;
+        state.packs = await dealAllPacks(ctx, config, seatCount, state.round, state);
+        state.packThemes = themesForSeats(config, seatCount, state.round);
+        state.opened = [];
+        state.waitingOn = seatsWithCards(state.packs, seatCount);
+        setClockDeadline(state, config);
+        state.log.push({
+          seq: state.log.length + 1,
+          text: `Pack ${state.round} of ${config.rounds} is on the table. This one passes ${passDirection(state.round)}.`,
+        });
+      }
+    } else {
+      setClockDeadline(state, parseConfig(row));
+    }
+  }
+  return { status, insurance, assembling, changed };
+}
+
+/**
+ * Auto-pick every seat the host's clock ran out on, then advance the draft.
+ * The room has no live scheduler: every viewer sees the same answer the
+ * moment their next read happens, because this runs lazily on the read path.
+ * If the deadline hasn't passed, this returns the row untouched — there is
+ * no write to make.
+ */
+async function expireClockIfDue(ctx: Ctx, row: DraftRow): Promise<DraftRow> {
+  const state = parseState(row);
+  if (row.status !== 'active' || state.pickDeadlineAt === null) return row;
+  if (Date.now() <= state.pickDeadlineAt) return row;
+
+  const config = parseConfig(row);
+  const seats = await loadParticipants(ctx, row.id);
+  if (seats.length === 0) return row;
+  const names = await namesFor(ctx, seats.map((s) => s.userId));
+  const namesOf = (seat: number) => {
+    const u = seats.find((s) => s.seat === seat);
+    return u ? (names.get(u.userId) ?? `seat ${seat + 1}`) : `seat ${seat + 1}`;
+  };
+
+  const toFile: { userId: number; card: DraftCard }[] = [];
+  for (const seat of [...state.waitingOn]) {
+    const seatRow = seats.find((s) => s.seat === seat);
+    if (!seatRow) {
+      state.waitingOn = state.waitingOn.filter((s) => s !== seat);
+      continue;
+    }
+    const key = String(seat);
+    const pack = state.packs[key] ?? [];
+    const card = autoPickSuggestion(state.picks[key] ?? [], pack, config.rarityCaps);
+    if (card) {
+      const idx = pack.indexOf(card);
+      if (idx >= 0) {
+        pack.splice(idx, 1);
+        state.packs[key] = pack;
+        state.picks[key] = [...(state.picks[key] ?? []), card];
+        toFile.push({ userId: seatRow.userId, card });
+        state.log.push({
+          seq: state.log.length + 1,
+          text: `The clock ran out — ${namesOf(seat)} picked ${card.name} (${card.rarity}).`,
+        });
+      } else {
+        state.log.push({ seq: state.log.length + 1, text: `The clock ran out — ${namesOf(seat)} skipped (no legal card left).` });
+      }
+    } else {
+      state.log.push({
+        seq: state.log.length + 1,
+        text: `The clock ran out — ${namesOf(seat)} skipped (no legal card left).`,
+      });
+    }
+    state.waitingOn = state.waitingOn.filter((s) => s !== seat);
+  }
+
+  const outcome = await applyAfterAllPicks(ctx, row, state, seats);
+  if (!outcome.changed && toFile.length === 0) return row;
+
+  const updated = await ctx.db.transaction(async (tx) => {
+    for (const file of toFile) state.cardFiling[file.card.id] = await filePickedCard(tx, file.userId, file.card);
+    for (const deal of outcome.insurance) state.cardFiling[deal.card.id] = await filePickedCard(tx, deal.userId, deal.card);
+    if (outcome.assembling) await buildDraftTeams(ctxOn(tx), seats, state);
+    const [saved] = await tx
+      .update(drafts)
+      .set({ state, status: outcome.status, version: row.version + 1, updatedAt: new Date() })
+      .where(and(eq(drafts.id, row.id), eq(drafts.version, row.version)))
+      .returning();
+    if (!saved) throw new HttpError(409, 'The draft moved on — refresh and try again');
+    return saved;
+  });
+  broadcast(ctx, updated);
+  return updated;
 }
 
 /**
@@ -255,6 +451,11 @@ function parseConfig(row: DraftRow): DraftConfig {
     themes: raw.themes && raw.themes.length > 0 ? raw.themes : ['mixed'],
     rarityCaps: draftCaps(raw.rarityCaps),
     regulationInnings: raw.regulationInnings ?? 9,
+    pickClockSeconds: (() => {
+      const v = raw.pickClockSeconds;
+      // Old rooms saved before the clock existed read as "no clock".
+      return typeof v === 'number' && PICK_CLOCK_CHOICES.includes(v as (typeof PICK_CLOCK_CHOICES)[number]) ? v : 0;
+    })(),
   };
 }
 
@@ -276,6 +477,7 @@ function freshState(log: DraftState['log']): DraftState {
     games: [],
     keeps: {},
     packChoices: {},
+    pickDeadlineAt: null,
   };
 }
 
@@ -295,6 +497,7 @@ function parseState(row: DraftRow): DraftState {
     games: raw.games ?? [],
     keeps: raw.keeps ?? {},
     packChoices: raw.packChoices ?? {},
+    pickDeadlineAt: raw.pickDeadlineAt ?? null,
   };
 }
 
@@ -426,6 +629,7 @@ async function toView(
     myKeeps,
     myPendingChoice: pending.length > 0 ? Math.min(...pending) : null,
     log: state.log.slice(-60),
+    pickDeadlineAt: state.pickDeadlineAt,
     updatedAt: row.updatedAt.toISOString(),
   };
 }
@@ -486,6 +690,8 @@ export interface CreateDraftInput {
   rarityCaps?: { rare: number; star: number; mythic: number } | null;
   /** regulation innings the series' games are played to */
   regulationInnings?: number;
+  /** host's per-pass pick clock in seconds; 0 (default) turns the clock off */
+  pickClockSeconds?: number;
 }
 
 function validateConfig(input: CreateDraftInput): DraftConfig {
@@ -525,6 +731,11 @@ function validateConfig(input: CreateDraftInput): DraftConfig {
     }
   }
 
+  const pickClockSeconds = ((input.pickClockSeconds ?? 0) as number) as (typeof PICK_CLOCK_CHOICES)[number];
+  if (!PICK_CLOCK_CHOICES.includes(pickClockSeconds)) {
+    throw badRequest(`The pick clock must be one of ${PICK_CLOCK_CHOICES.join(', ')} seconds (0 turns it off)`);
+  }
+
   return {
     rounds: input.rounds,
     packSize: input.packSize,
@@ -535,6 +746,7 @@ function validateConfig(input: CreateDraftInput): DraftConfig {
     themes: themes.length > 0 ? themes : ['mixed'],
     rarityCaps,
     regulationInnings: input.regulationInnings ?? 9,
+    pickClockSeconds,
   };
 }
 
@@ -611,8 +823,8 @@ export async function listDrafts(ctx: Ctx, user: AuthUser): Promise<DraftListIte
   return items;
 }
 
-export async function getDraft(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
-  return viewOf(ctx, await loadRow(ctx, draftId), user.id);
+export function getDraft(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
+  return withLock(draftId, async () => viewOf(ctx, await expireClockIfDue(ctx, await loadRow(ctx, draftId)), user.id));
 }
 
 export function joinDraft(ctx: Ctx, user: AuthUser, draftId: number, notifyList = true): Promise<DraftView> {
@@ -628,7 +840,7 @@ export function pickCard(ctx: Ctx, user: AuthUser, draftId: number, cardId: stri
 }
 
 async function joinUnlocked(ctx: Ctx, user: AuthUser, draftId: number, notifyList: boolean): Promise<DraftView> {
-  const row = await loadRow(ctx, draftId);
+  const row = await expireClockIfDue(ctx, await loadRow(ctx, draftId));
   const seats = await loadParticipants(ctx, draftId);
   if (seats.some((s) => s.userId === user.id)) return viewOf(ctx, row, user.id);
   if (row.status !== 'lobby') throw badRequest('That draft has already started');
@@ -642,7 +854,7 @@ async function joinUnlocked(ctx: Ctx, user: AuthUser, draftId: number, notifyLis
 }
 
 async function startUnlocked(ctx: Ctx, user: AuthUser, draftId: number, notifyList: boolean): Promise<DraftView> {
-  const row = await loadRow(ctx, draftId);
+  const row = await expireClockIfDue(ctx, await loadRow(ctx, draftId));
   if (row.hostUserId !== user.id) throw forbidden('Only the host can start the draft');
   if (row.status !== 'lobby') throw badRequest('That draft already started');
 
@@ -655,6 +867,7 @@ async function startUnlocked(ctx: Ctx, user: AuthUser, draftId: number, notifyLi
   state.packThemes = themesForSeats(config, seats.length, 1);
   state.waitingOn = seatsWithCards(state.packs, seats.length);
   state.picks = Object.fromEntries(seats.map((s) => [String(s.seat), []]));
+  setClockDeadline(state, config);
   const first = packTheme(themeForRound(config.themes, 1, 0));
   state.log.push({
     seq: state.log.length + 1,
@@ -670,7 +883,7 @@ export function openPack(ctx: Ctx, user: AuthUser, draftId: number): Promise<Dra
 
 /** Tear the wrapper off the pack in front of you, revealing its cards. */
 async function openUnlocked(ctx: Ctx, user: AuthUser, draftId: number): Promise<DraftView> {
-  const row = await loadRow(ctx, draftId);
+  const row = await expireClockIfDue(ctx, await loadRow(ctx, draftId));
   if (row.status !== 'active') throw badRequest('That draft is not running');
 
   const seats = await loadParticipants(ctx, draftId);
@@ -703,7 +916,7 @@ async function filePickedCard(db: Executor, userId: number, card: DraftCard): Pr
 }
 
 async function pickUnlocked(ctx: Ctx, user: AuthUser, draftId: number, cardId: string): Promise<DraftView> {
-  const row = await loadRow(ctx, draftId);
+  const row = await expireClockIfDue(ctx, await loadRow(ctx, draftId));
   if (row.status !== 'active') throw badRequest('That draft is not running');
 
   const seats = await loadParticipants(ctx, draftId);
@@ -722,74 +935,23 @@ async function pickUnlocked(ctx: Ctx, user: AuthUser, draftId: number, cardId: s
   if (blocked) throw badRequest(`${blocked} — this draft caps it. Take another card.`);
 
   const [card] = pack.splice(index, 1);
+  state.packs[key] = pack;
   state.picks[key] = [...(state.picks[key] ?? []), card!];
-
-  const seatCount = seats.length;
-  const log = (text: string) => state.log.push({ seq: state.log.length + 1, text });
-  const packAt = (seat: number) => state.packs[String(seat)] ?? [];
-
-  log(`${user.displayName} took ${card!.name} (${card!.rarity}).`);
+  state.log.push({ seq: state.log.length + 1, text: `${user.displayName} took ${card!.name} (${card!.rarity}).` });
   state.waitingOn = state.waitingOn.filter((seat) => seat !== me.seat);
 
-  let status: string = 'active';
-  // Field insurance dealt as the last pack empties, filed with the last pick.
-  let insurance: { userId: number; card: DraftCard }[] = [];
-  // The last pack of the last round: every seat's picks become their team.
-  let assembling = false;
-  if (state.waitingOn.length === 0) {
-    // Everyone has picked: pass every pack one seat along together, wrapper and all.
-    const step = passDirection(state.round) === 'left' ? 1 : seatCount - 1;
-    const passed: Record<string, DraftCard[]> = {};
-    const passedThemes: Record<string, PackThemeId> = {};
-    for (let seat = 0; seat < seatCount; seat++) {
-      const target = (seat + step) % seatCount;
-      passed[String(target)] = packAt(seat);
-      passedThemes[String(target)] = state.packThemes[String(seat)] ?? 'mixed';
-    }
-    state.packs = passed;
-    state.packThemes = passedThemes;
-    state.opened = [];
-    state.waitingOn = seatsWithCards(state.packs, seatCount);
-
-    if (state.waitingOn.length === 0) {
-      const config = parseConfig(row);
-      if (state.round >= config.rounds) {
-        state.packs = {};
-        state.packThemes = {};
-        log("That's the last pack — draft complete.");
-        // No seat leaves a finished draft unable to field a team.
-        insurance = await topUpForFielding(ctx, row, seats, state);
-        state.dealtPersonIds.push(...insurance.map((deal) => deal.card.personId));
-        if (await draftOwner(ctx, row.id)) {
-          // A tournament drives its own post-draft flow: it reads 'finished'
-          // and builds its rosters itself.
-          status = 'finished';
-        } else {
-          status = 'assembling';
-          assembling = true;
-          log('Cards drafted — build your lineup.');
-        }
-      } else {
-        state.round += 1;
-        state.packs = await dealAllPacks(ctx, config, seatCount, state.round, state);
-        state.packThemes = themesForSeats(config, seatCount, state.round);
-        state.opened = [];
-        state.waitingOn = seatsWithCards(state.packs, seatCount);
-        log(`Pack ${state.round} of ${config.rounds} is on the table. This one passes ${passDirection(state.round)}.`);
-      }
-    }
-  }
+  const outcome = await applyAfterAllPicks(ctx, row, state, seats);
 
   // File the card and save the pick in one transaction: a failure between the
   // two can no longer leave the card in the sandbox and still in the pack. The
   // insurance cards ride along, so a topped-up seat owns what it was dealt.
   const updated = await ctx.db.transaction(async (tx) => {
     state.cardFiling[card!.id] = await filePickedCard(tx, user.id, card!);
-    for (const deal of insurance) state.cardFiling[deal.card.id] = await filePickedCard(tx, deal.userId, deal.card);
-    if (assembling) await buildDraftTeams(ctxOn(tx), seats, state);
+    for (const deal of outcome.insurance) state.cardFiling[deal.card.id] = await filePickedCard(tx, deal.userId, deal.card);
+    if (outcome.assembling) await buildDraftTeams(ctxOn(tx), seats, state);
     const [saved] = await tx
       .update(drafts)
-      .set({ state, status, version: row.version + 1, updatedAt: new Date() })
+      .set({ state, status: outcome.status, version: row.version + 1, updatedAt: new Date() })
       .where(and(eq(drafts.id, row.id), eq(drafts.version, row.version)))
       .returning();
     if (!saved) throw new HttpError(409, 'The draft moved on — refresh and try again');

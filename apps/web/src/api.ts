@@ -46,6 +46,8 @@ export interface NewDraft {
   themes: PackThemeId[];
   rarityCaps: { rare: number; star: number; mythic: number } | null;
   regulationInnings: number;
+  /** 0 = no clock, else seconds per pass (60/120/180) */
+  pickClockSeconds: number;
 }
 
 /** What the host fills in to open a tournament. */
@@ -62,6 +64,7 @@ export interface NewTournament {
     yearTo: number;
     themes: PackThemeId[];
     rarityCaps: { rare: number; star: number; mythic: number } | null;
+    pickClockSeconds: number;
   };
 }
 
