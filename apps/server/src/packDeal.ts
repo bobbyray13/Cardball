@@ -90,7 +90,10 @@ function toDealCard(card: CardSnapshot): DraftCard {
 
 /**
  * Deal a themed pack: `count` random players whose card, built on `cardYear`,
- * fits the wrapper's label.
+ * fits the wrapper's label. `excludePersonIds` are the players a draft has
+ * already dealt to anyone, so no player comes up twice in one draft; a pack
+ * that runs out of fresh candidates comes back short rather than repeating
+ * one.
  */
 export async function dealPackAtYear(
   handle: DealDb,
@@ -98,14 +101,17 @@ export async function dealPackAtYear(
   count: number,
   theme: PackTheme,
   playableOnly: boolean,
+  excludePersonIds: readonly number[] = [],
 ): Promise<DraftCard[]> {
   const pack: DraftCard[] = [];
+  const excluded = new Set(excludePersonIds);
   // A themed pack throws most of the sample away — only a fraction of the players
   // in any six-year window had a 30-homer or a 30-steal season — so the sample
   // has to be much wider than the pack.
   const cards = await sampleCards(handle, cardYear, count * 15 + 150, playableOnly);
   for (const card of cards) {
     if (pack.length >= count) break;
+    if (excluded.has(card.personId)) continue;
     if (!theme.matches(rateCard(card))) continue;
     pack.push(toDealCard(card));
   }
@@ -118,13 +124,15 @@ export const PACK_YEAR_TRIES = 10;
 /**
  * Deal one pack. A pack is built on a single card year drawn from the era, so
  * the whole wrapper is coherent ("a 1973 pack"); the theme decides which of
- * that year's cards are eligible.
+ * that year's cards are eligible. Players already dealt in this draft are
+ * skipped, so a draft never hands the same player to two packs.
  */
 export async function dealPack(
   handle: DealDb,
   config: { yearFrom: number; yearTo: number; playableOnly?: boolean },
   count: number,
   themeId: PackThemeId,
+  excludePersonIds: readonly number[] = [],
 ): Promise<DraftCard[]> {
   const theme = packTheme(themeId);
   const playableOnly = config.playableOnly ?? true;
@@ -132,11 +140,14 @@ export async function dealPack(
   let best: DraftCard[] = [];
   for (let attempt = 0; attempt < PACK_YEAR_TRIES; attempt++) {
     const cardYear = config.yearFrom + Math.floor(Math.random() * span);
-    const pack = await dealPackAtYear(handle, cardYear, count, theme, playableOnly);
+    const pack = await dealPackAtYear(handle, cardYear, count, theme, playableOnly, excludePersonIds);
     if (pack.length >= count) return pack;
     if (pack.length > best.length) best = pack;
   }
   if (best.length > 0) return best;
+  // Every candidate is already dealt in this draft: hand back an empty pack
+  // rather than fail the deal, since the era itself is fine.
+  if (excludePersonIds.length > 0) return [];
   throw badRequest(`No ${theme.name.toLowerCase()} cards to deal from ${config.yearFrom}–${config.yearTo} — widen the era or drop that pack`);
 }
 

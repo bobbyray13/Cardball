@@ -36,7 +36,11 @@ function baseQuery(ctx: Ctx) {
 }
 
 export async function loadCollection(ctx: Ctx, userId: number): Promise<CollectionCard[]> {
-  const rows = await baseQuery(ctx).where(eq(userCards.userId, userId)).orderBy(people.nameLast, cardModels.cardYear);
+  // The binder proper: sandbox cards (draft picks) stay out of it until their
+  // manager keeps them.
+  const rows = await baseQuery(ctx)
+    .where(and(eq(userCards.userId, userId), eq(userCards.sandbox, false)))
+    .orderBy(people.nameLast, cardModels.cardYear);
   return toCollectionCards(ctx, rows);
 }
 

@@ -14,12 +14,12 @@ import {
   getDefense,
   getOffense,
   leadRunner,
-  pitcherPitchMod,
+  pitcherTotalMod,
   rulesOf,
   seasonForPlayer,
   sprayDirection,
 } from './queries.js';
-import { applyWalkForces, finishPlateAppearance, maybeWalkOff, scoreRun } from './flow.js';
+import { applyWalkForces, finishPlateAppearance, maybeWalkOff, recordAchievement, scoreRun } from './flow.js';
 import { creditOut, creditPlateAppearance } from './box.js';
 
 /** Scoring-notation position numbers (1 P … 9 RF). */
@@ -117,11 +117,10 @@ export function applyThrowPitch(state: GameState, rng: Rng): GameEvent[] {
   if (!batter || !pitcher) throw new GameError('Plate appearance has missing players');
 
   const batterSeason = seasonForPlayer(state, batter);
-  const pitcherSeason = seasonForPlayer(state, pitcher);
 
   // Paced: the pitcher's roll goes on the table, and the batter answers it.
   if (state.config.pacedPitch) {
-    const { mod: pMod, note: pNote } = pitcherPitchMod(pitcherSeason, rulesOf(state));
+    const { mod: pMod, note: pNote } = pitcherTotalMod(state, pitcher);
     const pRoll = rng.d6();
     const pTotal = pRoll + pMod;
     events.push(
@@ -145,7 +144,7 @@ export function applyThrowPitch(state: GameState, rng: Rng): GameEvent[] {
   while (true) {
     const { mod: bBase, note: bNote } = batterPitchMod(batterSeason, rulesOf(state));
     const bRbi = batterRbiBonus(state, batter, batterSeason);
-    const { mod: pMod, note: pNote } = pitcherPitchMod(pitcherSeason, rulesOf(state));
+    const { mod: pMod, note: pNote } = pitcherTotalMod(state, pitcher);
 
     const bRoll = rng.d6();
     const pRoll = rng.d6();
@@ -183,10 +182,9 @@ export function applyRollBat(state: GameState, rng: Rng): GameEvent[] {
   const events: GameEvent[] = [];
 
   const batterSeason = seasonForPlayer(state, batter);
-  const pitcherSeason = seasonForPlayer(state, pitcher);
   const { mod: bBase, note: bNote } = batterPitchMod(batterSeason, rulesOf(state));
   const bRbi = batterRbiBonus(state, batter, batterSeason);
-  const { mod: pMod, note: pNote } = pitcherPitchMod(pitcherSeason, rulesOf(state));
+  const { mod: pMod, note: pNote } = pitcherTotalMod(state, pitcher);
 
   const pRoll = decision.detail?.pitcherRoll ?? 0;
   const pTotal = decision.detail?.pitcherTotal ?? pRoll + pMod;
@@ -285,6 +283,7 @@ function resolveContact(
 
   // Natural 20: automatic home run, no fielding chance.
   if (contactRoll === 20) {
+    const basesLoaded = leadForcedBase(state) === 3;
     events.push(
       pushEvent(state, {
         kind: 'hit',
@@ -294,6 +293,7 @@ function resolveContact(
     );
     creditPlateAppearance(state, 'home-run');
     applyAdvancesForHit(state, events, batter, 4);
+    homerAchievements(state, events, batter, basesLoaded);
     if (state.phase === 'live') maybeWalkOff(state, events);
     if (state.phase === 'live') finishPlateAppearance(state, events);
     return;
@@ -420,6 +420,7 @@ function resolveContact(
   creditPlateAppearance(state, hitKind);
 
   const advance = { single: 1, double: 2, triple: 3, 'home-run': 4 }[hitKind];
+  const basesLoaded = hitKind === 'home-run' ? leadForcedBase(state) === 3 : false;
 
   // Send-runner chance: lead runner could try one extra base.
   const lead = leadRunner(getOffense(state));
@@ -457,8 +458,30 @@ function resolveContact(
   }
 
   applyAdvancesForHit(state, events, batter, advance);
+  if (hitKind === 'home-run') homerAchievements(state, events, batter, basesLoaded);
   if (state.phase === 'live') maybeWalkOff(state, events);
   if (state.phase === 'live') finishPlateAppearance(state, events);
+}
+
+/** A home run just landed: a grand slam if the bases were drunk, a walk-off if it ended the game. */
+function homerAchievements(state: GameState, events: GameEvent[], batter: EnginePlayer, basesLoadedBefore: boolean): void {
+  if (basesLoadedBefore) {
+    recordAchievement(state, events, {
+      side: getOffense(state).side,
+      kind: 'grand-slam',
+      text: `${batter.name} clears the bases — a GRAND SLAM!`,
+      playerId: batter.id,
+    });
+  }
+  // A home run that ends the bottom of the last inning in the home team's favor.
+  if (state.phase === 'finished' && state.winner === 'home' && state.half === 'bottom') {
+    recordAchievement(state, events, {
+      side: 'home',
+      kind: 'walkoff-hr',
+      text: `${batter.name} wins it with a WALK-OFF HOME RUN!`,
+      playerId: batter.id,
+    });
+  }
 }
 
 // ---------------------------------------------------------------------------

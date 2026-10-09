@@ -33,7 +33,7 @@ export function season(year: number, o: SeasonOverrides = {}, pitcher = false): 
     rbi: o.rbi ?? 50,
     sb: o.sb ?? 15,
     pa: ab,
-    pitching: pitcher ? { games: 30, ipOuts: o.ipOuts ?? 450, era: o.era ?? 3.25 } : null,
+    pitching: pitcher ? { games: 30, ipOuts: o.ipOuts ?? 450, era: o.era ?? 3.25, so: 120, bb: 50, h: 140, w: 12, l: 8, sv: 0 } : null,
     primaryPosition: null,
     positionsPlayed: [],
   };

@@ -91,7 +91,8 @@ export async function challengeViews(ctx: Ctx, userId: number): Promise<Challeng
     .from(userCards)
     .innerJoin(cardModels, eq(cardModels.id, userCards.cardModelId))
     .innerJoin(people, eq(people.id, cardModels.personId))
-    .where(eq(userCards.userId, userId));
+    // Only the binder counts: a sandbox draft pick is not yet a collected card.
+    .where(and(eq(userCards.userId, userId), eq(userCards.sandbox, false)));
   const claimed = await claimedChallengeIds(ctx, userId);
 
   return HISTORIC_TEAMS.map((team) => viewOf(team, owned, claimed.has(team.id), rules.statWindowSeasons));

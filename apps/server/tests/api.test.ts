@@ -997,7 +997,7 @@ describe('match rules', () => {
   it('refuses a roster carrying more rare cards than the match allows', async () => {
     const res = await call('POST', '/api/games', {
       token: hostToken,
-      body: { mode: 'hotseat', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId, match: { yearFrom: 2000, yearTo: 2010, rarityCaps: { rare: 0, chase: 0 } } },
+      body: { mode: 'hotseat', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId, match: { yearFrom: 2000, yearTo: 2010, rarityCaps: { rare: 0, star: 0, mythic: 0 } } },
     });
     expect(res.statusCode).toBe(400);
     // The one ace on every roster is a rare card.
@@ -1021,7 +1021,7 @@ describe('match rules', () => {
   });
 
   it('snapshots the match into the game and shows it in the lobby list', async () => {
-    const match = { yearFrom: 2001, yearTo: 2010, rarityCaps: { rare: 5, chase: 2 } };
+    const match = { yearFrom: 2001, yearTo: 2010, rarityCaps: { rare: 5, star: 2, mythic: 3 } };
     const created = await call('POST', '/api/games', {
       token: hostToken,
       body: { mode: 'hotseat', regulationInnings: 3, teamId: hostTeamId, opponentTeamId: hostTeamId, match },
@@ -1047,7 +1047,7 @@ describe('match rules', () => {
     const hostTeam = await smallBallTeam(hostToken, 'Small Ball');
     const created = await call('POST', '/api/games', {
       token: hostToken,
-      body: { mode: 'remote', regulationInnings: 3, teamId: hostTeam, match: { yearFrom: 2000, yearTo: 2010, rarityCaps: { rare: 0, chase: 0 } } },
+      body: { mode: 'remote', regulationInnings: 3, teamId: hostTeam, match: { yearFrom: 2000, yearTo: 2010, rarityCaps: { rare: 0, star: 0, mythic: 0 } } },
     });
     expect(created.statusCode, created.body).toBe(200);
     const gameId = body<{ game: { id: number } }>(created).game.id;

@@ -8,9 +8,10 @@
  */
 
 import { applyAction, waitingOn } from './apply.js';
-import { botAction } from './bot.js';
+import { botAction, botOffClockAction } from './bot.js';
 import { getTeam } from './queries.js';
 import type { Rng } from './rng.js';
+import { SIDES } from './types.js';
 import type { Actor, GameEvent, GameState, Side } from './types.js';
 
 /** An actor that may speak for this side, bot or not. */
@@ -34,6 +35,21 @@ export function autoPlay(state: GameState, rng: Rng, maxActions = MAX_SIM_ACTION
 
   for (let i = 0; i < maxActions; i++) {
     if (next.phase === 'finished') break;
+
+    // Off the clock: a driven manager can still visit the bullpen between
+    // pitches, whichever side the game is waiting on.
+    let offClock = false;
+    for (const side of SIDES) {
+      const action = botOffClockAction(next, side);
+      if (!action) continue;
+      const result = applyAction(next, action, actorFor(next, side), rng);
+      next = result.state;
+      events.push(...result.events);
+      offClock = true;
+      break;
+    }
+    if (offClock) continue;
+
     const waiting = waitingOn(next);
     if (!waiting) break;
     const action = botAction(next, waiting.side);

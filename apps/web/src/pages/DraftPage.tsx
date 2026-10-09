@@ -1,19 +1,41 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { OUT_OF_POSITION_RATING } from '@cardball/engine';
-import type { CardSnapshot, DraftCard, DraftView, Position } from '@cardball/shared';
-import { packTheme } from '@cardball/shared';
+import { WINNER_PACK_THEMES, packTheme } from '@cardball/shared';
+import type {
+  CardSnapshot,
+  DraftCard,
+  DraftConfig,
+  DraftSeatPicks,
+  DraftTeamView,
+  DraftView,
+  PackThemeId,
+  Position,
+  SavedLineup,
+} from '@cardball/shared';
 import { api } from '../api.js';
 import { BallCard } from '../components/BallCard.js';
 import { CardZoom } from '../components/CardZoom.js';
+import { LineupBuilder, lineupProblem } from '../components/LineupBuilder.js';
+import type { LineupCandidate } from '../components/LineupBuilder.js';
 import { PackArt, RevealCards, TearingPack } from '../components/PackArt.js';
 import { RarityBadge } from '../components/RarityBadge.js';
-import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction } from '../components/ui.js';
+import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useLoad } from '../components/ui.js';
 import { pushCardToast } from '../components/Toasts.js';
 import { useSession } from '../session.js';
+
+/** "3 rare / 2 star / 1 mythic", or null when nothing is capped. */
+function draftCapsLabel(caps: DraftConfig['rarityCaps']): string | null {
+  if (!caps) return null;
+  const parts: string[] = [];
+  if (caps.rare > 0) parts.push(`${caps.rare} rare`);
+  if (caps.star > 0) parts.push(`${caps.star} star`);
+  if (caps.mythic > 0) parts.push(`${caps.mythic} mythic`);
+  return parts.length > 0 ? `${parts.join(' / ')} each` : null;
+}
 
 export function DraftPage() {
   const draftId = Number(useParams().id);
@@ -24,6 +46,8 @@ export function DraftPage() {
   const [loadError, setLoadError] = useState<unknown>(null);
   const [closed, setClosed] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // A drafted pick, opened for a quick read while the draft is under way.
+  const [peek, setPeek] = useState<DraftCard | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -77,6 +101,27 @@ export function DraftPage() {
     navigate('/drafts');
   });
 
+  // ---- the assembly and the series ----
+  const lockLineup = useAction(async (lineup: SavedLineup) => {
+    setDraft((await api.setDraftLineup(draftId, lineup)).draft);
+  });
+  const rematch = useAction(async () => {
+    const { gameId } = await api.rematchDraft(draftId);
+    navigate(`/games/${gameId}`);
+  });
+  const choosePack = useAction(async (gameId: number, themeId: PackThemeId) => {
+    setDraft((await api.chooseDraftPack(draftId, gameId, themeId)).draft);
+  });
+  const keepCard = useAction(async (gameId: number, cardId: string) => {
+    setDraft((await api.keepDraftCard(draftId, gameId, cardId)).draft);
+  });
+
+  // The seat's full cards, with stats, only once the draft reaches assembly.
+  const roomTeam = useLoad(
+    () => (draft && (draft.phase === 'assembling' || draft.phase === 'playing') ? api.draftTeam(draftId) : Promise.resolve(null)),
+    [draftId, draft?.phase, draft?.updatedAt],
+  );
+
   if (closed) {
     return (
       <EmptyState title="The host closed this room">
@@ -97,7 +142,23 @@ export function DraftPage() {
   const selected = draft.myPack.find((c) => c.id === selectedId) ?? null;
   const myTheme = draft.myPackTheme ? packTheme(draft.myPackTheme) : null;
   const sealed = draft.myPack.length > 0 && !draft.myPackOpened;
+  // The tear is a first-pack ceremony: round 1 only. Later rounds open quietly.
+  const firstPack = draft.round === 1;
   const era = config.yearFrom === config.yearTo ? `${config.yearFrom}` : `${config.yearFrom}–${config.yearTo}`;
+  const capsLabel = draftCapsLabel(config.rarityCaps);
+  const team = roomTeam.data?.team ?? null;
+  const mySeatPicks = draft.seats?.find((s) => s.userId === user?.id) ?? null;
+
+  const phaseLine =
+    draft.phase === 'lobby'
+      ? 'taking seats'
+      : draft.phase === 'active'
+        ? `pack ${draft.round} of ${config.rounds}`
+        : draft.phase === 'assembling'
+          ? 'build your lineup'
+          : draft.phase === 'playing'
+            ? 'the series'
+            : 'complete';
 
   return (
     <div className="space-y-6">
@@ -108,8 +169,7 @@ export function DraftPage() {
           </Link>
           <h1 className="font-display text-3xl font-bold text-chalk">{era} draft</h1>
           <p className="mt-1 text-sm text-chalk/60">
-            {config.rounds} packs of {config.packSize} ·{' '}
-            {draft.phase === 'lobby' ? 'taking seats' : draft.phase === 'active' ? `pack ${draft.round} of ${config.rounds}` : 'complete'}
+            {config.rounds} packs of {config.packSize} · {phaseLine}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             {config.themes.map((id) => {
@@ -124,10 +184,8 @@ export function DraftPage() {
                 </span>
               );
             })}
-            {config.rarityCaps ? (
-              <span className="rounded-full border border-gold/40 px-2 py-0.5 text-[10px] tracking-wide text-gold uppercase">
-                cap {config.rarityCaps.rare} rare · {config.rarityCaps.chase} chase
-              </span>
+            {capsLabel ? (
+              <span className="rounded-full border border-gold/40 px-2 py-0.5 text-[10px] tracking-wide text-gold uppercase">cap {capsLabel}</span>
             ) : null}
           </div>
         </div>
@@ -140,7 +198,19 @@ export function DraftPage() {
 
       <SeatStrip draft={draft} />
 
-      <ErrorNote error={join.error ?? start.error ?? openPack.error ?? pick.error ?? close.error} />
+      <ErrorNote
+        error={
+          join.error ??
+          start.error ??
+          openPack.error ??
+          pick.error ??
+          close.error ??
+          lockLineup.error ??
+          rematch.error ??
+          choosePack.error ??
+          keepCard.error
+        }
+      />
 
       {draft.phase === 'lobby' ? (
         <Panel title="Waiting for managers">
@@ -162,84 +232,129 @@ export function DraftPage() {
       ) : null}
 
       {draft.phase === 'active' && me ? (
-        <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
-          <Panel
-            title={sealed ? 'Your pack' : myTurn ? 'Your pick' : `Waiting on ${stillPicking.map((p) => p.name).join(', ') || '…'}`}
-            subtitle={
-              sealed
-                ? `${myTheme?.name ?? 'A pack'} is in front of you. Tear it open.`
-                : myTurn
-                  ? `Tap a card to look at it, then take it. The rest pass ${draft.passDirection} once everyone has picked.`
-                  : `You've taken your card. The packs pass ${draft.passDirection} when everyone has picked.`
-            }
-          >
-            {draft.myPack.length === 0 ? (
-              <EmptyState title="No pack in hand" />
-            ) : sealed && myTheme ? (
-              <div className="py-4">
-                <TearingPack theme={myTheme} busy={openPack.busy} label="Tear it open" onOpen={() => void openPack.execute()} />
-              </div>
-            ) : (
-              <RevealCards>
-                <div className="mb-3 flex items-center gap-3">
-                  {myTheme ? <PackArt theme={myTheme} size="sm" sealed={false} /> : null}
-                  <p className="text-sm text-chalk/60">
-                    {draft.myPack.length} card{draft.myPack.length === 1 ? '' : 's'} left in this {myTheme?.name ?? 'pack'}.
-                  </p>
-                </div>
-                <ul className="grid gap-2 sm:grid-cols-2">
-                  {/* The taken card leaves the pack on the next render; no exit
-                      animation, so a ghost of it can't linger in the list. */}
-                  {draft.myPack.map((card) => (
-                    <motion.li key={card.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                      <PackCardButton
-                        card={card}
-                        selected={card.id === selectedId}
-                        disabled={!myTurn}
-                        capped={overCap(draft, card)}
-                        onSelect={() => setSelectedId(card.id)}
-                      />
-                      {myTurn && card.id === selectedId ? (
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          className="mt-1.5 w-full lg:hidden"
-                          disabled={pick.busy || overCap(draft, card)}
-                          onClick={() => void pick.execute(card.id)}
-                        >
-                          {pick.busy ? 'Taking…' : `Take ${card.name}`}
-                        </Button>
-                      ) : null}
-                    </motion.li>
-                  ))}
-                </ul>
-              </RevealCards>
-            )}
-          </Panel>
+        <>
+          <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+            <Panel
+              title={sealed ? 'Your pack' : myTurn ? 'Your pick' : `Waiting on ${stillPicking.map((p) => p.name).join(', ') || '…'}`}
+              subtitle={
+                sealed
+                  ? `${myTheme?.name ?? 'A pack'} is in front of you.${firstPack ? ' Tear it open.' : ' Open it and pick.'}`
+                  : myTurn
+                    ? `Tap a card to look at it, then take it. The rest pass ${draft.passDirection} once everyone has picked.`
+                    : `You've taken your card. The packs pass ${draft.passDirection} when everyone has picked.`
+              }
+            >
+              {draft.myPack.length === 0 ? (
+                <EmptyState title="No pack in hand" />
+              ) : sealed ? (
+                firstPack && myTheme ? (
+                  <div className="py-4">
+                    <TearingPack theme={myTheme} busy={openPack.busy} label="Tear it open" onOpen={() => void openPack.execute()} />
+                  </div>
+                ) : (
+                  // Later rounds skip the ceremony: a quick fade and straight in.
+                  <RevealCards>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {myTheme ? <PackArt theme={myTheme} size="sm" /> : null}
+                      <div className="min-w-0">
+                        <p className="text-sm text-chalk/70">{myTheme?.name ?? 'Your pack'} is in front of you.</p>
+                        <p className="text-xs text-chalk/50">Later rounds skip the tear — open it and pick.</p>
+                      </div>
+                      <Button variant="primary" disabled={openPack.busy} onClick={() => void openPack.execute()}>
+                        {openPack.busy ? 'Opening…' : 'Open the pack'}
+                      </Button>
+                    </div>
+                  </RevealCards>
+                )
+              ) : (
+                <RevealCards>
+                  <div className="mb-3 flex items-center gap-3">
+                    {myTheme ? <PackArt theme={myTheme} size="sm" sealed={false} /> : null}
+                    <p className="text-sm text-chalk/60">
+                      {draft.myPack.length} card{draft.myPack.length === 1 ? '' : 's'} left in this {myTheme?.name ?? 'pack'}.
+                    </p>
+                  </div>
+                  <ul className="grid gap-2 sm:grid-cols-2">
+                    {/* The taken card leaves the pack on the next render; no exit
+                        animation, so a ghost of it can't linger in the list. */}
+                    {draft.myPack.map((card) => (
+                      <motion.li key={card.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+                        <PackCardButton
+                          card={card}
+                          selected={card.id === selectedId}
+                          disabled={!myTurn}
+                          capped={overCap(draft, card)}
+                          onSelect={() => setSelectedId(card.id)}
+                        />
+                        {myTurn && card.id === selectedId ? (
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            className="mt-1.5 w-full lg:hidden"
+                            disabled={pick.busy || overCap(draft, card)}
+                            onClick={() => void pick.execute(card.id)}
+                          >
+                            {pick.busy ? 'Taking…' : `Take ${card.name}`}
+                          </Button>
+                        ) : null}
+                      </motion.li>
+                    ))}
+                  </ul>
+                </RevealCards>
+              )}
+            </Panel>
 
-          <Panel title={selected ? selected.name : 'Card preview'}>
-            {selected ? (
-              <div className="space-y-3">
-                <CardPreview card={selected} />
-                {overCap(draft, selected) ? (
-                  <Notice>You've hit this draft's {selected.rarity} cap. Pick a different card.</Notice>
-                ) : null}
-                <Button
-                  variant="primary"
-                  className="w-full"
-                  disabled={!myTurn || pick.busy || overCap(draft, selected)}
-                  onClick={() => void pick.execute(selected.id)}
-                >
-                  {pick.busy ? 'Taking…' : `Take ${selected.name}`}
-                </Button>
-              </div>
-            ) : (
-              <p className="text-sm text-chalk/55">
-                {sealed ? 'Tear the pack open to see what is inside.' : myTurn ? 'Pick a card from your pack to see its front and back.' : 'Hang tight.'}
-              </p>
-            )}
-          </Panel>
-        </div>
+            <Panel title={selected ? selected.name : 'Card preview'}>
+              {selected ? (
+                <div className="space-y-3">
+                  <CardPreview card={selected} />
+                  {overCap(draft, selected) ? (
+                    <Notice>You've hit this draft's {selected.rarity} cap. Pick a different card.</Notice>
+                  ) : null}
+                  <Button
+                    variant="primary"
+                    className="w-full"
+                    disabled={!myTurn || pick.busy || overCap(draft, selected)}
+                    onClick={() => void pick.execute(selected.id)}
+                  >
+                    {pick.busy ? 'Taking…' : `Take ${selected.name}`}
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-sm text-chalk/55">
+                  {sealed ? 'Open the pack to see what is inside.' : myTurn ? 'Pick a card from your pack to see its front and back.' : 'Hang tight.'}
+                </p>
+              )}
+            </Panel>
+          </div>
+
+          <TheTable draft={draft} meSeat={me.seat} onPeek={setPeek} />
+        </>
+      ) : null}
+
+      {draft.phase === 'assembling' ? (
+        <AssemblyPanel
+          draft={draft}
+          team={team}
+          loading={roomTeam.loading}
+          loadError={roomTeam.error}
+          mySeat={mySeatPicks}
+          onLock={(lineup) => void lockLineup.execute(lineup)}
+          busy={lockLineup.busy}
+        />
+      ) : null}
+
+      {draft.phase === 'playing' ? (
+        <SeriesPanel
+          draft={draft}
+          team={team}
+          loading={roomTeam.loading}
+          mySeat={mySeatPicks}
+          onChoosePack={(gameId, themeId) => void choosePack.execute(gameId, themeId)}
+          onKeep={(gameId, cardId) => void keepCard.execute(gameId, cardId)}
+          onRematch={() => void rematch.execute()}
+          busy={choosePack.busy || keepCard.busy || rematch.busy}
+        />
       ) : null}
 
       {draft.phase === 'finished' ? (
@@ -270,7 +385,7 @@ export function DraftPage() {
             title={`Your picks (${draft.myPicks.length})`}
             subtitle={
               config.rarityCaps
-                ? `${draft.myTally.rare}/${config.rarityCaps.rare} rare · ${draft.myTally.chase}/${config.rarityCaps.chase} chase`
+                ? `${draft.myTally.rare}/${config.rarityCaps.rare} rare · ${draft.myTally.star}/${config.rarityCaps.star} star · ${draft.myTally.mythic}/${config.rarityCaps.mythic} mythic`
                 : undefined
             }
           >
@@ -300,6 +415,8 @@ export function DraftPage() {
           </ol>
         </Panel>
       </div>
+
+      <PickPeekModal card={peek} onClose={() => setPeek(null)} />
     </div>
   );
 }
@@ -309,6 +426,7 @@ function SeatStrip({ draft }: { draft: DraftView }) {
     <ul className="flex flex-wrap gap-2">
       {draft.participants.map((p) => {
         const onClock = draft.phase === 'active' && draft.waitingOn.includes(p.seat);
+        const seat = draft.seats?.find((s) => s.seat === p.seat) ?? null;
         return (
           <li
             key={p.userId}
@@ -320,12 +438,425 @@ function SeatStrip({ draft }: { draft: DraftView }) {
             <span className="font-medium">{p.name}</span>
             {p.isHost ? <span className="text-[10px] tracking-wide text-gold uppercase">host</span> : null}
             {draft.phase !== 'lobby' ? <span className="font-mono text-xs text-chalk/50">{draft.pickCounts[String(p.seat)] ?? 0}</span> : null}
+            {seat?.lineupReady ? <span className="text-[10px] tracking-wide text-gold uppercase" title="Lineup locked in">ready</span> : null}
             {onClock ? <span className="h-2 w-2 animate-pulse rounded-full bg-gold" aria-label="still picking" /> : null}
             {draft.phase === 'active' && !onClock ? <span className="text-xs text-chalk/60" aria-label="picked">✓</span> : null}
           </li>
         );
       })}
     </ul>
+  );
+}
+
+/** Every seat's construction, as it emerges — both teams visible during the draft. */
+function TheTable({ draft, meSeat, onPeek }: { draft: DraftView; meSeat: number; onPeek: (card: DraftCard) => void }) {
+  return (
+    <Panel title="The table" subtitle="Every seat's build, as it comes together. Tap a card to read it.">
+      <ul className="grid gap-3 sm:grid-cols-2">
+        {(draft.seats ?? []).map((seat) => (
+          <li
+            key={seat.seat}
+            className={`rounded-xl border p-3 ${seat.seat === meSeat ? 'border-gold/50 bg-gold/5' : 'border-white/10 bg-black/20'}`}
+          >
+            <div className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1">
+              <span className="font-mono text-xs text-chalk/40">{seat.seat + 1}</span>
+              <span className="font-medium text-chalk">{seat.name}</span>
+              {seat.isHost ? <span className="text-[10px] tracking-wide text-gold uppercase">host</span> : null}
+              {seat.seat === meSeat ? <span className="text-[10px] tracking-wide text-chalk/50 uppercase">you</span> : null}
+              {seat.lineupReady ? <span className="text-[10px] tracking-wide text-gold uppercase">ready</span> : null}
+              <span className="ml-auto font-mono text-xs text-chalk/45">{seat.picks.length} picked</span>
+            </div>
+            {seat.picks.length === 0 ? (
+              <p className="text-xs text-chalk/45">Nothing yet.</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {seat.picks.map((card) => (
+                  <PickChip key={card.id} card={card} onClick={() => onPeek(card)} />
+                ))}
+              </div>
+            )}
+          </li>
+        ))}
+      </ul>
+    </Panel>
+  );
+}
+
+/** A small chip for one drafted card, positions and all. */
+function PickChip({ card, onClick }: { card: DraftCard; onClick: () => void }) {
+  const positions = card.positions ?? [];
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={`${card.name} — ${card.headline}`}
+      className="rounded-lg border border-white/10 bg-black/25 px-2 py-1 text-left transition-colors hover:border-white/30"
+    >
+      <span className="flex items-center gap-1.5">
+        <span className="text-xs text-chalk">{card.name}</span>
+        <RarityBadge rarity={card.rarity} />
+      </span>
+      <span className="mt-0.5 flex flex-wrap items-center gap-1">
+        {positions.length > 0 ? (
+          positions.map((pos) => (
+            <span key={pos} className="rounded border border-white/15 px-1 font-mono text-[9px] text-chalk/60">
+              {pos}
+            </span>
+          ))
+        ) : (
+          <span className="font-mono text-[9px] text-chalk/40">{card.starter ? 'SP' : card.reliever ? 'RP' : '—'}</span>
+        )}
+      </span>
+    </button>
+  );
+}
+
+/** A compact read of a drafted pick, for a manager who wants the card details. */
+function PickPeekModal({ card, onClose }: { card: DraftCard | null; onClose: () => void }) {
+  if (!card) return null;
+  const positions = card.positions ?? [];
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${card.name}, ${card.cardYear}`}
+      className="fixed inset-0 z-[85] flex items-center justify-center bg-black/70 p-4"
+      onClick={onClose}
+    >
+      <div className="panel w-full max-w-sm p-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-display text-xl font-semibold text-chalk">{card.name}</h3>
+            <p className="text-sm text-chalk/60">
+              {card.cardYear} · {card.teamLabel || 'Cardball'}
+            </p>
+          </div>
+          <RarityBadge rarity={card.rarity} />
+        </div>
+        <p className="mt-2 font-mono text-sm text-chalk/80">{card.headline}</p>
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {positions.map((pos) => (
+            <span key={pos} className="rounded border border-white/20 px-1.5 py-0.5 font-mono text-[10px] text-chalk/70">
+              {pos}
+            </span>
+          ))}
+          {card.starter ? <span className="rounded border border-gold/40 px-1.5 py-0.5 font-mono text-[10px] text-gold">SP</span> : null}
+          {card.reliever ? <span className="rounded border border-sky-300/40 px-1.5 py-0.5 font-mono text-[10px] text-sky-200">RP</span> : null}
+          {positions.length === 0 && !card.starter && !card.reliever ? (
+            <span className="font-mono text-[10px] text-chalk/50">no position</span>
+          ) : null}
+        </div>
+        <div className="mt-4 flex justify-end">
+          <Button size="sm" onClick={onClose}>
+            Close
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * The assembly screen, after the last pick: the seat's cards, a suggested
+ * lineup, and a place to lock one in. The other seat's build is shown so a
+ * manager can size up the series before it starts.
+ */
+function AssemblyPanel({
+  draft,
+  team,
+  loading,
+  loadError,
+  mySeat,
+  onLock,
+  busy,
+}: {
+  draft: DraftView;
+  team: DraftTeamView | null;
+  loading: boolean;
+  loadError: unknown;
+  mySeat: DraftSeatPicks | null;
+  onLock: (lineup: SavedLineup) => void;
+  busy: boolean;
+}) {
+  const [lineup, setLineup] = useState<SavedLineup | null>(null);
+
+  // Seed from the locked lineup, or the server's suggestion, when it arrives.
+  useEffect(() => {
+    if (!team) return;
+    setLineup(team.lineup ?? team.suggested ?? null);
+  }, [team]);
+
+  const candidates = useMemo<LineupCandidate[]>(
+    () =>
+      (team?.cards ?? []).map(({ card, snapshot }) => ({
+        id: card.id,
+        name: card.name,
+        cardYear: card.cardYear,
+        positions: snapshot.positions.length > 0 ? snapshot.positions : (card.positions ?? []),
+        pitcherClass: snapshot.pitcherClass,
+        canBat: snapshot.canBat,
+      })),
+    [team],
+  );
+
+  const current: SavedLineup = lineup ?? { lineup: [], fieldPositions: {}, startingPitcherId: '' };
+  const problem = lineupProblem(candidates, current);
+  const locked = draft.myLineup !== null;
+  const others = (draft.seats ?? []).filter((s) => s.seat !== mySeat?.seat);
+  const waiting = (draft.seats ?? []).filter((s) => !s.lineupReady);
+
+  return (
+    <div className="space-y-6">
+      <Panel title="Cards drafted — build your lineup" subtitle="Your picks are your team. Set nine, pick a starter, and lock it in.">
+        <ErrorNote error={loadError} />
+        {loading && !team ? (
+          <Spinner label="Fetching your cards…" />
+        ) : !team ? (
+          <p className="text-sm text-chalk/55">Your cards could not be loaded. Refresh the room to try again.</p>
+        ) : (
+          <>
+            <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {team.cards.map(({ card, snapshot }) => (
+                <div key={card.id}>
+                  <BallCard card={snapshot} rarity={card.rarity === 'common' ? null : card.rarity} tier={card.rarity} />
+                  <p className="mt-1 truncate font-mono text-[11px] text-chalk/50">{card.headline}</p>
+                </div>
+              ))}
+            </div>
+
+            {locked ? (
+              <Notice>Your lineup is locked in. Change it below and lock it again to update it.</Notice>
+            ) : null}
+
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              {team.suggested ? (
+                <Button size="sm" onClick={() => setLineup(team.suggested)}>
+                  Use the suggested lineup
+                </Button>
+              ) : null}
+              <Button
+                variant="primary"
+                size="sm"
+                disabled={busy || !!problem}
+                onClick={() => onLock(current)}
+              >
+                {busy ? 'Locking…' : locked ? 'Update lineup' : 'Lock lineup'}
+              </Button>
+            </div>
+
+            <LineupBuilder candidates={candidates} value={current} outOfPosition onChange={setLineup} />
+            {problem ? <p className="mt-3 text-sm text-chalk/50">{problem}</p> : null}
+          </>
+        )}
+      </Panel>
+
+      <Panel title="The other dugout" subtitle="Waiting on lineups">
+        {waiting.length === 0 ? (
+          <p className="text-sm text-gold/90">Everyone is assembled. The first pitch is next.</p>
+        ) : (
+          <p className="text-sm text-chalk/60">
+            Waiting on {waiting.map((s) => s.name).join(', ')} to lock a lineup.
+          </p>
+        )}
+        <ul className="mt-3 space-y-3">
+          {others.map((seat) => (
+            <li key={seat.seat} className="rounded-xl border border-white/10 bg-black/20 p-3">
+              <div className="mb-2 flex items-center gap-2">
+                <span className="font-medium text-chalk">{seat.name}</span>
+                {seat.lineupReady ? <span className="text-[10px] tracking-wide text-gold uppercase">ready</span> : null}
+                <span className="ml-auto font-mono text-xs text-chalk/45">{seat.picks.length} picked</span>
+              </div>
+              {seat.picks.length === 0 ? (
+                <p className="text-xs text-chalk/45">Nothing yet.</p>
+              ) : (
+                <div className="flex flex-wrap gap-1.5">
+                  {seat.picks.map((card) => (
+                    <span key={card.id} className="rounded-lg border border-white/10 bg-black/25 px-2 py-1">
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-xs text-chalk">{card.name}</span>
+                        <RarityBadge rarity={card.rarity} />
+                      </span>
+                      <span className="mt-0.5 flex flex-wrap items-center gap-1">
+                        {(card.positions ?? []).length > 0 ? (
+                          (card.positions ?? []).map((pos) => (
+                            <span key={pos} className="rounded border border-white/15 px-1 font-mono text-[9px] text-chalk/60">
+                              {pos}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="font-mono text-[9px] text-chalk/40">{card.starter ? 'SP' : card.reliever ? 'RP' : '—'}</span>
+                        )}
+                      </span>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+      </Panel>
+    </div>
+  );
+}
+
+/**
+ * The series, once every seat is assembled: the games so far, the winner's
+ * bonus-pack choice, and the one card a winner keeps from each game.
+ */
+function SeriesPanel({
+  draft,
+  team,
+  loading,
+  mySeat,
+  onChoosePack,
+  onKeep,
+  onRematch,
+  busy,
+}: {
+  draft: DraftView;
+  team: DraftTeamView | null;
+  loading: boolean;
+  mySeat: DraftSeatPicks | null;
+  onChoosePack: (gameId: number, themeId: PackThemeId) => void;
+  onKeep: (gameId: number, cardId: string) => void;
+  onRematch: () => void;
+  busy: boolean;
+}) {
+  const games = draft.games ?? [];
+  const keeps = draft.myKeeps ?? {};
+  const nameFor = (seat: number) => draft.seats?.find((s) => s.seat === seat)?.name ?? `Seat ${seat + 1}`;
+  const keptIds = new Set(Object.values(keeps).filter((id): id is string => id !== null));
+  const nameOfCard = (id: string) => team?.cards.find((c) => c.card.id === id)?.card.name ?? id;
+  const pendingKeeps = Object.entries(keeps)
+    .filter(([, cardId]) => cardId === null)
+    .map(([gameId]) => Number(gameId));
+  const currentFinished = draft.gameId !== null && games.some((g) => g.gameId === draft.gameId);
+  const gameNumber = (gameId: number) => games.findIndex((g) => g.gameId === gameId) + 1;
+
+  return (
+    <div className="space-y-6">
+      <Panel
+        title="The series"
+        subtitle={draft.gameId !== null ? 'The current game is on the field.' : 'The next game is being dealt.'}
+        actions={
+          draft.gameId !== null ? (
+            <Link to={`/games/${draft.gameId}`}>
+              <Button size="sm" variant="primary">
+                Go to the game →
+              </Button>
+            </Link>
+          ) : null
+        }
+      >
+        {games.length === 0 ? (
+          <p className="text-sm text-chalk/60">No games played yet.</p>
+        ) : (
+          <ol className="space-y-2">
+            {games.map((g, i) => (
+              <li key={g.gameId} className="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-white/10 bg-black/20 px-3 py-2">
+                <span className="font-mono text-xs text-chalk/40">Game {i + 1}</span>
+                <span className="font-medium text-chalk">
+                  {nameFor(g.awaySeat)} {g.awayScore}–{g.homeScore} {nameFor(g.homeSeat)}
+                </span>
+                {g.winnerSeat !== null ? (
+                  <span className="text-xs text-gold">{nameFor(g.winnerSeat)} won</span>
+                ) : (
+                  <span className="text-xs text-chalk/50">in progress</span>
+                )}
+                {g.gameId === draft.gameId ? <span className="ml-auto text-xs text-gold/80">current</span> : null}
+              </li>
+            ))}
+          </ol>
+        )}
+        {currentFinished && mySeat ? (
+          <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-3">
+            <Button variant="primary" disabled={busy} onClick={onRematch}>
+              Rematch the series
+            </Button>
+          </div>
+        ) : null}
+      </Panel>
+
+      {/* The winner's bonus pack: four wrappers to choose between. */}
+      {draft.myPendingChoice !== null ? (
+        <Panel title={`Bonus pack for game ${gameNumber(draft.myPendingChoice)}`} subtitle="You won it — pick the wrapper.">
+          <div className="flex flex-wrap gap-3">
+            {WINNER_PACK_THEMES.map((id) => {
+              const theme = packTheme(id);
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => onChoosePack(draft.myPendingChoice!, id)}
+                  className="rounded-xl border border-white/15 p-3 text-left transition-transform hover:-translate-y-1 disabled:opacity-50"
+                  style={{ background: `linear-gradient(150deg, ${theme.colors.from}, ${theme.colors.to})`, color: theme.colors.ink }}
+                >
+                  <PackArt theme={theme} size="sm" />
+                  <span className="mt-2 block text-xs font-semibold">{theme.name}</span>
+                  <span className="block text-[10px] opacity-80">{theme.hold}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Panel>
+      ) : null}
+
+      {/* Keep one card from each game won, filed into the collection. */}
+      {pendingKeeps.length > 0 ? (
+        <Panel title="Keep one card" subtitle="The winner files one card from the team they fielded.">
+          {loading && !team ? (
+            <Spinner label="Fetching your cards…" />
+          ) : !team ? (
+            <p className="text-sm text-chalk/55">Your cards could not be loaded.</p>
+          ) : (
+            pendingKeeps.map((gameId) => (
+              <div key={gameId} className="mb-4 last:mb-0">
+                <p className="mb-2 text-sm text-chalk/70">Game {gameNumber(gameId)} — pick the card you keep.</p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5">
+                  {team.cards.map(({ card }) => {
+                    const alreadyKept = keptIds.has(card.id);
+                    return (
+                      <button
+                        key={card.id}
+                        type="button"
+                        disabled={busy || alreadyKept}
+                        onClick={() => onKeep(gameId, card.id)}
+                        className={`rounded-lg border p-2 text-left transition-colors ${
+                          alreadyKept ? 'border-white/5 opacity-40' : 'border-white/15 bg-black/20 hover:border-gold/50'
+                        }`}
+                      >
+                        <span className="flex items-center gap-1.5">
+                          <span className="truncate text-xs text-chalk">{card.name}</span>
+                          <RarityBadge rarity={card.rarity} />
+                        </span>
+                        <span className="mt-0.5 block truncate font-mono text-[10px] text-chalk/50">
+                          {card.cardYear} · {card.headline}
+                        </span>
+                        {alreadyKept ? <span className="text-[10px] text-chalk/40">already kept</span> : null}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))
+          )}
+        </Panel>
+      ) : null}
+
+      {Object.keys(keeps).length > 0 ? (
+        <Panel title="Your keeps" subtitle="One card a game, out of the games you won.">
+          <ul className="space-y-1.5 text-sm">
+            {Object.entries(keeps).map(([gameId, cardId]) => (
+              <li key={gameId} className="flex items-center gap-2">
+                <span className="font-mono text-xs text-chalk/40">Game {gameNumber(Number(gameId))}</span>
+                <span className="text-chalk">{cardId === null ? 'pick pending…' : nameOfCard(cardId)}</span>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      ) : null}
+    </div>
   );
 }
 
@@ -364,7 +895,6 @@ function PackCardButton({
   );
 }
 
-/** Would taking this card break the draft's rarity cap? */
 const FIELD: readonly Position[] = ['C', '1B', '2B', '3B', 'SS', 'LF', 'CF', 'RF'];
 
 /**
@@ -395,11 +925,13 @@ function RosterNeeds({ picks }: { picks: DraftCard[] }) {
   );
 }
 
+/** Would taking this card break the draft's rarity cap? */
 function overCap(draft: DraftView, card: DraftCard): boolean {
   const caps = draft.config.rarityCaps;
   if (!caps) return false;
-  if (card.rarity === 'chase') return draft.myTally.chase >= caps.chase;
   if (card.rarity === 'rare') return draft.myTally.rare >= caps.rare;
+  if (card.rarity === 'star') return draft.myTally.star >= caps.star;
+  if (card.rarity === 'mythic') return draft.myTally.mythic >= caps.mythic;
   return false;
 }
 
@@ -427,7 +959,7 @@ function CardPreview({ card }: { card: DraftCard }) {
   return (
     <div className="space-y-2">
       <button type="button" className="mx-auto block w-full max-w-[260px]" onClick={() => setFace((f) => (f === 'front' ? 'back' : 'front'))}>
-        <BallCard card={snapshot} rarity={card.rarity === 'common' ? null : card.rarity} face={face} />
+        <BallCard card={snapshot} rarity={card.rarity === 'common' ? null : card.rarity} tier={card.rarity} face={face} />
       </button>
       <p className="text-center text-xs text-chalk/45">
         Tap the card to flip it, or{' '}

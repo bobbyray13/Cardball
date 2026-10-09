@@ -3,12 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { motion } from 'framer-motion';
-import type { ChatMessage, GameAction, PackView, TeamSummary } from '@cardball/shared';
-import { MATCH_LIMITS, matchEraLabel, matchIsOpen } from '@cardball/shared';
-import { sidesFor, waitingOn } from '@cardball/engine';
-import type { GameEvent, GameState, Side } from '@cardball/engine';
+import type { ChatMessage, DraftView, GameAction, PackView, SavedLineup, TeamSummary } from '@cardball/shared';
+import { MATCH_LIMITS, matchCapsLabel, matchEraLabel, matchIsOpen } from '@cardball/shared';
+import { canSubstituteNow, sidesFor, waitingOn } from '@cardball/engine';
+import type { GameEvent, GameState, Side, TeamState } from '@cardball/engine';
 import { ApiError, api } from '../api.js';
 import type { GameRoom } from '../api.js';
+import { BenchPanel } from '../components/BenchPanel.js';
 import { BoxScore } from '../components/BoxScore.js';
 import { CardZoom } from '../components/CardZoom.js';
 import type { ZoomTarget } from '../components/CardZoom.js';
@@ -18,6 +19,8 @@ import { ErrorBoundary } from '../components/ErrorBoundary.js';
 import { Field } from '../components/Field.js';
 import type { ZoomPlayer } from '../components/Field.js';
 import { LatestPlay } from '../components/LatestPlay.js';
+import { LineupBuilder, lineupProblem } from '../components/LineupBuilder.js';
+import type { LineupCandidate } from '../components/LineupBuilder.js';
 import { zoomForPlayer } from '../components/gameZoom.js';
 import { LineScore } from '../components/LineScore.js';
 import { PlayByPlay } from '../components/PlayByPlay.js';
@@ -113,6 +116,23 @@ export function GamePage() {
     [gameId, appendEvents],
   );
 
+  // Same as runAction, but rethrows so a form (the lobby lineup editor) can
+  // show the server's validation error in its own words.
+  const runActionOrThrow = useCallback(
+    async (action: GameAction) => {
+      setBusy(true);
+      setError(null);
+      try {
+        const result = await api.action(gameId, action);
+        setGame(result.game);
+        appendEvents(result.events as GameEvent[]);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [gameId, appendEvents],
+  );
+
   const sendChat = useCallback(
     async (body: string) => {
       const { message } = await api.chat(gameId, body);
@@ -136,6 +156,8 @@ export function GamePage() {
   const state = game?.state ?? null;
   const mySides = useMemo<Side[]>(() => (state && user ? sidesFor(state, { userId: user.id }) : []), [state, user]);
   const finished = state?.phase === 'finished';
+  // Did the signed-in manager win this one? Decides the draft-room pack nudge.
+  const iWonGame = !!finished && state !== null && state.winner !== null && state[state.winner].userId === (user?.id ?? null);
   // Once the final out is recorded, fetch the shelf so the curtain call can
   // name the packs this game earned.
   const shelf = useLoad(() => (finished ? api.packs() : Promise.resolve(null)), [finished]);
@@ -192,6 +214,10 @@ export function GamePage() {
     <div className="space-y-4">
       <GameHeader game={game} state={state} connected={connected} waiting={waiting} />
 
+      {game.draftId !== null ? (
+        <DraftSeriesStrip draftId={game.draftId} currentGameId={gameId} finished={!!finished} iWon={iWonGame} />
+      ) : null}
+
       {game.status === 'open' ? (
         <OpenSeat game={game} onJoined={setGame} />
       ) : (
@@ -199,7 +225,9 @@ export function GamePage() {
           <div className="space-y-4">
             {state ? (
               <>
-                {game.status === 'lobby' ? <LobbyPanel game={game} state={state} mySides={mySides} onAction={runAction} busy={busy} /> : null}
+                {game.status === 'lobby' ? (
+                  <LobbyPanel game={game} state={state} mySides={mySides} onAction={runAction} submit={runActionOrThrow} busy={busy} />
+                ) : null}
 
                 {state.phase === 'finished' ? <GameOver state={state} earned={earned} userId={user?.id ?? null} /> : null}
 
@@ -233,6 +261,12 @@ export function GamePage() {
                     </div>
                   ) : null}
                 </Panel>
+
+                {/* Between pitches a manager can reach for the bench — unless
+                    a forced decision already owns the moment. */}
+                {state.phase === 'live' && !state.pendingDecision && canSubstituteNow(state)
+                  ? mySides.map((side) => <BenchPanel key={side} state={state} side={side} onAction={dispatchAction} busy={busy} />)
+                  : null}
 
                 <Panel title="Line score">
                   <LineScore state={state} events={events} />
@@ -382,6 +416,7 @@ function GameHeader({
   connected: boolean;
   waiting: { side: Side; kind: string; prompt: string } | null;
 }) {
+  const capsLabel = matchCapsLabel(game.match);
   return (
     <div className="panel flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
       <Link to="/" className="text-sm text-chalk/50 hover:text-chalk">
@@ -423,12 +458,10 @@ function GameHeader({
         {matchIsOpen(game.match) ? null : (
           <span
             className="rounded-full border border-gold/40 px-2 py-0.5 text-gold"
-            title={`Cards: ${matchEraLabel(game.match)}${
-              game.match.rarityCaps ? `, at most ${game.match.rarityCaps.rare} rare and ${game.match.rarityCaps.chase} chase each` : ''
-            }`}
+            title={`Cards: ${matchEraLabel(game.match)}${capsLabel ? `, ${capsLabel}` : ''}`}
           >
             {game.match.yearFrom <= MATCH_LIMITS.minYear && game.match.yearTo >= MATCH_LIMITS.maxYear
-              ? `${game.match.rarityCaps?.rare} rare / ${game.match.rarityCaps?.chase} chase each`
+              ? (capsLabel ?? matchEraLabel(game.match))
               : matchEraLabel(game.match)}
           </span>
         )}
@@ -447,12 +480,15 @@ function LobbyPanel({
   state,
   mySides,
   onAction,
+  submit,
   busy,
 }: {
   game: GameRoom;
   state: GameState;
   mySides: Side[];
   onAction: (action: GameAction) => Promise<void>;
+  /** sends an action and rethrows on failure, for the lineup editor's own errors */
+  submit: (action: GameAction) => Promise<void>;
   busy: boolean;
 }) {
   const ready = new Set(game.ready);
@@ -494,6 +530,16 @@ function LobbyPanel({
           </div>
         ))}
       </div>
+
+      {mySides.map((side) => (
+        <LobbyLineupEditor
+          key={side}
+          state={state}
+          side={side}
+          submit={submit}
+          outOfPosition={state.config.match?.outOfPosition === true}
+        />
+      ))}
 
       {mySides.length === 0 ? (
         <p className="text-sm text-chalk/50">Both managers are set. Waiting for them to start.</p>
@@ -590,5 +636,177 @@ function OpenSeat({ game, onJoined }: { game: GameRoom; onJoined: (game: GameRoo
         </form>
       )}
     </Panel>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// The lobby lineup editor
+// ---------------------------------------------------------------------------
+
+/** The lineup as the engine currently holds it, keyed the way set-lineup wants. */
+function lineupFromTeam(team: TeamState): SavedLineup {
+  const fieldPositions: SavedLineup['fieldPositions'] = {};
+  for (const p of team.players) {
+    if (p.status === 'active' && p.fieldPosition && p.fieldPosition !== 'DH') fieldPositions[p.fieldPosition] = p.id;
+  }
+  return {
+    lineup: team.lineup.filter((id): id is string => id !== null),
+    fieldPositions,
+    startingPitcherId: team.activePitcherId ?? '',
+  };
+}
+
+/** A cheap fingerprint of the engine's lineup, to resync the editor when it changes. */
+function lineupSignature(team: TeamState): string {
+  const positions = team.players
+    .filter((p) => p.status === 'active' && p.fieldPosition)
+    .map((p) => `${p.id}:${p.fieldPosition}`)
+    .sort()
+    .join(',');
+  return `${team.lineup.join(',')}|${positions}|${team.activePitcherId ?? ''}`;
+}
+
+function lineupCandidates(team: TeamState): LineupCandidate[] {
+  return team.players.map((p) => ({
+    id: p.id,
+    name: p.name,
+    cardYear: p.cardYear,
+    positions: p.positions,
+    pitcherClass: p.pitcherClass,
+    // The engine lets anyone with an eligible position bat; a pure pitcher has none.
+    canBat: p.positions.length > 0,
+  }));
+}
+
+/**
+ * Set your nine before the first pitch. Only the sides the viewer manages are
+ * editable — in hotseat that is both. The engine rejects set-lineup once the
+ * game is live, so this lives only in the lobby.
+ */
+function LobbyLineupEditor({
+  state,
+  side,
+  submit,
+  outOfPosition,
+}: {
+  state: GameState;
+  side: Side;
+  submit: (action: GameAction) => Promise<void>;
+  outOfPosition: boolean;
+}) {
+  const team = state[side];
+  const signature = lineupSignature(team);
+  const [draft, setDraft] = useState<SavedLineup>(() => lineupFromTeam(team));
+  const [dirty, setDirty] = useState(false);
+
+  // The engine's lineup can change under us (a save, the other manager). Resync
+  // only while the manager has nothing unsaved, so their edits are not clobbered.
+  useEffect(() => {
+    if (!dirty) setDraft(lineupFromTeam(team));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature]);
+
+  const candidates = useMemo(() => lineupCandidates(team), [team]);
+  const problem = lineupProblem(candidates, draft);
+
+  const save = useAction(async () => {
+    await submit({
+      type: 'set-lineup',
+      side,
+      lineup: draft.lineup,
+      fieldPositions: draft.fieldPositions,
+      startingPitcherId: draft.startingPitcherId,
+    });
+    setDirty(false);
+  });
+
+  return (
+    <div className="mt-4 rounded-xl border border-white/10 bg-black/15 p-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h3 className="font-display text-base font-semibold text-chalk">Set your lineup · {team.name}</h3>
+          <p className="text-xs text-chalk/50">Eight fielders, a designated hitter, and a starting pitcher. The pitcher does not bat.</p>
+        </div>
+        <Button variant="primary" size="sm" disabled={save.busy || !dirty || !!problem} onClick={() => void save.execute()}>
+          {save.busy ? 'Saving…' : dirty ? 'Save lineup' : 'Saved'}
+        </Button>
+      </div>
+      <LineupBuilder
+        candidates={candidates}
+        value={draft}
+        outOfPosition={outOfPosition}
+        onChange={(next) => {
+          setDraft(next);
+          setDirty(true);
+        }}
+      />
+      {problem ? <p className="mt-3 text-sm text-chalk/50">{problem}</p> : null}
+      <ErrorNote error={save.error} />
+    </div>
+  );
+}
+
+/**
+ * The draft series, on the game page: where this game sits in the set, and the
+ * two ways out of it once it is over. The pack and keep-card decisions live in
+ * the draft room.
+ */
+function DraftSeriesStrip({
+  draftId,
+  currentGameId,
+  finished,
+  iWon,
+}: {
+  draftId: number;
+  currentGameId: number;
+  finished: boolean;
+  iWon: boolean;
+}) {
+  const navigate = useNavigate();
+  const room = useLoad(() => api.draft(draftId), [draftId]);
+  const rematch = useAction(async () => {
+    const { gameId } = await api.rematchDraft(draftId);
+    navigate(`/games/${gameId}`);
+  });
+  const draft: DraftView | null = room.data?.draft ?? null;
+  if (!draft) return null;
+
+  const nameFor = (seat: number) => draft.seats.find((s) => s.seat === seat)?.name ?? `Seat ${seat + 1}`;
+
+  return (
+    <div className="panel flex flex-wrap items-center gap-x-4 gap-y-2 p-3">
+      <span className="text-[10px] font-semibold tracking-wide text-gold uppercase">Draft series</span>
+      {draft.games.length === 0 ? (
+        <span className="text-xs text-chalk/50">Game one is under way.</span>
+      ) : (
+        <ol className="flex flex-wrap gap-2">
+          {draft.games.map((g) => (
+            <li
+              key={g.gameId}
+              className={`rounded-full border px-2.5 py-1 font-mono text-[11px] ${
+                g.gameId === currentGameId ? 'border-gold/60 text-gold' : 'border-white/15 text-chalk/70'
+              }`}
+            >
+              {nameFor(g.awaySeat)} {g.awayScore}–{g.homeScore} {nameFor(g.homeSeat)}
+              {g.winnerSeat !== null ? ` · ${nameFor(g.winnerSeat)} won` : ' · in progress'}
+            </li>
+          ))}
+        </ol>
+      )}
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        {finished && iWon ? <span className="text-xs text-gold">Pick your bonus pack in the draft room →</span> : null}
+        {finished ? (
+          <>
+            <Button size="sm" disabled={rematch.busy} onClick={() => void rematch.execute()}>
+              {rematch.busy ? 'Dealing…' : 'Rematch'}
+            </Button>
+            <Button size="sm" onClick={() => void navigate(`/drafts/${draftId}`)}>
+              Back to the draft room
+            </Button>
+          </>
+        ) : null}
+      </div>
+      <ErrorNote error={room.error ?? rematch.error} />
+    </div>
   );
 }

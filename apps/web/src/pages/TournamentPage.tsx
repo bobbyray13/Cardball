@@ -15,6 +15,16 @@ const STATUS_LABEL: Record<TournamentView['status'], string> = {
   finished: 'Finished',
 };
 
+/**
+ * The draft's rarity caps as the room prints them. Configs saved before the
+ * mythic tier may lack star and mythic counts; those read as no cap there.
+ */
+function draftCapsLabel(caps: { rare: number; star: number; mythic: number } | null): string {
+  const star = caps?.star ?? 0;
+  const mythic = caps?.mythic ?? 0;
+  return `${caps?.rare ?? 0} rare/${star} star/${mythic} mythic cap`;
+}
+
 export function TournamentPage() {
   const id = Number(useParams().id);
   const { user } = useSession();
@@ -143,9 +153,7 @@ export function TournamentPage() {
             {t.config.draft.rarityCaps ? (
               <>
                 <span>·</span>
-                <span>
-                  {t.config.draft.rarityCaps.rare} rare/{t.config.draft.rarityCaps.chase} chase cap
-                </span>
+                <span>{draftCapsLabel(t.config.draft.rarityCaps)}</span>
               </>
             ) : null}
             <span>·</span>

@@ -57,8 +57,12 @@ const TIER_STOCK: Record<DraftRarity, string> = {
   common: 'from-[#e6dcc3] to-[#cfc4a6]',
   uncommon: 'from-[#cfe3d5] to-[#a9c4b4]',
   rare: 'from-[#c3d6f2] to-[#93b0dd]',
-  chase: 'from-[#f6e2a8] to-[#dfb14a]',
+  star: 'from-[#f6e2a8] to-[#dfb14a]',
+  mythic: 'from-[#e79ab4] to-[#8a5fc4]',
 };
+
+/** The foil class each tier wears on its mini card, matching the full card. */
+const TIER_FOIL: Partial<Record<DraftRarity, string>> = { rare: 'foil-rare', star: 'foil-star', mythic: 'foil-mythic' };
 
 /** The little card that flies in: card stock, team stripes, and foil if it earns it. */
 function MiniCard({ toast }: { toast: CardToast }) {
@@ -72,8 +76,7 @@ function MiniCard({ toast }: { toast: CardToast }) {
         <span className="block h-1 w-2/3 rounded-full bg-ink/20" />
       </span>
       <span className="absolute inset-x-0 bottom-0 h-2.5 bg-crimson/70" />
-      {toast.rarity === 'rare' ? <span className="foil-rare pointer-events-none absolute inset-0" /> : null}
-      {toast.rarity === 'chase' ? <span className="foil-chase pointer-events-none absolute inset-0" /> : null}
+      {TIER_FOIL[toast.rarity] ? <span className={`${TIER_FOIL[toast.rarity]} pointer-events-none absolute inset-0`} /> : null}
     </span>
   );
 }

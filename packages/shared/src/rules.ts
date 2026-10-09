@@ -40,10 +40,10 @@ export interface HouseRules {
   fieldingRatingMinGames: number;
 
   // --- the mound ---
-  /** innings a pitcher may throw in one game, by role */
-  ipCaps: { starter: number; reliever: number; closer: number };
-  /** regulation innings that must be pitched by relievers */
-  relieverOnlyInnings: number[];
+  /** innings a starting pitcher works at full strength in a 9-inning game */
+  starterFreshInnings: number;
+  /** pitch-roll penalty per fatigued inning (starters past their fresh innings, relievers after every full inning) */
+  fatiguePerInning: number;
 
   // --- at the plate ---
   /** consecutive tied pitch rolls that become a walk */
@@ -79,8 +79,8 @@ export function defaultHouseRules(): HouseRules {
     starterIpThreshold: RULES_CONFIG.starterIpThreshold,
     positionEligibilityGames: RULES_CONFIG.positionEligibilityGames,
     fieldingRatingMinGames: RULES_CONFIG.fieldingRatingMinGames,
-    ipCaps: { ...RULES_CONFIG.ipCaps },
-    relieverOnlyInnings: [...RULES_CONFIG.relieverOnlyInnings],
+    starterFreshInnings: RULES_CONFIG.starterFreshInnings,
+    fatiguePerInning: RULES_CONFIG.fatiguePerInning,
     walkBalls: RULES_CONFIG.walkBalls,
     dpTarget: RULES_CONFIG.dpTarget,
     sendRerollOnes: RULES_CONFIG.sendRerollOnes,
@@ -123,8 +123,8 @@ export const houseRulesSchema = z.object({
   positionEligibilityGames: int(0, 162),
   fieldingRatingMinGames: int(0, 162),
 
-  ipCaps: z.object({ starter: int(0, 12), reliever: int(0, 12), closer: int(0, 12) }),
-  relieverOnlyInnings: z.array(int(1, 30)).max(12),
+  starterFreshInnings: int(0, 12),
+  fatiguePerInning: int(0, 6),
 
   walkBalls: int(1, 12),
   dpTarget: int(0, 60),
@@ -163,7 +163,6 @@ function tidy(rules: HouseRules): HouseRules {
   const byMaxAsc = (a: MaxBand, b: MaxBand) => a.max - b.max;
   return {
     ...rules,
-    relieverOnlyInnings: [...new Set(rules.relieverOnlyInnings)].sort((a, b) => a - b),
     regulationInningsOptions: [...new Set(rules.regulationInningsOptions)].sort((a, b) => a - b),
     hitBands: [...rules.hitBands].sort(byMinDesc),
     sbBands: [...rules.sbBands].sort(byMinDesc),

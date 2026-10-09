@@ -137,9 +137,6 @@ function buildPlayer(
     base: null,
     outsPitched: 0,
     pitchingRole: isStartingPitcher ? 'starter' : null,
-    injured: false,
-    exitDue: false,
-    fatigueWaived: false,
   };
 }
 
@@ -211,6 +208,7 @@ export function createGame(setup: GameSetup, rng: Rng): { state: GameState; even
     lastEventSeq: 0,
     winner: null,
     endedBy: null,
+    achievements: [],
   };
   boxOf(state);
 

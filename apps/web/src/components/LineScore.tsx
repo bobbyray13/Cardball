@@ -78,7 +78,6 @@ export const LineScore = memo(function LineScore({ state, events }: { state: Gam
                     <span className="truncate text-chalk/80">{p.name}</span>
                     <span className="shrink-0 text-chalk/50">
                       {formatIp(p.outsPitched)} IP{p.pitchingRole ? ` · ${p.pitchingRole}` : ''}
-                      {p.injured ? ' · injured' : ''}
                     </span>
                   </li>
                 ))}

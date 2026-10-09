@@ -1,19 +1,20 @@
 import { and, asc, desc, eq } from 'drizzle-orm';
-import { GameError, applyAction, botAction, createGame, cryptoRng, sidesFor, waitingOn } from '@cardball/engine';
+import { GameError, applyAction, botAction, botOffClockAction, createGame, cryptoRng, sidesFor, waitingOn } from '@cardball/engine';
 import type { GameEvent, GameMode, GameState, Side } from '@cardball/engine';
 import { activeHouseRules, MATCH_LIMITS, matchProblem, openMatch } from '@cardball/shared';
 import type { ChatMessage, GameAction, GameStatus, GameView, MatchRules } from '@cardball/shared';
-import { chatMessages, gameEvents, gameViewers, games, users } from '@cardball/db';
+import { chatMessages, gameEvents, gameViewers, games, tournaments, users } from '@cardball/db';
 import type { GameRow } from '@cardball/db';
 import { hashPassword, verifyPassword } from './auth.js';
 import type { AuthUser } from './auth.js';
 import { recordCardLines } from './cardStats.js';
 import type { Ctx } from './context.js';
+import { recordDraftSeriesResult } from './draftService.js';
 import { env } from './env.js';
 import { HttpError, badRequest, forbidden, notFound } from './http.js';
 import { withKeyLock } from './lock.js';
 import { namesFor } from './names.js';
-import { rewardGameWin } from './packs.js';
+import { rewardAchievements, rewardGameWin } from './packs.js';
 import { loadTeam, photoMap, rosterMatchCards, teamSetupFor } from './roster.js';
 import type { LoadedTeam } from './roster.js';
 import { stockTeamForGame } from './stockTeams.js';
@@ -93,6 +94,7 @@ export function toView(row: GameRow): GameRoomView {
     locked: row.passwordHash !== null,
     ready: s.ready,
     photos: s.photos,
+    draftId: row.draftId,
     state: s.engine,
     updatedAt: row.updatedAt.toISOString(),
   };
@@ -117,9 +119,21 @@ function broadcast(ctx: Ctx, row: GameRow, events: GameEvent[]): void {
   }
 }
 
+/**
+ * A draft owned by a tournament drives its own post-draft flow, so its games
+ * pay like ordinary games. Only a standalone draft's series is special.
+ */
+async function isTournamentDraft(db: Ctx['db'], draftId: number): Promise<boolean> {
+  const [owner] = await db.select({ id: tournaments.id }).from(tournaments).where(eq(tournaments.draftId, draftId)).limit(1);
+  return owner !== undefined;
+}
+
 /** Persist a new stored state (+ events) with an optimistic version check. */
 async function save(ctx: Ctx, row: GameRow, next: StoredGame, events: GameEvent[]): Promise<GameRow> {
   const engine = next.engine;
+  const justFinished = engine?.phase === 'finished' && stored(row).engine?.phase !== 'finished';
+  // A draft series game pays through its draft instead of the ordinary win.
+  const draftGame = justFinished && row.draftId !== null && !(await isTournamentDraft(ctx.db, row.draftId));
   const [updated] = await ctx.db.transaction(async (tx) => {
     const result = await tx
       .update(games)
@@ -142,12 +156,25 @@ async function save(ctx: Ctx, row: GameRow, next: StoredGame, events: GameEvent[
     }
     // The final save is the one moment a game becomes a win: the cards get
     // their box-score lines, and the winning manager earns a pack on the shelf.
-    if (engine?.phase === 'finished' && stored(row).engine?.phase !== 'finished') {
+    if (justFinished && engine) {
       await recordCardLines(tx, row.id, engine);
-      await rewardGameWin(tx, { id: row.id, mode: row.mode }, engine);
+      // Feats pay in every mode, the draft series included.
+      await rewardAchievements(tx, row.id, engine);
+      if (!draftGame) await rewardGameWin(tx, { id: row.id, mode: row.mode }, engine);
     }
     return result;
   });
+  // The draft's own bookkeeping runs once the game is safely saved, so a
+  // hiccup there can never lose the action that ended the game. It is keyed
+  // and idempotent, so a retry cannot pay the same game twice.
+  if (draftGame && engine) {
+    await recordDraftSeriesResult(ctx, row.draftId!, {
+      gameId: row.id,
+      homeScore: engine.home.score,
+      awayScore: engine.away.score,
+      winner: engine.winner,
+    });
+  }
   return updated!;
 }
 
@@ -156,6 +183,22 @@ function runBots(state: GameState): { state: GameState; events: GameEvent[] } {
   const events: GameEvent[] = [];
   const rng = cryptoRng();
   for (let i = 0; i < MAX_BOT_ACTIONS; i++) {
+    // Off the clock first: a bot manager can still visit the bullpen between
+    // pitches, so a tired starter is pulled even while the other side bats.
+    let offClock = false;
+    for (const side of ['home', 'away'] as const) {
+      const team = side === 'home' ? state.home : state.away;
+      if (!team.isBot) continue;
+      const change = botOffClockAction(state, side);
+      if (!change) continue;
+      const result = applyAction(state, change, BOT, rng);
+      state = result.state;
+      events.push(...result.events);
+      offClock = true;
+      break;
+    }
+    if (offClock) continue;
+
     const waiting = waitingOn(state);
     if (!waiting) break;
     const team = waiting.side === 'home' ? state.home : state.away;
@@ -197,7 +240,9 @@ export function resolveMatch(input: MatchRules | undefined): MatchRules {
   return {
     yearFrom: input.yearFrom,
     yearTo: input.yearTo,
-    rarityCaps: input.rarityCaps ? { rare: input.rarityCaps.rare, chase: input.rarityCaps.chase } : null,
+    rarityCaps: input.rarityCaps
+      ? { rare: input.rarityCaps.rare, star: input.rarityCaps.star, mythic: input.rarityCaps.mythic }
+      : null,
   };
 }
 

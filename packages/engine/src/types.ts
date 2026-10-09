@@ -52,12 +52,6 @@ export interface EnginePlayer {
   outsPitched: number;
   /** role assigned when this player took the mound */
   pitchingRole: 'starter' | 'reliever' | 'closer' | null;
-  /** true when a rolled season injured this player — must exit at next opportunity */
-  injured: boolean;
-  /** injured pitcher who has finished his batter and must now come out */
-  exitDue: boolean;
-  /** pitch limits waived because no legal reliever was left in the bullpen */
-  fatigueWaived: boolean;
   /**
    * While on base: the pitcher who let him on, who is charged with the run if
    * he scores, even after being relieved. Missing in games saved before box
@@ -88,7 +82,7 @@ export interface TeamState {
   yearRoll: number | null;
   /** index (0-8) of the next lineup spot due to bat */
   lineupCursor: number;
-  /** batting order: player ids by spot; null = vacated (injured) spot */
+  /** batting order: player ids by spot; null = vacated (substituted-out) spot */
   lineup: (string | null)[];
   /** player currently on the mound */
   activePitcherId: string | null;
@@ -198,6 +192,11 @@ export interface GameState {
   /** how the game ended (score, concede) */
   endedBy: 'score' | 'concede' | null;
   /**
+   * Feats pulled off during this game — a no-hitter, a grand slam, a cycle —
+   * each tagged to the side that did it. The server pays bonus packs for them.
+   */
+  achievements: { side: Side; kind: string }[];
+  /**
    * The box score, kept as the game is played. Missing in games saved before
    * box scores existed; boxOf() starts one the first time it is needed.
    */
@@ -232,6 +231,7 @@ export type GameEventKind =
   | 'sub'
   | 'pitcher-change'
   | 'half-end'
+  | 'achievement'
   | 'game-over'
   | 'concede'
   | 'info';

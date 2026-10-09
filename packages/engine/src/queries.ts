@@ -1,4 +1,6 @@
 import {
+  fatiguePerInning,
+  freshInningsFor,
   hitMod,
   pitMod,
   sbMod,
@@ -83,31 +85,65 @@ export function cardSeasons(player: EnginePlayer, rules: HouseRules): SeasonStat
   return player.seasons.filter((s) => years.has(s.year) && seasonAppeared(s)).sort((a, b) => a.year - b.year);
 }
 
+/** The season a roll-for-year points at before any skipping, most recent first. */
+function naiveSeason(seasons: SeasonStats[], yearRoll: number): SeasonStats {
+  const index = (seasons.length - 1 - ((yearRoll - 1) % seasons.length)) as number;
+  return seasons[index]!;
+}
+
 /**
- * The season a player uses this inning: count back `roll` seasons from the
+ * The season a player uses this inning, counting back `roll` seasons from the
  * most recent on the card, wrapping around (roll 5 with 3 listed years → 2nd).
  */
 export function activeSeason(player: EnginePlayer, yearRoll: number | null, rules: HouseRules): SeasonStats {
+  return resolveSeason(player, yearRoll, rules).season;
+}
+
+export interface SeasonResolution {
+  season: SeasonStats;
+  /** the year the roll originally landed on, when an unusable year was skipped */
+  skippedYear: number | null;
+}
+
+/**
+ * Resolve a roll-for-year to the season the dice actually read.
+ *
+ * A season that qualified as neither a healthy batting year nor a healthy
+ * pitching year (a call-up cup of coffee, an injury year) is *skipped*: the
+ * count moves on to the next-older season on the card, wrapping from the
+ * oldest back to the most recent. A card whose every season is unusable keeps
+ * the rolled season — the least bad answer, and the manager can bench him.
+ *
+ * The roll only ever lands on seasons the card actually lists, so a player
+ * with three years of stats and a roll of 5 reads his 2nd season.
+ */
+export function resolveSeason(player: EnginePlayer, yearRoll: number | null, rules: HouseRules): SeasonResolution {
   const seasons = cardSeasons(player, rules);
   if (seasons.length === 0) throw new GameError(`${player.name} has no eligible seasons on this card`);
   if (yearRoll === null) throw new GameError('No roll-for-year yet this inning');
-  const index = (seasons.length - 1 - ((yearRoll - 1) % seasons.length)) as number;
-  const season = seasons[index];
-  if (!season) throw new GameError(`No season for roll ${yearRoll}`);
-  return season;
+
+  const rolled = naiveSeason(seasons, yearRoll);
+  if (!seasonIsInjuredYear(rolled, rules.fullGameAb, rules.pitcherInjuryIpOuts)) {
+    return { season: rolled, skippedYear: null };
+  }
+
+  // Walk on to older seasons, wrapping, until one is usable.
+  const index = seasons.indexOf(rolled);
+  for (let step = 1; step < seasons.length; step++) {
+    const candidate = seasons[(index - step + seasons.length) % seasons.length]!;
+    if (!seasonIsInjuredYear(candidate, rules.fullGameAb, rules.pitcherInjuryIpOuts)) {
+      return { season: candidate, skippedYear: rolled.year };
+    }
+  }
+
+  // Every season on the card is unusable: play the rolled one as-is.
+  return { season: rolled, skippedYear: null };
 }
 
 /** Team-level helper: this player's season for the current inning. */
 export function seasonForPlayer(state: GameState, player: EnginePlayer): SeasonStats {
   const team = getPlayerTeam(state, player.id);
   return activeSeason(player, team.yearRoll, rulesOf(state));
-}
-
-export function isSeasonInjured(player: EnginePlayer, yearRoll: number | null, rules: HouseRules): boolean {
-  const seasons = cardSeasons(player, rules);
-  if (seasons.length === 0) return false;
-  // A card with a single healthy season can never roll an injured year.
-  return seasonIsInjuredYear(activeSeason(player, yearRoll, rules), rules.fullGameAb, rules.pitcherInjuryIpOuts);
 }
 
 // ---------------------------------------------------------------------------
@@ -192,26 +228,53 @@ export function outsRemaining(state: GameState): number {
 }
 
 // ---------------------------------------------------------------------------
+// Pitcher fatigue
+// ---------------------------------------------------------------------------
+
+/**
+ * How tired the pitcher on the mound is right now, in pitch-roll points.
+ *
+ * A starter works `freshInningsFor(regulation)` full-strength innings (5 of a
+ * 9-inning game, scaled down for 6- and 3-inning games); every inning past
+ * that costs `fatiguePerInning`, counted as complete innings pitched — so a
+ * +3 starter is a -1 walking into the 9th he started. Relievers pay the same
+ * cost after every full inning they throw, from their first inning onward.
+ * The modifier is per-game and disappears the moment the pitcher does.
+ */
+export function pitcherFatigue(state: GameState, player: EnginePlayer): number {
+  if (!player.pitchingRole || player.outsPitched === 0) return 0;
+  const inningsPitched = Math.floor(player.outsPitched / 3);
+  const free = player.pitchingRole === 'starter' ? freshInningsFor(state.config.regulationInnings, rulesOf(state)) - 1 : 0;
+  const fatiguedInnings = Math.max(0, inningsPitched - free);
+  // Guard the sign of zero: "-0" would print as "fatigue −0" on the mat.
+  return fatiguedInnings === 0 ? 0 : -fatiguedInnings * fatiguePerInning(rulesOf(state));
+}
+
+/** The pitcher's whole pitch-roll modifier: his season's rating plus fatigue. */
+export function pitcherTotalMod(state: GameState, pitcher: EnginePlayer): { mod: number; note: string } {
+  const season = seasonForPlayer(state, pitcher);
+  const { mod, note } = pitcherPitchMod(season, rulesOf(state));
+  const fatigue = pitcherFatigue(state, pitcher);
+  if (fatigue === 0) return { mod, note };
+  return {
+    mod: mod + fatigue,
+    note: `${note}, fatigue ${fmtMod(fatigue)}`,
+  };
+}
+
+/** How the mat and the bullpen read fatigue aloud: "3 fatigued innings". */
+export function fatigueInnings(state: GameState, player: EnginePlayer): number {
+  return Math.max(0, -pitcherFatigue(state, player) / (fatiguePerInning(rulesOf(state)) || 1));
+}
+
+// ---------------------------------------------------------------------------
 // Pitcher legality
 // ---------------------------------------------------------------------------
 
-export function pitcherCap(state: GameState, role: 'starter' | 'reliever' | 'closer'): number {
-  return rulesOf(state).ipCaps[role] * 3; // in outs
-}
-
 /**
- * Reliever-only innings scale with game length: the 8th and 9th of a
- * 9-inning game, the 6th of a 6-inning game, none in a 3-inning game.
- * Extra innings are always reliever-only.
+ * The final regulation inning (and extras) is closer territory: a reliever
+ * taking the mound there is closing the game.
  */
-export function isRelieverOnlyInning(state: GameState): boolean {
-  const reg = state.config.regulationInnings;
-  if (state.inning > reg) return true;
-  const count = reg >= 9 ? rulesOf(state).relieverOnlyInnings.length : reg >= 6 ? 1 : 0;
-  return state.inning > reg - count;
-}
-
-/** The final regulation inning (and extras) is closer territory. */
 export function isCloserInning(state: GameState): boolean {
   return state.config.regulationInnings >= 6 && state.inning >= state.config.regulationInnings;
 }
@@ -224,9 +287,6 @@ export function formatIp(outs: number): string {
 export function canEnterAsPitcher(state: GameState, player: EnginePlayer): { ok: boolean; reason: string } {
   if (player.status !== 'bench') return { ok: false, reason: 'is not available on the bench' };
   if (player.pitcherClass === null) return { ok: false, reason: 'never pitched in the majors' };
-  if (isRelieverOnlyInning(state) && player.pitcherClass !== 'RP' && state.firstPitchThrown) {
-    return { ok: false, reason: 'is a starter — this inning must be pitched by a reliever' };
-  }
   return { ok: true, reason: '' };
 }
 
@@ -236,25 +296,13 @@ export function availablePitchers(state: GameState, side: Side): EnginePlayer[] 
 }
 
 /**
- * May the current pitcher stay on the mound? Checks injury, caps, and the
- * reliever-only innings. When the bullpen is empty the manager can't be
- * forced to change, so the limit is waived (`fatigueWaived`).
+ * May the current pitcher stay on the mound? Fatigue never forces a change —
+ * it only costs him on the pitch roll — so the only illegal pitcher is one
+ * who is no longer in the game, or nobody at all.
  */
 export function pitcherLegalOnMound(state: GameState, player: EnginePlayer): { ok: boolean; reason: string } {
   if (player.status !== 'active') return { ok: false, reason: 'has already been removed from the game' };
   if (!player.pitchingRole) return { ok: false, reason: 'is not the active pitcher' };
-  if (player.fatigueWaived) return { ok: true, reason: '' };
-  if (player.exitDue) return { ok: false, reason: 'is injured' };
-
-  if (isRelieverOnlyInning(state) && player.pitcherClass !== 'RP' && player.pitchingRole === 'starter') {
-    return { ok: false, reason: 'is a starter — this inning must be pitched by a reliever' };
-  }
-
-  const cap = pitcherCap(state, player.pitchingRole);
-  if (player.outsPitched >= cap) {
-    return { ok: false, reason: `has reached the ${player.pitchingRole} limit (${formatIp(player.outsPitched)} IP)` };
-  }
-
   return { ok: true, reason: '' };
 }
 

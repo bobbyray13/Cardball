@@ -4,33 +4,29 @@ import { pushEvent } from './events.js';
 import { GameError } from './errors.js';
 import { openPlateAppearance } from './flow.js';
 import {
-  activeSeason,
   canEnterAsPitcher,
   formatIp,
   getDefense,
   getPlayerTeam,
-  isSeasonInjured,
   roleForEnteringPitcher,
-  rulesOf,
 } from './queries.js';
-import type { EnginePlayer, GameEvent, GameState, Side, TeamState } from './types.js';
+import type { GameEvent, GameState, Side } from './types.js';
 
 /** Between plate appearances (or before the first pitch of one), nothing in flight. */
 function betweenPitches(state: GameState): boolean {
   return state.phase === 'live' && !state.pendingPlay && (!state.currentPa || state.currentPa.balls === 0);
 }
 
-function flagIfInjured(state: GameState, team: TeamState, player: EnginePlayer, events: GameEvent[]): void {
-  const rules = rulesOf(state);
-  if (team.yearRoll === null || !isSeasonInjured(player, team.yearRoll, rules)) return;
-  player.injured = true;
-  events.push(
-    pushEvent(state, {
-      kind: 'injury',
-      text: `${player.name} enters on his ${activeSeason(player, team.yearRoll, rules).year} season — injured, he'll leave after his next plate appearance.`,
-      refs: { playerId: player.id, side: team.side },
-    }),
-  );
+/**
+ * May substitutions happen right now? Managers can move players — pinch
+ * hitters, pinch runners, defensive swaps, and pitching changes — any time
+ * between pitches. False once a play is in flight or another decision is
+ * pending.
+ */
+export function canSubstituteNow(state: GameState): boolean {
+  if (state.phase !== 'live') return false;
+  if (state.pendingDecision && state.pendingDecision.kind !== 'pinch-runner' && state.pendingDecision.kind !== 'lineup-fill') return false;
+  return betweenPitches(state);
 }
 
 /** Which side owns the substitution decision (for permission checks). */
@@ -119,7 +115,6 @@ export function applySubstitute(
       }),
     );
   }
-  flagIfInjured(state, team, incoming, events);
 
   if (pending) {
     state.pendingDecision = null;
@@ -161,7 +156,6 @@ export function applyPitcherChange(state: GameState, inPlayerId: string): GameEv
       refs: { playerIds: outgoing ? [incoming.id, outgoing.id] : [incoming.id], side: defense.side, position: 'P' },
     }),
   ];
-  flagIfInjured(state, defense, incoming, events);
 
   if (pending) {
     state.pendingDecision = null;

@@ -30,6 +30,18 @@ export interface PitchingStint {
   ipOuts: number;
   er: number;
   bf: number;
+  /** strikeouts */
+  so: number;
+  /** walks allowed */
+  bb: number;
+  /** hits allowed */
+  h: number;
+  /** wins */
+  w: number;
+  /** losses */
+  l: number;
+  /** saves */
+  sv: number;
 }
 
 /** One Lahman `Fielding.csv` (or `FieldingOFsplit.csv`) row. */
@@ -101,6 +113,12 @@ export interface SeasonSeed {
   pitchIpOuts: number;
   pitchEra: number | null;
   pitchBf: number;
+  pitchSo: number;
+  pitchBb: number;
+  pitchH: number;
+  pitchW: number;
+  pitchL: number;
+  pitchSv: number;
   primaryPosition: Position | null;
   positionsPlayed: PositionPlayed[];
 }

@@ -11,8 +11,8 @@
  */
 
 import { and, eq, isNull, sql } from 'drizzle-orm';
-import { REWARDS, packTheme, packThemesForYears } from '@cardball/shared';
-import type { DrawnCard, PackShape, PackSource, PackThemeId, PackView } from '@cardball/shared';
+import { ACHIEVEMENT_PACKS, REWARDS, packTheme, packThemesForYears } from '@cardball/shared';
+import type { AchievementKind, DrawnCard, PackShape, PackSource, PackThemeId, PackView } from '@cardball/shared';
 import { seasons, userPacks } from '@cardball/db';
 import type { UserPackRow } from '@cardball/db';
 import type { GameState } from '@cardball/engine';
@@ -39,6 +39,15 @@ const STARTER_PACKS: readonly { themeId: PackThemeId; shape: PackShape; size: nu
   { themeId: 'aces', shape: 'mound', size: 4, label: 'The pitching staff' },
   { themeId: 'sluggers', shape: 'random', size: 5, label: 'A fistful of sluggers' },
 ];
+
+/** How a feat reads on the shelf, in the manager's own words. */
+const ACHIEVEMENT_LABELS: Record<string, string> = {
+  'perfect-game': 'Pitched a perfect game',
+  'no-hitter': 'Pitched a no-hitter',
+  'grand-slam': 'Hit a grand slam',
+  'walkoff-hr': 'Walk-off home run',
+  cycle: 'Hit for the cycle',
+};
 
 export interface PackGrant {
   themeId: PackThemeId;
@@ -156,6 +165,38 @@ export async function rewardGameWin(db: Executor, game: { id: number; mode: stri
     [{ themeId: pickThemes(era, 1)[0]!, source: 'game-win', label, era, size: 5 }],
     `game:${game.id}`,
   );
+}
+
+/**
+ * The bonus packs a game's feats earn. The engine records each achievement
+ * against the side that pulled it off, so the packs go to that side's manager
+ * — a bot side earns nothing, and an achievement in a draft game pays here
+ * too, since the draft only replaces the ordinary win reward.
+ *
+ * One pack per feat, sized by the feat's own table. Repeats of the same feat
+ * in one game (two grand slams) are numbered in the reward key, so the second
+ * is a second pack rather than a duplicate the unique index swallows.
+ */
+export async function rewardAchievements(db: Executor, gameId: number, engine: GameState): Promise<void> {
+  const feats = engine.achievements ?? [];
+  if (feats.length === 0) return;
+  const era = await modernEra(db);
+  const seen = new Map<string, number>();
+  for (const feat of feats) {
+    const size = ACHIEVEMENT_PACKS[feat.kind as AchievementKind];
+    if (size === undefined) continue; // an unknown kind is not worth paying for
+    const userId = engine[feat.side].userId;
+    if (userId === null) continue;
+    const count = `${feat.side}:${feat.kind}`;
+    const index = seen.get(count) ?? 0;
+    seen.set(count, index + 1);
+    await grantPacks(
+      db,
+      userId,
+      [{ themeId: pickThemes(era, 1)[0]!, source: 'achievement', label: ACHIEVEMENT_LABELS[feat.kind] ?? 'A feat', era, size }],
+      `achievement:${gameId}:${feat.kind}:${index}`,
+    );
+  }
 }
 
 /** The champion's packs for winning a tournament. */

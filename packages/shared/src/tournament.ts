@@ -23,7 +23,7 @@ export interface TournamentDraftConfig {
   yearFrom: number;
   yearTo: number;
   themes: PackThemeId[];
-  rarityCaps: { rare: number; chase: number } | null;
+  rarityCaps: { rare: number; star: number; mythic: number } | null;
 }
 
 export interface TournamentConfig {

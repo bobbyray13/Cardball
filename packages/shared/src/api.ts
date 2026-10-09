@@ -248,6 +248,8 @@ export interface GameView<S = unknown> {
   ready: ('home' | 'away')[];
   /** engine player id → photo id, so real card art shows up in games */
   photos: Record<string, number>;
+  /** the draft whose sandbox this game belongs to, or null for an ordinary game */
+  draftId: number | null;
   state: S | null;
   updatedAt: string;
 }
@@ -278,7 +280,7 @@ export interface GameListItem {
 // ---------------------------------------------------------------------------
 
 /** How good a drafted card looks, for the foil on the front. */
-export type DraftRarity = 'common' | 'uncommon' | 'rare' | 'chase';
+export type DraftRarity = 'common' | 'uncommon' | 'rare' | 'star' | 'mythic';
 
 export interface DraftConfig {
   /** how many packs each manager opens */
@@ -294,8 +296,10 @@ export interface DraftConfig {
   playableOnly: boolean;
   /** the themed packs in the rotation; empty means a mixed pack every round */
   themes: PackThemeId[];
-  /** most rare and chase cards one manager may take all draft, or null for no limit */
-  rarityCaps: { rare: number; chase: number } | null;
+  /** most rare, star, and mythic cards one manager may take all draft, or null for no limit */
+  rarityCaps: { rare: number; star: number; mythic: number } | null;
+  /** regulation innings the series' games are played to */
+  regulationInnings: number;
 }
 
 /** Draft room limits, shared so the client and server agree on them. */
@@ -308,7 +312,8 @@ export const DRAFT_LIMITS = {
   minYear: 1872,
   maxYear: 2100,
   maxRare: 20,
-  maxChase: 20,
+  maxStar: 20,
+  maxMythic: 20,
 } as const;
 
 /** A card sitting in a pack, or one a manager has taken. */
@@ -328,6 +333,8 @@ export interface DraftCard {
   positions?: Position[];
   /** a starting pitcher (missing on old drafts) */
   starter?: boolean;
+  /** a relief pitcher (missing on old drafts) */
+  reliever?: boolean;
 }
 
 export interface DraftParticipant {
@@ -337,7 +344,30 @@ export interface DraftParticipant {
   isHost: boolean;
 }
 
-export type DraftPhase = 'lobby' | 'active' | 'finished';
+export type DraftPhase = 'lobby' | 'active' | 'assembling' | 'playing' | 'finished';
+
+/** One game of a draft's series, decided by seat. */
+export interface DraftGameResult {
+  gameId: number;
+  /** which seats played, and which side each was */
+  homeSeat: number;
+  awaySeat: number;
+  homeScore: number;
+  awayScore: number;
+  /** null until the game is decided */
+  winnerSeat: number | null;
+}
+
+/** Every seat's picks as the draft unfolds, so the table sees each team emerge. */
+export interface DraftSeatPicks {
+  seat: number;
+  userId: number;
+  name: string;
+  isHost: boolean;
+  picks: DraftCard[];
+  /** true once this seat has locked in a lineup for the series */
+  lineupReady: boolean;
+}
 
 /** The draft room, generic-free: the server owns the whole shape. */
 export interface DraftView {
@@ -362,15 +392,43 @@ export interface DraftView {
   iHavePicked: boolean;
   /** every card the viewer has taken */
   myPicks: DraftCard[];
-  /** rare and chase cards the viewer has taken, against the draft's caps */
-  myTally: { rare: number; chase: number };
+  /** rare, star, and mythic cards the viewer has taken, against the draft's caps */
+  myTally: { rare: number; star: number; mythic: number };
   /** how many picks each seat has made */
   pickCounts: Record<string, number>;
+  /** every seat's picks, positions included, so both teams are visible as they emerge */
+  seats: DraftSeatPicks[];
+  /** the lineup the viewer has locked in (draft card ids), during and after assembly */
+  myLineup: SavedLineup | null;
+  /** the series' current game, once every seat is assembled */
+  gameId: number | null;
+  /** the series so far, newest first */
+  games: DraftGameResult[];
+  /**
+   * Games this viewer's seat has won, keyed by game id: the card they kept,
+   * or null while the keep is still pending. Empty when the viewer won nothing.
+   */
+  myKeeps: Record<string, string | null>;
+  /** the finished game whose winner's pack choice is still pending, if any */
+  myPendingChoice: number | null;
   /** newest-last draft log */
   log: { seq: number; text: string }[];
   /** the tournament this room drafts for, if any: picks become its roster */
   tournamentId: number | null;
   updatedAt: string;
+}
+
+/** One drafted card with its full stats, for the team-assembly screen. */
+export interface DraftTeamCard {
+  card: DraftCard;
+  snapshot: CardSnapshot;
+}
+
+/** The assembly screen's answer: this seat's cards and a suggested lineup. */
+export interface DraftTeamView {
+  cards: DraftTeamCard[];
+  suggested: SavedLineup | null;
+  lineup: SavedLineup | null;
 }
 
 export interface DraftListItem {

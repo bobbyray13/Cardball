@@ -3,7 +3,7 @@ import type { GameAction } from '@cardball/shared';
 import { applyAction, waitingOn } from '../src/apply.js';
 import { createGame } from '../src/create.js';
 import { GameError } from '../src/errors.js';
-import { OUT_OF_POSITION_RATING, fieldingRating } from '../src/queries.js';
+import { OUT_OF_POSITION_RATING, fieldingRating, pitcherFatigue, pitcherTotalMod } from '../src/queries.js';
 import { scriptedRng } from '../src/rng.js';
 import type { GameState } from '../src/types.js';
 import { neutralTeam, seasons } from './fixtures.js';
@@ -282,36 +282,65 @@ describe('permissions', () => {
   });
 });
 
-describe('pitching', () => {
-  it('forces a change when the starter hits his 4 IP cap', () => {
+describe('pitching and fatigue', () => {
+  it('never forces a change: a starter may pitch on, at a cost', () => {
     let state = liveGame();
-    // 4 innings of 1-2-3: both teams' starters reach 12 outs.
+    // 4 innings of 1-2-3: both teams' starters have 12 outs.
     for (let half = 0; half < 8; half++) for (let i = 0; i < 3; i++) state = pitch(state, [1, 6]);
     expect(state.inning).toBe(5);
-    expect(state.pendingDecision?.kind).toBe('pitcher-change');
-    expect(state.pendingDecision?.side).toBe('home');
-    state = act(state, { type: 'pitcher-change', inPlayerId: 'arp1' });
-    expect(state.home.activePitcherId).toBe('arp1');
-    expect(state.currentPa?.pitcherId).toBe('arp1');
+    expect(state.pendingDecision).toBeNull();
+    expect(state.home.activePitcherId).toBe('asp');
   });
 
-  it('a second starter may relieve before the reliever-only innings', () => {
+  it('a starter is fresh for five innings, then wears a -1 per inning', () => {
     let state = liveGame();
     for (let half = 0; half < 8; half++) for (let i = 0; i < 3; i++) state = pitch(state, [1, 6]);
-    expect(() => act(state, { type: 'pitcher-change', inPlayerId: 'asp2' })).not.toThrow();
+    // Five innings in the books: still fresh entering the 6th.
+    expect(pitcherFatigue(state, state.home.players.find((p) => p.id === 'asp')!)).toBe(0);
+    for (let half = 8; half < 12; half++) for (let i = 0; i < 3; i++) state = pitch(state, [1, 6]);
+    // Six innings in the books: -2 entering the 7th (one from each inning past five).
+    const sp = state.home.players.find((p) => p.id === 'asp')!;
+    expect(pitcherFatigue(state, sp)).toBe(-2);
+    expect(pitcherTotalMod(state, sp).mod).toBe(-2);
+    // The roll notes tell the manager what he is losing.
+    expect(pitcherTotalMod(state, sp).note).toMatch(/fatigue -2/);
   });
 
-  it('starters cannot enter in the reliever-only innings', () => {
-    const state = pitch(liveGame(), [1, 6]);
+  it('a reliever loses a point with every inning he pitches', () => {
+    let state = pitch(liveGame(), [1, 6]); // out 1, asp on the mound
+    state = act(state, { type: 'pitcher-change', inPlayerId: 'arp1' });
+    const rp = () => state.home.players.find((p) => p.id === 'arp1')!;
+    for (let i = 0; i < 2; i++) state = pitch(state, [1, 6]); // he closes out the top of the 1st
+    expect(pitcherFatigue(state, rp())).toBe(0); // two outs: no complete inning yet
+    for (let i = 0; i < 3; i++) state = pitch(state, [1, 6]); // bottom 1: home bats
+    for (let i = 0; i < 3; i++) state = pitch(state, [1, 6]); // his first full inning, the top of the 2nd
+    expect(pitcherFatigue(state, rp())).toBe(-1);
+    for (let i = 0; i < 3; i++) state = pitch(state, [1, 6]); // bottom 2
+    for (let i = 0; i < 3; i++) state = pitch(state, [1, 6]); // top 3
+    expect(pitcherFatigue(state, rp())).toBe(-2);
+  });
+
+  it('scales the fresh innings to shorter games', () => {
+    // Six-inning games: fresh for the first three innings, -1 per inning after.
+    let six = liveGame(6);
+    for (let half = 0; half < 4; half++) for (let i = 0; i < 3; i++) six = pitch(six, [1, 6]);
+    expect(pitcherFatigue(six, six.home.players.find((p) => p.id === 'asp')!)).toBe(0); // 2 IP, fresh
+    for (let half = 4; half < 6; half++) for (let i = 0; i < 3; i++) six = pitch(six, [1, 6]);
+    expect(pitcherFatigue(six, six.home.players.find((p) => p.id === 'asp')!)).toBe(-1); // 3 IP
+    for (let half = 6; half < 8; half++) for (let i = 0; i < 3; i++) six = pitch(six, [1, 6]);
+    expect(pitcherFatigue(six, six.home.players.find((p) => p.id === 'asp')!)).toBe(-2); // 4 IP
+
+    // Three-inning games: fresh for the first two innings, -1 in the third.
+    let three = liveGame(3);
+    for (let half = 0; half < 4; half++) for (let i = 0; i < 3; i++) three = pitch(three, [1, 6]);
+    expect(pitcherFatigue(three, three.home.players.find((p) => p.id === 'asp')!)).toBe(-1); // 2 IP
+  });
+
+  it('starters and relievers alike may enter at any point', () => {
+    let state = pitch(liveGame(), [1, 6]);
     state.inning = 8;
-    expect(() => act(state, { type: 'pitcher-change', inPlayerId: 'asp2' })).toThrow(/reliever/);
-    expect(() => act(state, { type: 'pitcher-change', inPlayerId: 'arp1' })).not.toThrow();
-  });
-
-  it('in a 3-inning game nobody is reliever-only in regulation', () => {
-    const state = pitch(liveGame(3), [1, 6]);
-    state.inning = 3;
     expect(() => act(state, { type: 'pitcher-change', inPlayerId: 'asp2' })).not.toThrow();
+    expect(() => act(state, { type: 'pitcher-change', inPlayerId: 'arp1' })).not.toThrow();
   });
 });
 
