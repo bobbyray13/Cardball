@@ -5,8 +5,8 @@ import type { Socket } from 'socket.io-client';
 import { motion } from 'framer-motion';
 import type { ChatMessage, DraftView, GameAction, PackView, SavedLineup, TeamSummary } from '@cardball/shared';
 import { MATCH_LIMITS, matchCapsLabel, matchEraLabel, matchIsOpen } from '@cardball/shared';
-import { canSubstituteNow, sidesFor, waitingOn } from '@cardball/engine';
-import type { GameEvent, GameState, Side, TeamState } from '@cardball/engine';
+import { batterDue, batterPitchMod, canSubstituteNow, fmtMod, getDefense, getOffense, pitcherFatigue, pitcherTotalMod, seasonForPlayer, sidesFor, waitingOn } from '@cardball/engine';
+import type { EnginePlayer, GameEvent, GameState, Side, TeamState } from '@cardball/engine';
 import { ApiError, api } from '../api.js';
 import type { GameRoom } from '../api.js';
 import { BenchPanel } from '../components/BenchPanel.js';
@@ -239,28 +239,32 @@ export function GamePage() {
                   </ErrorBoundary>
                 </Panel>
 
-                <Panel title={mySides.length > 0 ? 'Your move' : 'In the stands'} subtitle={waiting && mySides.includes(waiting.side) ? waiting.prompt : undefined}>
-                  <ErrorNote error={error} />
-                  <ErrorBoundary label="The decision panel">
-                    <DecisionControls state={state} mySides={mySides} onAction={dispatchAction} busy={busy} />
-                  </ErrorBoundary>
-                  {mySides.length > 0 && state.phase === 'live' ? (
-                    <div className="mt-4 border-t border-white/10 pt-3">
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        disabled={busy}
-                        onClick={() => {
-                          if (confirm('Concede this game?')) {
-                            void runAction({ type: 'concede', ...(mySides.length === 2 ? { side: 'home' as const } : {}) });
-                          }
-                        }}
-                      >
-                        Concede
-                      </Button>
-                    </div>
-                  ) : null}
-                </Panel>
+                {/* The phone-sized controls scroll to here when a forced
+                    decision owns the moment (see MobileActionBar). */}
+                <div id="your-move">
+                  <Panel title={mySides.length > 0 ? 'Your move' : 'In the stands'} subtitle={waiting && mySides.includes(waiting.side) ? waiting.prompt : undefined}>
+                    <ErrorNote error={error} />
+                    <ErrorBoundary label="The decision panel">
+                      <DecisionControls state={state} mySides={mySides} onAction={dispatchAction} busy={busy} />
+                    </ErrorBoundary>
+                    {mySides.length > 0 && state.phase === 'live' ? (
+                      <div className="mt-4 border-t border-white/10 pt-3">
+                        <Button
+                          size="sm"
+                          variant="danger"
+                          disabled={busy}
+                          onClick={() => {
+                            if (confirm('Concede this game?')) {
+                              void runAction({ type: 'concede', ...(mySides.length === 2 ? { side: 'home' as const } : {}) });
+                            }
+                          }}
+                        >
+                          Concede
+                        </Button>
+                      </div>
+                    ) : null}
+                  </Panel>
+                </div>
 
                 {/* Between pitches a manager can reach for the bench — unless
                     a forced decision already owns the moment. */}
@@ -303,6 +307,10 @@ export function GamePage() {
         </div>
       )}
       <CardZoom target={zoom} onClose={() => setZoom(null)} />
+
+      {/* The phone keeps its next move docked under the feed, where the
+          manager's eyes already are. */}
+      <MobileActionBar state={state} mySides={mySides} busy={busy} onAction={dispatchAction} />
     </div>
   );
 }
@@ -347,6 +355,121 @@ function PasswordGate({ gameId, message, onUnlocked }: { gameId: number; message
       </Panel>
     </div>
   );
+}
+
+/**
+ * The pitch button, docked where a thumb can reach it.
+ *
+ * On a phone the play-by-play is the centre of attention, but the real
+ * controls sit a full screen's scroll away under the mat. This bar pins the
+ * next move — and the dice that will decide it — to the bottom of the
+ * viewport, so a manager watching the feed never has to scroll for the
+ * button. It only appears when the signed-in manager is the one the game is
+ * waiting on; spectators and the side off the clock see nothing.
+ */
+function MobileActionBar({
+  state,
+  mySides,
+  busy,
+  onAction,
+}: {
+  state: GameState | null;
+  mySides: Side[];
+  busy: boolean;
+  onAction: (action: GameAction) => void;
+}) {
+  if (!state || state.phase !== 'live') return null;
+  const waiting = waitingOn(state);
+  if (!waiting || !mySides.includes(waiting.side)) return null;
+
+  const pending = state.pendingDecision;
+  const offense = getOffense(state);
+  const defense = getDefense(state);
+  const pitcher = defense.players.find((p) => p.id === defense.activePitcherId) ?? null;
+  // A PA is always under way when the bar shows a pitch button; stay null-safe
+  // anyway so an odd state can never take the whole page down.
+  const batter = state.currentPa
+    ? offense.players.find((p) => p.id === state.currentPa!.batterId) ?? batterDue(state)
+    : null;
+
+  // A forced decision needs the full panel (double plays, sends, the
+  // bullpen); the bar hands the thumb a lift down to it instead.
+  if (pending && pending.kind !== 'batter-roll') {
+    return (
+      <>
+        <div aria-hidden className="h-24 md:hidden" />
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-stock-dark/95 backdrop-blur md:hidden">
+          <div className="mx-auto flex max-w-3xl flex-col gap-1.5 px-4 py-2.5 pb-[calc(env(safe-area-inset-bottom)+0.625rem)]">
+            <p className="truncate text-xs font-medium text-gold">{pending.prompt}</p>
+            <Button
+              variant="primary"
+              onClick={() => document.getElementById('your-move')?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
+            >
+              Answer it ↓
+            </Button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  // The dice line: the matchup the next pitch rolls on, with the wear showing.
+  // A card with no readable season must never take the whole page down, so
+  // the line quietly drops to empty rather than throwing past the boundary.
+  const diceLine = diceLineFor(state, { batter, pitcher });
+
+  return (
+    <>
+      {/* In-flow, so the chat box at the page's end is never buried. */}
+      <div aria-hidden className="h-24 md:hidden" />
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-stock-dark/95 backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-3xl flex-col gap-1.5 px-4 py-2.5 pb-[calc(env(safe-area-inset-bottom)+0.625rem)]">
+          <p className="truncate font-mono text-[11px] text-chalk/60">{diceLine}</p>
+          <Button
+            variant="primary"
+            disabled={busy}
+            onClick={() => onAction(pending?.kind === 'batter-roll' ? { type: 'roll-bat' } : { type: 'throw-pitch' })}
+          >
+            {busy ? 'Rolling…' : pending?.kind === 'batter-roll' ? 'Roll the bat' : 'Throw the pitch'}
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function shortName(name: string): string {
+  const parts = name.trim().split(/\s+/);
+  return parts.length > 1 ? (parts[parts.length - 1] ?? name) : name;
+}
+
+/**
+ * "Griffey +1 · Maddux +2 · fatigue -1 · 2 tied rolls" — the numbers the
+ * next pitch will be rolled on. Each piece is computed under its own guard,
+ * so an unreadable card costs a fragment of the line, not the page.
+ */
+function diceLineFor(state: GameState, who: { batter: EnginePlayer | null; pitcher: EnginePlayer | null }): string {
+  const parts: string[] = [];
+  if (who.batter) {
+    try {
+      parts.push(`${shortName(who.batter.name)} ${fmtMod(batterPitchMod(seasonForPlayer(state, who.batter), state.config.rules).mod)}`);
+    } catch {
+      parts.push(shortName(who.batter.name));
+    }
+  }
+  if (who.pitcher) {
+    try {
+      const total = pitcherTotalMod(state, who.pitcher);
+      parts.push(`${shortName(who.pitcher.name)} ${fmtMod(total.mod)}`);
+      const fatigue = pitcherFatigue(state, who.pitcher);
+      if (fatigue !== 0) parts.push(`fatigue ${fmtMod(fatigue)}`);
+    } catch {
+      parts.push(shortName(who.pitcher.name));
+    }
+  }
+  const balls = state.currentPa?.balls ?? 0;
+  if (balls > 0) parts.push(`${balls} tied roll${balls > 1 ? 's' : ''}`);
+  return parts.join(' · ');
 }
 
 /**
