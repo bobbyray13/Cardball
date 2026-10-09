@@ -17,6 +17,7 @@ import {
 import type { Ctx } from '../context.js';
 import { HttpError, badRequest, parse } from '../http.js';
 import { grantStarterPacks } from '../packs.js';
+import { assertLoginAllowed, assertRegisterAllowed, noteLoginFailure, noteLoginSuccess, noteRegisterAttempt } from '../rateLimit.js';
 
 const registerSchema = z.object({
   email: z.string().trim().toLowerCase().email(),
@@ -39,6 +40,8 @@ export function authRoutes(app: FastifyInstance, ctx: Ctx): void {
 
   app.post('/api/auth/register', async (request, reply) => {
     const body = parse(registerSchema, request.body);
+    assertRegisterAllowed(request.ip);
+    noteRegisterAttempt(request.ip);
     const [row] = await ctx.db.select({ n: count() }).from(users);
     const firstUser = (row?.n ?? 0) === 0;
 
@@ -82,10 +85,13 @@ export function authRoutes(app: FastifyInstance, ctx: Ctx): void {
 
   app.post('/api/auth/login', async (request, reply) => {
     const body = parse(loginSchema, request.body);
+    assertLoginAllowed(request.ip, body.email);
     const [user] = await ctx.db.select().from(users).where(eq(users.email, body.email)).limit(1);
     if (!user || !(await verifyPassword(user.passwordHash, body.password))) {
+      noteLoginFailure(request.ip, body.email);
       throw new HttpError(401, 'Wrong email or password');
     }
+    noteLoginSuccess(request.ip, body.email);
     setSessionCookie(reply, await createSession(ctx, user.id));
     return { user: { id: user.id, email: user.email, displayName: user.displayName, isAdmin: user.isAdmin, publicProfile: user.publicProfile } };
   });

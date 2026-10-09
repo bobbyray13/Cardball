@@ -24,6 +24,8 @@ export interface TournamentDraftConfig {
   yearTo: number;
   themes: PackThemeId[];
   rarityCaps: { rare: number; star: number; mythic: number } | null;
+  /** host's per-pass pick clock in seconds (0 = off). */
+  pickClockSeconds?: number;
 }
 
 export interface TournamentConfig {

@@ -8,6 +8,7 @@ import { EraRangePicker, RarityCapFields, SegmentedToggle } from '../components/
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 import { eraById } from '../eras.js';
 import { useSession } from '../session.js';
+import { useLiveListUpdates } from '../lib/liveList.js';
 
 const STATUS_LABEL: Record<GameListItem['status'], string> = {
   open: 'Open seat',
@@ -72,6 +73,7 @@ export function DashboardPage() {
   const { user } = useSession();
   const navigate = useNavigate();
   const games = useLoad(() => api.games(), []);
+  useLiveListUpdates('lobby', games.reload);
   const teams = useLoad(() => api.teams(), []);
   const collection = useLoad(() => api.collection(), []);
   const stockTeams = useLoad(() => api.stockTeams(), []);
@@ -178,15 +180,7 @@ export function DashboardPage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Panel
-          title="Your games"
-          subtitle="Open seats are joinable by anyone in the league."
-          actions={
-            <Button size="sm" onClick={games.reload} disabled={games.loading}>
-              Refresh
-            </Button>
-          }
-        >
+        <Panel title="Your games" subtitle="Open seats are joinable by anyone in the league.">
           <ErrorNote error={games.error} />
           {games.loading && !games.data ? (
             <Spinner />
@@ -348,16 +342,12 @@ export function DashboardPage() {
             {myTeams.length === 0 ? (
               <p className="text-sm text-chalk/55">Build a team to join a game.</p>
             ) : (
-              <form
-                className="space-y-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const open = games.data?.games.find((g) => g.status === 'open' && !g.isMine);
-                  if (open) void join.execute(open);
-                }}
-              >
+              // Not a form on purpose: the buttons below join the game they
+              // name, and an implicit submit would silently join whichever
+              // open game happens to be first in the list.
+              <div className="space-y-3">
                 <Field label="Your team">
-                  <select name="joinTeamId" className={inputClass} value={joinTeamId} onChange={(e) => setJoinTeamId(Number(e.target.value))} required>
+                  <select name="joinTeamId" className={inputClass} value={joinTeamId} onChange={(e) => setJoinTeamId(Number(e.target.value))}>
                     <option value="">Pick a team…</option>
                     {myTeams.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -387,7 +377,7 @@ export function DashboardPage() {
                   )}
                 </div>
                 <ErrorNote error={join.error} />
-              </form>
+              </div>
             )}
           </Panel>
         </div>

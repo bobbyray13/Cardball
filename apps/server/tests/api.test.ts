@@ -467,7 +467,7 @@ describe('card database and collection', () => {
 
   it('uploads a card photo and serves it back to signed-in members', async () => {
     const boundary = '----cardballtest';
-    const bytes = Buffer.from('not-really-a-jpeg-but-the-server-only-checks-the-mime-type');
+    const bytes = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.from('-really-a-jpeg-the-server-checks-the-signature')]);
     const head = [
       `--${boundary}`,
       'Content-Disposition: form-data; name="width"',
@@ -734,6 +734,19 @@ describe('games', () => {
     );
     expect(detail.chat.map((m) => m.body)).toContain('Good luck!');
     expect(detail.events.length).toBeGreaterThan(10);
+
+    // The lobby row prints only a slice of the room, but every printed field
+    // must agree with the engine state it comes from.
+    const rows = body<{ games: { id: number; mode: string; status: string; regulationInnings: number; isMine: boolean; home: { name: string; score: number } | null; away: { name: string; score: number } | null; inning: number | null; half: string | null; winner: string | null }[] }>(
+      await call('GET', '/api/games', { token: guestToken }),
+    ).games;
+    const row = rows.find((g) => g.id === gameId);
+    expect(row).toMatchObject({ mode: 'remote', status: 'finished', regulationInnings: 3, isMine: true });
+    expect(row?.home).toEqual({ name: state.home.name, score: state.home.score });
+    expect(row?.away).toEqual({ name: state.away.name, score: state.away.score });
+    expect(row?.inning).toBe(state.inning);
+    expect(row?.half).toBe(state.half);
+    expect(row?.winner).toBe(state.winner);
 
     // Anyone signed in can pull up a seat in the stands and talk.
     const invite = body<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;

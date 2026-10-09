@@ -319,6 +319,7 @@ function draftConfig(config: TournamentConfig): CreateDraftInput {
     themes: d.themes,
     rarityCaps: d.rarityCaps as unknown as CreateDraftInput['rarityCaps'],
     regulationInnings: config.regulationInnings,
+    pickClockSeconds: d.pickClockSeconds ?? 0,
   };
 }
 
@@ -327,7 +328,7 @@ export async function createTournament(ctx: Ctx, user: AuthUser, input: CreateTo
   // Open the draft room first: if no pack can be dealt from this era, fail
   // before the tournament exists. The host takes seat 1 of the draft, which is
   // seat 1 of the tournament.
-  const draft = await createDraft(ctx, user, draftConfig(config));
+  const draft = await createDraft(ctx, user, draftConfig(config), false);
   const state: TournamentState = {
     draftId: draft.id,
     teams: {},
@@ -339,6 +340,7 @@ export async function createTournament(ctx: Ctx, user: AuthUser, input: CreateTo
     .insert(tournaments)
     .values({ hostUserId: user.id, name: input.name.trim(), status: 'lobby', config, state, draftId: draft.id })
     .returning();
+  ctx.io?.to('list:tournaments').emit('tournaments:update', { tournamentId: row!.id });
   return toView(ctx, row!);
 }
 
@@ -391,7 +393,7 @@ export function joinTournament(ctx: Ctx, user: AuthUser, id: number): Promise<To
     if (seats.some((s) => s.userId === user.id)) return toView(ctx, row);
     if (seats.length >= config.seats) throw badRequest(`All ${config.seats} seats are taken`);
 
-    await joinDraft(ctx, user, stored(row).draftId!);
+    await joinDraft(ctx, user, stored(row).draftId!, false);
     const fresh = await loadRow(ctx, id);
     const state = stored(fresh);
     state.log.push({ seq: state.log.length + 1, text: `${user.displayName} took seat ${seats.length + 1}.` });
@@ -423,7 +425,7 @@ export function startTournament(ctx: Ctx, user: AuthUser, id: number): Promise<T
     }
 
     // Everyone is seated: deal the packs and let the draft room take over.
-    await startDraft(ctx, user, state.draftId);
+    await startDraft(ctx, user, state.draftId, false);
     state.matches = scheduleMatches(config.format, config.seats);
     state.log.push({
       seq: state.log.length + 1,
@@ -443,13 +445,16 @@ export function simulateTournament(ctx: Ctx, user: AuthUser, id: number): Promis
     if (synced.status !== 'playing') throw badRequest('The matches are not scheduled yet — finish the draft first');
 
     const state = stored(synced);
+    const pending = state.matches.filter((match) => match.winnerSeat === null && match.gameId !== null && match.error === null);
     let played = 0;
-    for (const match of state.matches) {
-      if (match.winnerSeat !== null || match.gameId === null || match.error !== null) continue;
-      if (await playMatch(ctx, match.gameId)) played += 1;
+    for (const [index, match] of pending.entries()) {
+      ctx.io?.to(`tournament:${id}`).emit('tournament:progress', { current: index + 1, total: pending.length, stage: match.stage });
+      if (await playMatch(ctx, match.gameId!)) played += 1;
     }
     if (played === 0) throw badRequest('Every match has already been played');
-    return toView(ctx, await sync(ctx, await loadRow(ctx, id)));
+    const updated = await sync(ctx, await loadRow(ctx, id));
+    ctx.io?.to(`tournament:${id}`).emit('tournament:progress', { current: pending.length, total: pending.length, done: true });
+    return toView(ctx, updated);
   });
 }
 
@@ -483,6 +488,7 @@ export function rematchTournament(ctx: Ctx, user: AuthUser, id: number): Promise
       .insert(tournaments)
       .values({ hostUserId: row.hostUserId, name, status: 'lobby', config, state: fresh, draftId: null })
       .returning();
+    ctx.io?.to('list:tournaments').emit('tournaments:update', { tournamentId: created!.id });
     return toView(ctx, created!);
   });
 }
@@ -496,6 +502,7 @@ export function deleteTournament(ctx: Ctx, user: AuthUser, id: number): Promise<
     // from the picks stay with their managers.
     if (state.draftId !== null) await ctx.db.delete(drafts).where(eq(drafts.id, state.draftId));
     await ctx.db.delete(tournaments).where(eq(tournaments.id, id));
+    ctx.io?.to('list:tournaments').emit('tournaments:update', { tournamentId: id });
   });
 }
 
@@ -846,5 +853,6 @@ async function save(ctx: Ctx, row: TournamentRow, state: TournamentState, status
     .where(eq(tournaments.id, row.id))
     .returning();
   ctx.io?.to(`tournament:${row.id}`).emit('tournament:update', { tournamentId: row.id, status });
+  ctx.io?.to('list:tournaments').emit('tournaments:update', { tournamentId: row.id });
   return updated!;
 }

@@ -90,6 +90,21 @@ if [ "$DO_BACKUP" -eq 1 ]; then
   mapfile -t OLD_DUMPS < <(ls -1t "$BACKUP_DIR"/cardball-*.dump 2>/dev/null | tail -n +6)
   if [ "${#OLD_DUMPS[@]}" -gt 0 ]; then rm -f "${OLD_DUMPS[@]}"; fi
   echo "Rollback: sudo -u postgres pg_restore -d $DB_NAME --clean --if-exists $DUMP"
+
+  # Card photos live on disk under UPLOAD_DIR, not in the database — they need
+  # their own copy or a restore would bring back cards with missing art.
+  UPLOADS=$(grep -E '^UPLOAD_DIR=' "$ENV_FILE" | head -1 | cut -d= -f2-)
+  UPLOADS=${UPLOADS:-/opt/cardball/uploads}
+  if [ -d "$UPLOADS" ]; then
+    PHOTOS="$BACKUP_DIR/uploads-$STAMP.tar.gz"
+    tar -czf "$PHOTOS" -C "$(dirname "$UPLOADS")" "$(basename "$UPLOADS")"
+    chown cardball:cardball "$PHOTOS"
+    ls -lh "$PHOTOS"
+    mapfile -t OLD_PHOTOS < <(ls -1t "$BACKUP_DIR"/uploads-*.tar.gz 2>/dev/null | tail -n +6)
+    if [ "${#OLD_PHOTOS[@]}" -gt 0 ]; then rm -f "${OLD_PHOTOS[@]}"; fi
+  else
+    echo "No uploads directory at $UPLOADS to back up."
+  fi
 else
   step "Back up the database"
   echo "Skipped (--no-backup)."

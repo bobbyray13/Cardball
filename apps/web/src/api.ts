@@ -46,6 +46,8 @@ export interface NewDraft {
   themes: PackThemeId[];
   rarityCaps: { rare: number; star: number; mythic: number } | null;
   regulationInnings: number;
+  /** 0 = no clock, else seconds per pass (60/120/180) */
+  pickClockSeconds: number;
 }
 
 /** What the host fills in to open a tournament. */
@@ -62,6 +64,7 @@ export interface NewTournament {
     yearTo: number;
     themes: PackThemeId[];
     rarityCaps: { rare: number; star: number; mythic: number } | null;
+    pickClockSeconds: number;
   };
 }
 
@@ -128,7 +131,7 @@ export const api = {
   deleteInvite: (code: string) => request<{ ok: true }>('DELETE', `/api/invites/${encodeURIComponent(code)}`),
 
   // ---- card database ----
-  searchPeople: (q: string, limit = 25) =>
+  searchPeople: (q: string, limit = 60) =>
     request<{ people: PersonSummary[] }>('GET', `/api/people/search?q=${encodeURIComponent(q)}&limit=${limit}`),
   person: (id: number) => request<{ person: PersonDetail; seasons: PersonDetail['seasons']; cardYears: { min: number; max: number } | null }>('GET', `/api/people/${id}`),
   previewCard: (personId: number, cardYear: number) =>

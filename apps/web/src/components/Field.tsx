@@ -1,7 +1,7 @@
-import { memo, useRef } from 'react';
-import { motion } from 'framer-motion';
-import type { EnginePlayer, GameState, Side } from '@cardball/engine';
-import type { HouseRules, SeasonStats } from '@cardball/shared';
+import { memo, useEffect, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import type { EnginePlayer, GameEvent, GameState, Side } from '@cardball/engine';
+import type { ContactType, HitKind, HouseRules, SeasonStats } from '@cardball/shared';
 import { formatBattingLine, formatPitchingLine } from '@cardball/shared';
 import {
   batterDue,
@@ -19,6 +19,10 @@ import {
   runnerSbMod,
   runnersOn,
 } from '@cardball/engine';
+import { BATTER_BOX, BASE_GAP, BASE_SPOTS, FENCE_R, FIELDER_SPOTS, HOME_PLATE, MOUND, pctY } from '../lib/fieldGeometry.js';
+import type { Point } from '../lib/fieldGeometry.js';
+import { fieldedLeg, stealThrowLeg, throughLeg, unfieldedLeg } from '../lib/ballFlight.js';
+import type { ContactRef, FlightLeg } from '../lib/ballFlight.js';
 import { teamColors } from './BallCard.js';
 import { PlayerSilhouette } from './Silhouette.js';
 import type { SilhouettePose } from './Silhouette.js';
@@ -55,62 +59,32 @@ const NEUTRAL_SEASON: SeasonStats = {
   positionsPlayed: [],
 };
 
-/**
- * The mat's coordinate system: a 100×75 viewBox (a 4:3 box, the same aspect
- * the container keeps, so the diamond stays square). Everything below — the
- * painted field and every token — is expressed in these units. Because the
- * viewBox is 75 tall but CSS `top` runs 0–100%, tokens convert y on the way
- * out (see `pctY`), or they would sit a quarter of the field too high.
- */
-const VIEW_H = 75;
-const pctY = (y: number) => (y / VIEW_H) * 100;
-
-/**
- * The diamond: a true square seen from above, home at the bottom. `BASE_GAP`
- * is the horizontal (and vertical) offset from one base to the next, so a
- * basepath is BASE_GAP·√2 long.
- */
-const BASE_GAP = 17;
-const HOME_PLATE = { x: 50, y: 64 };
-const BASE_SPOTS: Record<1 | 2 | 3, { x: number; y: number }> = {
-  1: { x: HOME_PLATE.x + BASE_GAP, y: HOME_PLATE.y - BASE_GAP },
-  2: { x: HOME_PLATE.x, y: HOME_PLATE.y - BASE_GAP * 2 },
-  3: { x: HOME_PLATE.x - BASE_GAP, y: HOME_PLATE.y - BASE_GAP },
-};
-/** The rubber sits just short of the line between first and third, as on a real field. */
-const MOUND = { x: 50, y: HOME_PLATE.y - BASE_GAP * 0.95 };
-/** The outfield fence, an arc around home plate. */
-const FENCE_R = 58;
-
-/**
- * Where each defender plays. Every spot is in fair territory and clear of the
- * bags and basepaths, so a runner on base never hides under a fielder: the
- * corner men play behind their bags, the middle infielders back on the dirt
- * either side of second, the outfielders in their gaps.
- */
-const FIELDER_SPOTS: Record<string, { x: number; y: number }> = {
-  C: { x: 50, y: 69.6 },
-  '1B': { x: 70, y: 37.5 },
-  '2B': { x: 61, y: 32 },
-  SS: { x: 39, y: 32 },
-  '3B': { x: 30, y: 37.5 },
-  LF: { x: 24, y: 22 },
-  CF: { x: 50, y: 12 },
-  RF: { x: 76, y: 22 },
-};
-
-/** The batter's box on the third-base side of the plate. */
-const BATTER_BOX = { x: 44.5, y: 62.6 };
-
 export type ZoomPlayer = (side: Side, player: EnginePlayer) => void;
+
+/** Beats that start the ball moving, and beats that send it back to the plate. */
+const FLIGHT_KINDS = new Set(['contact', 'fielding', 'hit', 'steal']);
+const CLEAR_KINDS = new Set(['pitch', 'ball', 'walk', 'half-end', 'game-over', 'inning-start', 'sub', 'pitcher-change']);
 
 /**
  * The mat. Defenders are tokens in their team color marked with their
  * position; the batting side wears cream with a gold ring, so a glance tells
  * who is in the field and who is trying to score. Runners stand on the bag
- * they hold and slide along the basepaths as plays resolve.
+ * they hold and slide along the basepaths as plays resolve. The ball itself
+ * follows the current beat: hit to the man fielding it, through the gap on a
+ * hit, over the fence on a home run.
  */
-export const Field = memo(function Field({ state, photos, onZoom }: { state: GameState; photos: Record<string, number>; onZoom?: ZoomPlayer }) {
+export const Field = memo(function Field({
+  state,
+  photos,
+  play,
+  onZoom,
+}: {
+  state: GameState;
+  photos: Record<string, number>;
+  /** the play-by-play beat being revealed right now, which drives the ball */
+  play?: GameEvent | null;
+  onZoom?: ZoomPlayer;
+}) {
   const defense = getDefense(state);
   const offense = getOffense(state);
   const defenseColors = teamColors(defense.name);
@@ -123,6 +97,50 @@ export const Field = memo(function Field({ state, photos, onZoom }: { state: Gam
       firstPaint.current = false;
     });
   }
+
+  // The ball: one leg at a time, keyed by the beat that started it. The
+  // contact beat records where the ball was hit; the fielding beat sends it
+  // to the man making the play; the hit beat sends it past him.
+  const [leg, setLeg] = useState<FlightLeg | null>(null);
+  const lastContact = useRef<ContactRef | null>(null);
+  const legSeq = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!play) return;
+    const refs = play.refs ?? {};
+    if (FLIGHT_KINDS.has(play.kind)) {
+      if (play.kind === 'contact' && refs.directionRoll !== undefined && refs.contactType) {
+        lastContact.current = { seq: play.seq, directionRoll: refs.directionRoll, contactType: refs.contactType };
+        return;
+      }
+      const contact = lastContact.current;
+      if (play.kind === 'fielding') {
+        if (!contact) return;
+        legSeq.current = play.seq;
+        setLeg(fieldedLeg(contact, play.seq, refs.position ?? null));
+        return;
+      }
+      if (play.kind === 'hit') {
+        const hitKind: HitKind | undefined = refs.hitKind;
+        if (!contact || !hitKind) return;
+        if (legSeq.current === null) {
+          // No fielding beat came first: a natural 20, or a defensive gap.
+          setLeg(unfieldedLeg(contact, play.seq, hitKind));
+        } else {
+          setLeg((prev) => (prev ? throughLeg(prev, play.seq, hitKind) : prev));
+        }
+        return;
+      }
+      if (play.kind === 'steal') {
+        if (refs.base !== undefined) setLeg(stealThrowLeg(play.seq, refs.base));
+        return;
+      }
+    }
+    if (CLEAR_KINDS.has(play.kind)) {
+      legSeq.current = null;
+      setLeg(null);
+    }
+  }, [play]);
 
   const fielders = defense.players.filter(
     (p): p is EnginePlayer & { fieldPosition: string } => p.status === 'active' && !!p.fieldPosition && p.fieldPosition !== 'DH' && p.fieldPosition !== 'P',
@@ -145,7 +163,7 @@ export const Field = memo(function Field({ state, photos, onZoom }: { state: Gam
         <Scorebug state={state} />
         <Legend defense={defense.name} offense={offense.name} defenseColor={defenseColors.primary} offenseColor={offenseColors.primary} />
 
-        {/* defense */}
+        {/* defense — the man making the play flashes gold while the ball is in flight */}
         {fielders.map((fielder) => {
           const spot = FIELDER_SPOTS[fielder.fieldPosition];
           if (!spot) return null;
@@ -160,6 +178,7 @@ export const Field = memo(function Field({ state, photos, onZoom }: { state: Gam
               mark={fielder.fieldPosition}
               label={shortName(fielder.name)}
               detail={rating}
+              flash={leg?.defenderPosition === fielder.fieldPosition}
               title={`${fielder.fieldPosition} · ${fielder.name} · fielding ${rating}`}
               photoId={photos[fielder.id]}
               onClick={onZoom ? () => onZoom(defense.side, fielder) : undefined}
@@ -219,6 +238,9 @@ export const Field = memo(function Field({ state, photos, onZoom }: { state: Gam
             />
           );
         })}
+
+        {/* the ball, following the beat */}
+        {leg ? <BallFlight leg={leg} /> : null}
       </div>
 
       <MatchupStrip state={state} pitcher={pitcher} photos={photos} onZoom={onZoom} />
@@ -241,6 +263,7 @@ function Token({
   pose,
   label,
   detail,
+  flash,
   title,
   photoId,
   onClick,
@@ -257,6 +280,8 @@ function Token({
   pose?: SilhouettePose;
   label: string;
   detail?: string;
+  /** the man making the play lights up while the ball is in flight to him */
+  flash?: boolean;
   title: string;
   photoId?: number | null | undefined;
   onClick?: (() => void) | undefined;
@@ -281,13 +306,13 @@ function Token({
       className="group absolute z-10 flex -translate-x-1/2 flex-col items-center enabled:cursor-zoom-in"
       style={{ marginTop: '-2.6cqw' }}
       initial={from ? { left: `${from.x}%`, top: `${pctY(from.y)}%`, opacity: 0, scale: 0.6 } : false}
-      animate={{ left: `${x}%`, top: `${pctY(y)}%`, opacity: 1, scale: 1 }}
+      animate={{ left: `${x}%`, top: `${pctY(y)}%`, opacity: 1, scale: flash ? 1.14 : 1 }}
       transition={{ type: 'spring', stiffness: 180, damping: 22 }}
     >
       <span
         className={`grid h-[5.2cqw] w-[5.2cqw] min-h-5 min-w-5 place-items-center rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.55)] transition group-enabled:group-hover:scale-110 ${
           offense ? 'border-[0.45cqw] border-gold bg-chalk ring-[0.5cqw] ring-gold/30' : 'border-[0.35cqw] border-chalk/90 text-chalk'
-        }`}
+        } ${flash ? 'ring-[0.6cqw] ring-gold' : ''}`}
         style={offense ? { color } : { background: color }}
       >
         {face}
@@ -510,6 +535,60 @@ const shortName = (name: string) => {
   const parts = name.trim().split(/\s+/);
   return parts.length > 1 ? (parts[parts.length - 1] ?? name) : name;
 };
+
+/**
+ * The ball in flight: a cream dot traveling from where it was hit to wherever
+ * the dice sent it, at a pace the contact type sets — a liner snaps, a fly
+ * ball hangs, a grounder hops through. A puff marks where a hit lands, and a
+ * home run fades as it leaves the park. Reduced motion skips the flight and
+ * shows the ball where the play ends.
+ */
+function BallFlight({ leg }: { leg: FlightLeg }) {
+  const reduced = useReducedMotion();
+  if (reduced) {
+    return (
+      <span
+        aria-hidden
+        className="pointer-events-none absolute z-20 h-[1.5cqw] min-h-[6px] w-[1.5cqw] min-w-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-chalk/80"
+        style={{ left: `${leg.to.x}%`, top: `${pctY(leg.to.y)}%` }}
+      />
+    );
+  }
+  // Repeat the endpoint for the hang times (a pop-up holds where it lands).
+  const stops: Point[] = [leg.from, ...Array(leg.times.length - 1).fill(leg.to)];
+  // When the ball reaches its man: the second keyframe's fraction of the run.
+  const arrivalSec = leg.seconds * (leg.times[1] ?? 1);
+  return (
+    <>
+      <motion.span
+        key={leg.key}
+        aria-hidden
+        className="pointer-events-none absolute z-20 h-[1.5cqw] min-h-[6px] w-[1.5cqw] min-w-[6px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-chalk shadow-md"
+        initial={{ left: `${leg.from.x}%`, top: `${pctY(leg.from.y)}%` }}
+        animate={{
+          left: stops.map((p) => `${p.x}%`),
+          top: stops.map((p) => `${pctY(p.y)}%`),
+          opacity: leg.fades ? [1, 1, 0] : 1,
+        }}
+        transition={{
+          left: { duration: leg.seconds, ease: 'linear', times: leg.times },
+          top: { duration: leg.seconds, ease: 'linear', times: leg.times },
+          opacity: leg.fades ? { duration: leg.seconds, times: [0, 0.75, 1] } : { duration: 0 },
+        }}
+      />
+      {leg.puff ? (
+        <motion.span
+          aria-hidden
+          className="pointer-events-none absolute z-10 h-[4cqw] w-[4cqw] -translate-x-1/2 -translate-y-1/2 rounded-full border-[0.35cqw] border-chalk/80"
+          style={{ left: `${leg.to.x}%`, top: `${pctY(leg.to.y)}%` }}
+          initial={{ scale: 0.3, opacity: 0 }}
+          animate={{ scale: [0.3, 1.4, 1.9], opacity: [0, 0.75, 0] }}
+          transition={{ duration: 0.5, delay: arrivalSec, ease: 'easeOut' }}
+        />
+      ) : null}
+    </>
+  );
+}
 
 /**
  * The field itself, from the press box: stands behind the fence, mown

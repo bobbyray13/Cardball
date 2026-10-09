@@ -1,9 +1,8 @@
 import { memo } from 'react';
 import { motion } from 'framer-motion';
-import type { EnginePlayer, GameState, RollDetail, Side } from '@cardball/engine';
+import type { GameState, RollDetail, Side } from '@cardball/engine';
 import {
   availablePitchers,
-  benchHitters,
   canSteal,
   fmtMod,
   getDefense,
@@ -21,8 +20,9 @@ import { Button, Notice } from './ui.js';
  * Everything the manager on the clock can do.
  *
  * The engine pauses on forced decisions (double-play gamble, sending a runner,
- * choosing a new pitcher, replacing an injured player). When it is not paused,
- * the offense throws the next pitch and may send a runner.
+ * choosing a new pitcher). When it is not paused, the offense throws the next
+ * pitch and may send a runner — including while the pitcher's die is in the
+ * air, so a quick pitcher can never deal past the steal window.
  */
 export const DecisionControls = memo(function DecisionControls({
   state,
@@ -71,6 +71,7 @@ export const DecisionControls = memo(function DecisionControls({
             <Button variant="primary" disabled={busy} onClick={() => onAction({ type: 'roll-bat' })}>
               {busy ? 'Rolling…' : 'Roll the bat'}
             </Button>
+            <StealButtons state={state} onAction={onAction} busy={busy} />
           </div>
         </div>
       );
@@ -88,9 +89,18 @@ export const DecisionControls = memo(function DecisionControls({
     if (!mySides.includes(throwerSide)) {
       const name = state.config.pacedPitch ? defense.name : offense.name;
       const prompt = state.config.pacedPitch ? `${defense.name} are on the mound.` : `${offense.name} are at bat.`;
-      return <Waiting name={name} prompt={prompt} />;
+      // In a paced game the offense can still make a move while the defense
+      // holds the ball, so the running game rides with the waiting card.
+      const stealButtons = mySides.includes(offense.side) ? <StealButtons state={state} onAction={onAction} busy={busy} /> : null;
+      return stealButtons ? (
+        <div className="space-y-3">
+          <Waiting name={name} prompt={prompt} />
+          <div className="flex flex-wrap gap-2">{stealButtons}</div>
+        </div>
+      ) : (
+        <Waiting name={name} prompt={prompt} />
+      );
     }
-    const onBase = state.config.pacedPitch ? [] : runnersOn(offense).filter((runner) => canSteal(state, runner.id).ok);
     return (
       <div className="space-y-3">
         <p className="text-sm text-chalk/70">
@@ -103,11 +113,7 @@ export const DecisionControls = memo(function DecisionControls({
           <Button variant="primary" disabled={busy} onClick={() => onAction({ type: 'throw-pitch' })}>
             {busy ? 'Rolling…' : 'Throw the pitch'}
           </Button>
-          {onBase.map((runner) => (
-            <Button key={runner.id} disabled={busy} onClick={() => onAction({ type: 'attempt-steal', runnerId: runner.id })}>
-              Send {lastName(runner.name)} (SB {fmtMod(runnerSbMod(seasonForPlayer(state, runner), state.config.rules).mod)})
-            </Button>
-          ))}
+          {state.config.pacedPitch ? null : <StealButtons state={state} onAction={onAction} busy={busy} />}
         </div>
       </div>
     );
@@ -128,11 +134,24 @@ function Waiting({ name, prompt }: { name: string; prompt: string }) {
   );
 }
 
+/** The offense's running game: one button per runner the engine would let go. */
+function StealButtons({ state, onAction, busy }: { state: GameState; onAction: (a: GameAction) => void; busy: boolean }) {
+  const offense = getOffense(state);
+  const runners = runnersOn(offense).filter((runner) => canSteal(state, runner.id).ok);
+  if (runners.length === 0) return null;
+  return (
+    <>
+      {runners.map((runner) => (
+        <Button key={runner.id} disabled={busy} onClick={() => onAction({ type: 'attempt-steal', runnerId: runner.id })}>
+          Send {lastName(runner.name)} (SB {fmtMod(runnerSbMod(seasonForPlayer(state, runner), state.config.rules).mod)})
+        </Button>
+      ))}
+    </>
+  );
+}
+
 function ForcedDecision({ state, onAction, busy }: { state: GameState; onAction: (a: GameAction) => void; busy: boolean }) {
   const pending = state.pendingDecision!;
-  const team = getTeam(state, pending.side);
-
-  const bench = benchHitters(team);
   const bullpen = availablePitchers(state, pending.side);
 
   return (
@@ -191,36 +210,6 @@ function ForcedDecision({ state, onAction, busy }: { state: GameState; onAction:
                   <span className="font-mono text-xs text-chalk/50">
                     {pitcher.cardYear} · {pitcher.pitcherClass}
                     {pitcher.outsPitched > 0 ? ` · ${pitcher.outsPitched} outs today` : ''}
-                  </span>
-                </Button>
-              </li>
-            ))}
-          </ul>
-        )
-      ) : null}
-
-      {pending.kind === 'pinch-runner' || pending.kind === 'lineup-fill' ? (
-        bench.length === 0 ? (
-          <Notice>No bench players available.</Notice>
-        ) : (
-          <ul className="space-y-2">
-            {bench.map((player) => (
-              <li key={player.id}>
-                <Button
-                  className="w-full justify-between"
-                  disabled={busy}
-                  onClick={() =>
-                    onAction({
-                      type: 'substitute',
-                      outPlayerId: pending.playerId!,
-                      inPlayerId: player.id,
-                      ...(pending.kind === 'lineup-fill' && player.fieldPosition ? { fieldPosition: player.fieldPosition } : {}),
-                    })
-                  }
-                >
-                  <span>{player.name}</span>
-                  <span className="font-mono text-xs text-chalk/50">
-                    {player.positions.join(' ') || 'bench'} · SB {fmtMod(runnerSbMod(seasonForPlayer(state, player), state.config.rules).mod)}
                   </span>
                 </Button>
               </li>

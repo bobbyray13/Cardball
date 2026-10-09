@@ -1,4 +1,5 @@
 import { creditRun } from './box.js';
+import { GameError } from './errors.js';
 import { pushEvent } from './events.js';
 import type { Rng } from './rng.js';
 import type { EnginePlayer, GameEvent, GameState, Side, TeamState } from './types.js';
@@ -116,25 +117,10 @@ export function openPlateAppearance(state: GameState, events: GameEvent[]): void
   if (state.currentPa) return;
 
   const offense = getOffense(state);
-  const dueId = offense.lineup[offense.lineupCursor] ?? null;
-  if (!dueId) {
-    // Vacated spot with nobody left on the bench: automatic out.
-    state.outs += 1;
-    events.push(
-      pushEvent(state, {
-        kind: 'out',
-        text: `Nobody left to bat in the ${offense.lineupCursor + 1} spot for ${offense.name} — automatic out.`,
-        refs: { side: offense.side },
-      }),
-    );
-    if (state.outs >= 3) {
-      endHalfInning(state, events);
-      return;
-    }
-    advanceLineupCursor(state);
-    openPlateAppearance(state, events);
-    return;
-  }
+  // Substitutions rewrite the lineup in place, so every spot always names a
+  // player — a vacated slot is a bug, not a playable state.
+  const dueId = offense.lineup[offense.lineupCursor];
+  if (!dueId) throw new GameError(`Lineup spot ${offense.lineupCursor + 1} is empty for ${offense.name}`);
 
   if (!ensurePitcher(state, events)) return;
 
@@ -173,7 +159,7 @@ export function endHalfInning(state: GameState, events: GameEvent[], batterCompl
   state.outs = 0;
   state.currentPa = null;
   state.pendingPlay = null;
-  if (state.pendingDecision?.kind === 'pinch-runner') state.pendingDecision = null;
+  state.pendingDecision = null;
 
   events.push(
     pushEvent(state, {

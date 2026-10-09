@@ -5,8 +5,9 @@ import type { PackThemeId, TournamentListItem } from '@cardball/shared';
 import { api } from '../api.js';
 import type { NewTournament } from '../api.js';
 import { eraById } from '../eras.js';
-import { EraRangePicker, PackThemePicker, RarityCapFields, RoundSizeFields, SegmentedToggle, chosenThemes } from '../components/RoomConfig.js';
+import { EraRangePicker, PackThemePicker, PickClockField, RarityCapFields, RoundSizeFields, SegmentedToggle, chosenThemes } from '../components/RoomConfig.js';
 import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { useLiveListUpdates } from '../lib/liveList.js';
 
 const STATUS_LABEL: Record<TournamentListItem['status'], string> = {
   lobby: 'Taking seats',
@@ -30,6 +31,7 @@ const SEAT_OPTIONS: ReadonlyArray<{ value: number; label: string }> = [
 export function TournamentsPage() {
   const navigate = useNavigate();
   const tournaments = useLoad(() => api.tournaments(), []);
+  useLiveListUpdates('tournaments', tournaments.reload);
 
   const [name, setName] = useState('');
   const [format, setFormat] = useState<TournamentFormatChoice>('round-robin');
@@ -45,6 +47,7 @@ export function TournamentsPage() {
   const [maxRare, setMaxRare] = useState(0);
   const [maxStar, setMaxStar] = useState(0);
   const [maxMythic, setMaxMythic] = useState(0);
+  const [pickClockSeconds, setPickClockSeconds] = useState(0);
 
   const chosen = chosenThemes(themes, yearFrom, yearTo);
 
@@ -75,6 +78,7 @@ export function TournamentsPage() {
       yearTo,
       themes: chosen,
       rarityCaps: maxRare > 0 || maxStar > 0 || maxMythic > 0 ? { rare: maxRare, star: maxStar, mythic: maxMythic } : null,
+      pickClockSeconds,
     };
     const { tournament } = await api.createTournament({ name, format, seats, regulationInnings: innings, autoSimulate, draft });
     navigate(`/tournaments/${tournament.id}`);
@@ -98,14 +102,7 @@ export function TournamentsPage() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <Panel
-          title="Tournament rooms"
-          actions={
-            <Button size="sm" onClick={tournaments.reload} disabled={tournaments.loading}>
-              Refresh
-            </Button>
-          }
-        >
+        <Panel title="Tournament rooms">
           <ErrorNote error={tournaments.error} />
           <ErrorNote error={join.error} />
           {tournaments.loading && !tournaments.data ? (
@@ -218,6 +215,8 @@ export function TournamentsPage() {
               maxStar={DRAFT_LIMITS.maxStar}
               maxMythic={DRAFT_LIMITS.maxMythic}
             />
+
+            <PickClockField value={pickClockSeconds} onChange={setPickClockSeconds} />
 
             <label className="flex items-center gap-2 text-sm text-chalk/70">
               <input

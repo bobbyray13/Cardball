@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { GameAction } from '@cardball/shared';
 import { applyAction, waitingOn } from '../src/apply.js';
+import { botAction, botOffClockAction } from '../src/bot.js';
 import { createGame } from '../src/create.js';
 import { GameError } from '../src/errors.js';
 import { OUT_OF_POSITION_RATING, fieldingRating, pitcherFatigue, pitcherTotalMod } from '../src/queries.js';
@@ -194,6 +195,16 @@ describe('double play', () => {
     expect(state.outs).toBe(1);
     expect(state.away.players.find((p) => p.id === 'b1')?.base).toBe(1);
     expect(state.away.players.find((p) => p.id === 'b0')?.base).toBeNull();
+  });
+
+  it('an outfielder fielding a grounder takes the sure out', () => {
+    let state = pitch(liveGame(), [6, 1, 3, 12, 2]); // b0 singles
+    // grounder (contact 14) to CF on direction 3, defense 15 fields it
+    state = pitch(state, [6, 1, 3, 14, 15]);
+    expect(state.pendingDecision).toBeNull();
+    expect(state.outs).toBe(1);
+    expect(state.away.players.find((p) => p.id === 'b0')?.base).toBe(1);
+    expect(state.away.players.find((p) => p.id === 'b1')?.base).toBeNull();
   });
 });
 
@@ -393,5 +404,75 @@ describe('paced pitching', () => {
 
   it('refuses a batter roll before the pitcher has thrown', () => {
     expect(() => act(pacedGame(), { type: 'roll-bat' })).toThrow(/No batter roll/);
+  });
+
+  it('lets the offense steal while the pitcher\'s die is in the air', () => {
+    // b0 singles: pitcher 1, batter 6, direction 3, contact 12, defense 2.
+    let state = act(pacedGame(), { type: 'throw-pitch' }, [1]);
+    state = act(state, { type: 'roll-bat' }, [6, 3, 12, 2]);
+    expect(state.away.players.find((p) => p.id === 'b0')?.base).toBe(1);
+    // The pitcher's die goes on the table for b1.
+    state = act(state, { type: 'throw-pitch' }, [4]);
+    expect(state.pendingDecision?.kind).toBe('batter-roll');
+    // b0 goes while the die is in the air — 3 vs 3, and the tie is his.
+    state = act(state, { type: 'attempt-steal', runnerId: 'b0' }, [3, 3]);
+    expect(state.away.players.find((p) => p.id === 'b0')?.base).toBe(2);
+    expect(state.pendingDecision?.kind).toBe('batter-roll');
+    // The batter still answers the pitcher's die: 1 under 4 → strikeout.
+    state = act(state, { type: 'roll-bat' }, [1]);
+    expect(state.pendingDecision).toBeNull();
+    expect(state.outs).toBe(1);
+    expect(state.currentPa?.batterId).toBe('b2');
+  });
+
+  it('a steal that makes the third out clears the pending batter roll', () => {
+    let state = pacedGame();
+    state = act(state, { type: 'throw-pitch' }, [1]);
+    state = act(state, { type: 'roll-bat' }, [6, 3, 12, 2]); // b0 singles
+    state = act(state, { type: 'throw-pitch' }, [6]);
+    state = act(state, { type: 'roll-bat' }, [1]); // b1 strikes out
+    state = act(state, { type: 'throw-pitch' }, [6]);
+    state = act(state, { type: 'roll-bat' }, [1]); // b2 strikes out
+    expect(state.outs).toBe(2);
+    // b3 steps in with the pitcher's die in the air and b0 on first.
+    state = act(state, { type: 'throw-pitch' }, [4]);
+    expect(state.pendingDecision?.kind).toBe('batter-roll');
+    // Caught stealing for out three: 1 vs 6.
+    state = act(state, { type: 'attempt-steal', runnerId: 'b0' }, [1, 6, 1, 1]);
+    expect(state.pendingDecision).toBeNull();
+    expect(state.half).toBe('bottom');
+    expect(state.outs).toBe(0);
+    // The cleared decision never stalls the game: the next half is already up.
+    expect(state.currentPa?.batterId).toBe('a0');
+    expect(waitingOn(state)).toMatchObject({ side: 'away', kind: 'throw-pitch' });
+    expect(() => act(state, { type: 'throw-pitch' }, [1])).not.toThrow();
+  });
+});
+
+describe('the bot\'s running game', () => {
+  /** Live game with b0 on first, the next PA already open. */
+  function runnerOnFirst(): GameState {
+    return pitch(liveGame(), [6, 1, 3, 12, 2]);
+  }
+
+  it('keeps the bat early in a tie game', () => {
+    const state = runnerOnFirst();
+    expect(botOffClockAction(state, 'away')).toBeNull();
+    expect(botAction(state, 'away')).toEqual({ type: 'throw-pitch' });
+  });
+
+  it('goes late when trailing', () => {
+    const state = runnerOnFirst();
+    state.inning = 8;
+    state.home.score = 2; // down two in the 8th
+    expect(botOffClockAction(state, 'away')).toEqual({ type: 'attempt-steal', runnerId: 'b0' });
+    expect(botAction(state, 'away')).toEqual({ type: 'attempt-steal', runnerId: 'b0' });
+  });
+
+  it('does not gamble from a big lead', () => {
+    const state = runnerOnFirst();
+    state.inning = 8;
+    state.away.score = 5; // up five in the 8th
+    expect(botOffClockAction(state, 'away')).toBeNull();
   });
 });

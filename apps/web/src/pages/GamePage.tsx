@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
@@ -18,13 +18,14 @@ import { DecisionControls } from '../components/DecisionControls.js';
 import { ErrorBoundary } from '../components/ErrorBoundary.js';
 import { Field } from '../components/Field.js';
 import type { ZoomPlayer } from '../components/Field.js';
-import { LatestPlay } from '../components/LatestPlay.js';
+import { LatestPlay, usePlayReveal } from '../components/LatestPlay.js';
 import { LineupBuilder, lineupProblem } from '../components/LineupBuilder.js';
 import type { LineupCandidate } from '../components/LineupBuilder.js';
 import { zoomForPlayer } from '../components/gameZoom.js';
 import { LineScore } from '../components/LineScore.js';
 import { PlayByPlay } from '../components/PlayByPlay.js';
-import { Button, EmptyState, ErrorNote, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { Button, ConfirmDialog, EmptyState, ErrorNote, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { playSound, setSoundEnabled, soundEnabled, soundFor } from '../lib/sound.js';
 import { useSession } from '../session.js';
 
 export function GamePage() {
@@ -40,6 +41,8 @@ export function GamePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [zoom, setZoom] = useState<ZoomTarget | null>(null);
+  // The concede dialog (hotseat has to pick which side gives it up).
+  const [askConcede, setAskConcede] = useState(false);
   // Bumped after a password opens the room, so the socket joins again.
   const [admitted, setAdmitted] = useState(0);
 
@@ -232,11 +235,7 @@ export function GamePage() {
                 {state.phase === 'finished' ? <GameOver state={state} earned={earned} userId={user?.id ?? null} /> : null}
 
                 <Panel title="The mat" subtitle={state.phase === 'finished' ? 'Final' : `${state.half === 'top' ? 'Top' : 'Bottom'} ${state.inning} · ${state.outs} out${state.outs === 1 ? '' : 's'}`}>
-                  {/* The call on the air: each play unfolds here, one beat at a time. */}
-                  <LatestPlay events={events} />
-                  <ErrorBoundary label="The field">
-                    <Field state={state} photos={game.photos} onZoom={zoomPlayer} />
-                  </ErrorBoundary>
+                  <Mat state={state} events={events} photos={game.photos} onZoom={zoomPlayer} />
                 </Panel>
 
                 {/* The phone-sized controls scroll to here when a forced
@@ -249,20 +248,59 @@ export function GamePage() {
                     </ErrorBoundary>
                     {mySides.length > 0 && state.phase === 'live' ? (
                       <div className="mt-4 border-t border-white/10 pt-3">
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          disabled={busy}
-                          onClick={() => {
-                            if (confirm('Concede this game?')) {
-                              void runAction({ type: 'concede', ...(mySides.length === 2 ? { side: 'home' as const } : {}) });
-                            }
-                          }}
-                        >
+                        <Button size="sm" variant="danger" disabled={busy} onClick={() => setAskConcede(true)}>
                           Concede
                         </Button>
                       </div>
                     ) : null}
+                    {/* Hotseat manages both sides, so the concession has to
+                        name its team instead of defaulting to home. */}
+                    <ConfirmDialog
+                      open={askConcede}
+                      title="Concede this game?"
+                      danger
+                      busy={busy}
+                      confirmLabel="Concede"
+                      onConfirm={
+                        mySides.length === 2
+                          ? undefined
+                          : () => {
+                              setAskConcede(false);
+                              void runAction({ type: 'concede' });
+                            }
+                      }
+                      onCancel={() => setAskConcede(false)}
+                    >
+                      {mySides.length === 2 ? (
+                        <>
+                          <p>You have both sides tonight. Who gives it up?</p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="danger"
+                              disabled={busy}
+                              onClick={() => {
+                                setAskConcede(false);
+                                void runAction({ type: 'concede', side: 'home' });
+                              }}
+                            >
+                              {state.home.name} concede
+                            </Button>
+                            <Button
+                              variant="danger"
+                              disabled={busy}
+                              onClick={() => {
+                                setAskConcede(false);
+                                void runAction({ type: 'concede', side: 'away' });
+                              }}
+                            >
+                              {state.away.name} concede
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <p>The game ends and the other side takes the win.</p>
+                      )}
+                    </ConfirmDialog>
                   </Panel>
                 </div>
 
@@ -528,6 +566,81 @@ function Score({ value }: { value: number }) {
   );
 }
 
+/** How the header phrases the moment the game is waiting on (engine kinds, said like a broadcast would). */
+const WAITING_LABEL: Record<string, string> = {
+  'throw-pitch': 'waiting on the pitch',
+  'batter-roll': 'waiting on the bat',
+  'dp-attempt': 'double-play call',
+  'send-runner': 'send the runner?',
+  'pitcher-change': 'new pitcher?',
+};
+
+/**
+ * The mat's moving parts. One reveal clock drives the broadcast strip, the
+ * ball on the field, and the sounds, so the call, the picture, and the crowd
+ * tell the same story a beat at a time.
+ */
+function Mat({ state, events, photos, onZoom }: { state: GameState; events: GameEvent[]; photos: Record<string, number>; onZoom: ZoomPlayer }) {
+  const beat = usePlayReveal(events);
+  const lastPlayed = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (!beat) return;
+    // Whatever is already on the ledger when the page opens never replays.
+    if (lastPlayed.current === null) {
+      lastPlayed.current = beat.seq;
+      return;
+    }
+    if (beat.seq > lastPlayed.current) {
+      lastPlayed.current = beat.seq;
+      const sound = soundFor(beat);
+      if (sound) playSound(sound);
+    }
+  }, [beat]);
+
+  return (
+    <>
+      {/* The call on the air: each play unfolds here, one beat at a time. */}
+      <LatestPlay beat={beat} />
+      <ErrorBoundary label="The field">
+        <Field state={state} photos={photos} play={beat} onZoom={onZoom} />
+      </ErrorBoundary>
+    </>
+  );
+}
+
+/** The mute toggle for the game's sounds, remembered across visits. */
+function SoundToggle() {
+  const [on, setOn] = useState(soundEnabled());
+  return (
+    <button
+      type="button"
+      className="rounded-full border border-white/20 p-1.5 text-chalk/70 hover:bg-white/10 hover:text-chalk"
+      title={on ? 'Sounds are on' : 'Sounds are off'}
+      aria-label={on ? 'Turn sounds off' : 'Turn sounds on'}
+      onClick={() => {
+        const next = !on;
+        setOn(next);
+        setSoundEnabled(next);
+      }}
+    >
+      {on ? (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M11 5 6 9H3v6h3l5 4V5z" />
+          <path d="M15.5 8.5a5 5 0 0 1 0 7" />
+          <path d="M18 6a8.5 8.5 0 0 1 0 12" />
+        </svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M11 5 6 9H3v6h3l5 4V5z" />
+          <line x1="16" y1="9" x2="22" y2="15" />
+          <line x1="22" y1="9" x2="16" y2="15" />
+        </svg>
+      )}
+    </button>
+  );
+}
+
 function GameHeader({
   game,
   state,
@@ -561,7 +674,7 @@ function GameHeader({
           ) : (
             <span className="font-mono text-xs text-chalk/50">
               {state.half === 'top' ? '▲' : '▼'} {state.inning} · {state.outs} out{state.outs === 1 ? '' : 's'}
-              {waiting ? ` · ${waiting.kind.replace('-', ' ')}` : ''}
+              {waiting ? ` · ${WAITING_LABEL[waiting.kind] ?? waiting.kind.replace('-', ' ')}` : ''}
             </span>
           )}
         </div>
@@ -573,6 +686,7 @@ function GameHeader({
         <span className="rounded-full bg-white/10 px-2 py-0.5 text-chalk/60">
           {game.mode} · {game.regulationInnings} inn
         </span>
+        <SoundToggle />
         {game.locked ? (
           <span className="rounded-full bg-white/10 px-2 py-0.5 text-chalk/60" title="Watching or joining takes the host's password">
             password

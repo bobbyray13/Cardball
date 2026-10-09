@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 import { ApiError } from '../api.js';
 
@@ -103,6 +103,106 @@ export function Chip({ active, disabled, onClick, children }: { active: boolean;
 
 export function Spinner({ label = 'Loading…' }: { label?: string }) {
   return <p className="animate-pulse py-6 text-center text-sm text-chalk/50">{label}</p>;
+}
+
+/**
+ * While `active`, keeps Tab focus inside the element the returned ref lands
+ * on, focuses it on open, and restores focus to what had it on close. Modals
+ * mount the trap so a keyboard user never ends up tabbing behind the overlay.
+ */
+export function useFocusTrap(active: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!active) return;
+    const container = ref.current;
+    if (!container) return;
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusable = () =>
+      [...container.querySelectorAll<HTMLElement>('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')].filter((el) => {
+        const formControl =
+          el instanceof HTMLButtonElement || el instanceof HTMLInputElement || el instanceof HTMLSelectElement || el instanceof HTMLTextAreaElement;
+        return !(formControl && el.disabled) && el.offsetParent !== null;
+      });
+    (focusable()[0] ?? container).focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const items = focusable();
+      if (items.length === 0) {
+        e.preventDefault();
+        return;
+      }
+      const first = items[0]!;
+      const last = items[items.length - 1]!;
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      previous?.focus();
+    };
+  }, [active]);
+  return ref;
+}
+
+/**
+ * A styled stand-in for window.confirm: a modal overlay in the house style
+ * with an Escape-cancel, a focus trap, and a busy flag for the action it
+ * gates. `children` can hold anything a decision needs beyond a plain prompt.
+ */
+export function ConfirmDialog({
+  open,
+  title,
+  children,
+  confirmLabel = 'Confirm',
+  danger = false,
+  busy = false,
+  onConfirm,
+  onCancel,
+}: {
+  open: boolean;
+  title: string;
+  children?: ReactNode;
+  confirmLabel?: string;
+  danger?: boolean;
+  busy?: boolean;
+  /** Omit for decisions whose children hold the buttons themselves. */
+  onConfirm?: (() => void) | undefined;
+  onCancel: () => void;
+}) {
+  const trap = useFocusTrap(open);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onCancel();
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, onCancel]);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" role="dialog" aria-modal="true" aria-label={title} onClick={onCancel}>
+      <div ref={trap} tabIndex={-1} className="panel w-full max-w-sm p-5 outline-none" onClick={(e) => e.stopPropagation()}>
+        <h2 className="font-display text-lg font-semibold text-chalk">{title}</h2>
+        {children ? <div className="mt-2 space-y-2 text-sm text-chalk/70">{children}</div> : null}
+        <div className="mt-4 flex justify-end gap-2">
+          <Button variant="secondary" onClick={onCancel}>
+            Cancel
+          </Button>
+          {onConfirm ? (
+            <Button variant={danger ? 'danger' : 'primary'} disabled={busy} onClick={onConfirm}>
+              {busy ? 'Working…' : confirmLabel}
+            </Button>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {

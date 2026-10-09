@@ -94,6 +94,9 @@ export function SearchPage() {
                 </li>
               ))}
             </ul>
+            {(results.data?.people.length ?? 0) >= 60 ? (
+              <p className="mt-3 text-xs text-chalk/45">Showing the first 60 — narrow the search to surface the rest.</p>
+            ) : null}
           </Panel>
 
           {person ? <CardPicker person={person} /> : <EmptyState title="Pick a player">Their card back and card years show up here.</EmptyState>}

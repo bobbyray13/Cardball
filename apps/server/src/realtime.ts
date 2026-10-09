@@ -13,6 +13,7 @@ import { HttpError } from './http.js';
 type Ack = (response: { ok: true; data?: unknown } | { ok: false; error: string }) => void;
 
 const gameIdSchema = z.number().int().positive();
+const listNameSchema = z.enum(['lobby', 'drafts', 'tournaments']);
 
 /**
  * Socket.IO carries live game updates and chat. Clients authenticate with
@@ -120,6 +121,17 @@ export function attachRealtime(httpServer: HttpServer, ctx: Ctx): Server {
     socket.on('disconnecting', () => {
       const rooms = [...socket.rooms].filter((r) => r.startsWith('game:'));
       setImmediate(() => rooms.forEach((r) => presence(Number(r.slice(5)))));
+    });
+
+    // List pages receive lightweight nudges and re-fetch their own REST view.
+    // The socket is already authenticated, so list rooms need no private data.
+    socket.on('list:join', (rawName: unknown) => {
+      const parsed = listNameSchema.safeParse(rawName);
+      if (parsed.success) void socket.join(`list:${parsed.data}`);
+    });
+    socket.on('list:leave', (rawName: unknown) => {
+      const parsed = listNameSchema.safeParse(rawName);
+      if (parsed.success) void socket.leave(`list:${parsed.data}`);
     });
   });
 

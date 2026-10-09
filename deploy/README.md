@@ -11,7 +11,7 @@ command instead of a walkthrough.
 | Code checkout (owned by `cardball`) | `/opt/cardball/app` |
 | Environment file (secrets, `600`) | `/opt/cardball/.env` |
 | Uploaded card photos | `/opt/cardball/uploads` |
-| Database backups | `/opt/cardball/backups` |
+| Database + photo backups | `/opt/cardball/backups` |
 | Built web client | `/opt/cardball/app/apps/web/dist` |
 | Service | `cardball.service` (systemd, runs as `cardball`) |
 | Database | PostgreSQL on the host, `127.0.0.1:5432`, database `cardball` |
@@ -122,8 +122,8 @@ Notes worth remembering:
 
 - The app listens on `127.0.0.1:3001` only. Caddy terminates TLS and is the only
   thing exposed. Do not open 3001 or 5432 in the firewall.
-- `UPLOAD_DIR` is a real directory on the box, not in the repo. Back it up
-  alongside the database if card photos matter.
+- `UPLOAD_DIR` is a real directory on the box, not in the repo. `update.sh`
+  copies it to the backups next to each database dump (five most recent kept).
 - The dev database is a Docker container on port **5433**; production is the
   host's PostgreSQL on **5432**. They are separate, and a `docker compose`
   command run on the server does nothing to production.

@@ -451,7 +451,7 @@ export const tournaments = pgTable(
     /** the draft room, the schedule, the teams, and the log */
     state: jsonb('state').notNull(),
     /** the draft room this tournament owns, so lookups don't scan state JSONB */
-    draftId: integer('draft_id'),
+    draftId: integer('draft_id').references(() => drafts.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at').notNull().defaultNow(),
   },

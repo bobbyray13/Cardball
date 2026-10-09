@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { RARITY_LABEL, RARITY_ORDER, faceLabel, rarityRank, rateCard } from '@cardball/shared';
@@ -9,7 +9,7 @@ import { CardZoom, CareerSummary } from '../components/CardZoom.js';
 import { PackShelf } from '../components/PackShelf.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { PhotoUploader } from '../components/PhotoUploader.js';
-import { Button, Chip, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { Button, Chip, ConfirmDialog, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useFocusTrap, useLoad } from '../components/ui.js';
 
 type SortKey = 'rarity' | 'newest' | 'name' | 'year-desc' | 'year-asc';
 type RoleFilter = 'all' | 'hitters' | 'pitchers';
@@ -91,14 +91,21 @@ export function CollectionPage() {
 
   const filtering = query.trim() !== '' || tierFilter !== 'all' || role !== 'all' || photosOnly;
 
+  // A binder can run to hundreds of cards; the grid shows one page at a time,
+  // and a new search or filter starts back at the first page.
+  const PAGE_SIZE = 60;
+  const [shown, setShown] = useState(PAGE_SIZE);
+  useEffect(() => setShown(PAGE_SIZE), [query, tierFilter, role, photosOnly, sort]);
+  const paged = useMemo(() => filtered.slice(0, shown), [filtered, shown]);
+
   // Under "Rarest first", split the grid into one shelf per tier.
   const groups = useMemo(() => {
-    if (sort !== 'rarity') return [{ tier: null as DraftRarity | null, cards: filtered }];
+    if (sort !== 'rarity') return [{ tier: null as DraftRarity | null, cards: paged }];
     return [...RARITY_ORDER]
       .reverse()
-      .map((tier) => ({ tier: tier as DraftRarity | null, cards: filtered.filter((c) => ratings.get(c.id)!.rarity === tier) }))
+      .map((tier) => ({ tier: tier as DraftRarity | null, cards: paged.filter((c) => ratings.get(c.id)!.rarity === tier) }))
       .filter((g) => g.cards.length > 0);
-  }, [filtered, sort, ratings]);
+  }, [paged, sort, ratings]);
 
   return (
     <div className="space-y-6">
@@ -215,6 +222,16 @@ export function CollectionPage() {
               </div>
             </section>
           ))}
+          {filtered.length > shown ? (
+            <div className="flex flex-col items-center gap-1 pb-2">
+              <Button onClick={() => setShown((n) => n + PAGE_SIZE)}>
+                Show more · {filtered.length - shown} card{filtered.length - shown === 1 ? '' : 's'} left
+              </Button>
+              <p className="text-xs text-chalk/40">
+                Showing {shown} of {filtered.length}
+              </p>
+            </div>
+          ) : null}
         </div>
       )}
 
@@ -294,6 +311,8 @@ function CardDetail({
   const [notes, setNotes] = useState(entry.notes ?? '');
   const [quantity, setQuantity] = useState(entry.quantity);
   const [zoomed, setZoomed] = useState(false);
+  // The detail sheet is a modal: keep keyboard focus inside while it is up.
+  const trap = useFocusTrap(true);
 
   const save = useAction(async () => {
     const { card } = await api.updateCard(entry.id, { notes: notes.trim() || null, quantity });
@@ -307,6 +326,7 @@ function CardDetail({
     await api.deleteCard(entry.id);
     onDeleted();
   });
+  const [askRemove, setAskRemove] = useState(false);
 
   return (
     <motion.div
@@ -317,7 +337,9 @@ function CardDetail({
       onClick={onClose}
     >
       <motion.div
-        className="panel w-full max-w-4xl p-4 sm:p-6"
+        ref={trap}
+        tabIndex={-1}
+        className="panel w-full max-w-4xl p-4 outline-none sm:p-6"
         initial={{ y: 24, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}
         exit={{ y: 16, opacity: 0 }}
@@ -391,15 +413,29 @@ function CardDetail({
                 variant="danger"
                 className="ml-auto"
                 disabled={remove.busy}
-                onClick={() => {
-                  if (confirm(`Remove ${entry.card.name} from your collection?`)) void remove.execute();
-                }}
+                onClick={() => setAskRemove(true)}
               >
                 Remove
               </Button>
             </div>
           </div>
         </div>
+        <ConfirmDialog
+          open={askRemove}
+          title={`Remove ${entry.card.name}?`}
+          danger
+          busy={remove.busy}
+          confirmLabel="Remove card"
+          onConfirm={() => {
+            setAskRemove(false);
+            void remove.execute();
+          }}
+          onCancel={() => setAskRemove(false)}
+        >
+          <p>
+            All {entry.quantity} cop{entry.quantity === 1 ? 'y' : 'ies'} of this card leave the collection.
+          </p>
+        </ConfirmDialog>
         <CardZoom target={zoomed ? { card: entry.card, photoId: entry.photoId, rarity: entry.rarity } : null} onClose={() => setZoomed(false)} />
       </motion.div>
     </motion.div>

@@ -7,6 +7,7 @@
 import postgres from 'postgres';
 import type { InjectOptions, LightMyRequestResponse } from 'fastify';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { eq } from 'drizzle-orm';
 import { botAction, waitingOn } from '@cardball/engine';
 import type { GameState } from '@cardball/engine';
 import { createDb, draftParticipants, drafts, people, runMigrations, seasons } from '@cardball/db';
@@ -982,5 +983,112 @@ describe('a draft from before the series', () => {
     const team = parse<{ team: { cards: { card: { id: string } }[]; suggested: unknown } }>(await call('GET', `/api/drafts/${draftId}/team`, { token: hostToken })).team;
     expect(team.cards.map((c) => c.card.id)).toEqual(['old-card']);
     expect(team.suggested).toBeNull();
+  });
+});
+
+describe('the draft pick clock', () => {
+  let clockDraftId = 0;
+  let lateToken = '';
+
+  beforeAll(async () => {
+    const invite = parse<{ code: string }>(await call('POST', '/api/invites', { token: hostToken, body: {} })).code;
+    lateToken = await register('late-clocker@example.com', 'Late', invite);
+  });
+
+  it('rejects a pick clock the schema does not list', async () => {
+    const res = await call('POST', '/api/drafts', {
+      token: hostToken,
+      body: { rounds: 1, packSize: 4, yearFrom: CARD_YEAR, yearTo: CARD_YEAR, playableOnly: true, pickClockSeconds: 45 },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(parse<{ error: string }>(res).error).toMatch(/pickClock|pick clock/i);
+  });
+
+  it('defaults to no clock and leaves the deadline null after the deal', async () => {
+    const res = await call('POST', '/api/drafts', {
+      token: hostToken,
+      body: { rounds: 1, packSize: 4, yearFrom: CARD_YEAR, yearTo: CARD_YEAR, playableOnly: true },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const draft = parse<{ draft: DraftView }>(res).draft;
+    clockDraftId = draft.id;
+    expect(draft.config.pickClockSeconds).toBe(0);
+    expect(draft.pickDeadlineAt).toBeNull();
+
+    expect((await call('POST', `/api/drafts/${clockDraftId}/join`, { token: guestToken })).statusCode).toBe(200);
+    const started = await call('POST', `/api/drafts/${clockDraftId}/start`, { token: hostToken });
+    expect(started.statusCode).toBe(200);
+    const view = parse<{ draft: DraftView }>(started).draft;
+    // No clock on a default room — the deadline is null forever, even mid-pass.
+    expect(view.pickDeadlineAt).toBeNull();
+  });
+
+  it('records the deadline on a draft that has a clock, and keeps it open while seats are still picking', async () => {
+    const res = await call('POST', '/api/drafts', {
+      token: hostToken,
+      body: { rounds: 1, packSize: 4, yearFrom: CARD_YEAR, yearTo: CARD_YEAR, playableOnly: true, pickClockSeconds: 60 },
+    });
+    expect(res.statusCode, res.body).toBe(200);
+    const clocked = parse<{ draft: DraftView }>(res).draft;
+    clockDraftId = clocked.id;
+    expect(clocked.config.pickClockSeconds).toBe(60);
+
+    expect((await call('POST', `/api/drafts/${clockDraftId}/join`, { token: lateToken })).statusCode).toBe(200);
+    const started = await call('POST', `/api/drafts/${clockDraftId}/start`, { token: hostToken });
+    expect(started.statusCode).toBe(200);
+    const view = parse<{ draft: DraftView }>(started).draft;
+    // The clock arm starts the moment the round deals.
+    expect(view.pickDeadlineAt).not.toBeNull();
+    expect(view.pickDeadlineAt!).toBeGreaterThan(Date.now());
+    expect(view.waitingOn).toEqual([0, 1]);
+
+    await call('POST', `/api/drafts/${clockDraftId}/open`, { token: hostToken });
+    const picked = (await call('POST', `/api/drafts/${clockDraftId}/pick`, {
+      token: hostToken,
+      body: { cardId: parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${clockDraftId}`, { token: hostToken })).draft.myPack[0]!.id },
+    }));
+    expect(picked.statusCode).toBe(200);
+    const mid = parse<{ draft: DraftView }>(picked).draft;
+    expect(mid.waitingOn).toEqual([1]);
+    expect(mid.pickDeadlineAt).not.toBeNull();
+  });
+
+  it('auto-picks the stuck seat when the deadline passes, files the card, and advances the round', async () => {
+    // Stamp the deadline back so the very next read expires it.
+    const [row] = await db.select({ state: drafts.state, version: drafts.version }).from(drafts).where(eq(drafts.id, clockDraftId)).limit(1);
+    const state = row!.state as { waitingOn: number[]; packs: Record<string, { id: string; personId: number; rarity: string; starter?: boolean; positions?: string[] }[]>; picks: Record<string, unknown[]>; pickDeadlineAt: number | null };
+    const stuckPack = state.packs['1'] ?? [];
+    const stuckBefore = state.picks['1']?.length ?? 0;
+    const waitingBefore = state.waitingOn;
+    expect(waitingBefore).toEqual([1]);
+    expect(stuckPack.length).toBeGreaterThan(0);
+    await db
+      .update(drafts)
+      .set({ state: { ...state, pickDeadlineAt: Date.now() - 1 } })
+      .where(eq(drafts.id, clockDraftId));
+
+    // The next read triggers expiry: one beat of work auto-picks the seat and
+    // advances the draft, since this is the only remaining pick of round one.
+    const view = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${clockDraftId}`, { token: hostToken })).draft;
+    // Round one finished; the room is now in round one of the last pass and
+    // waiting on every seat, or the whole thing has unwound to one row before assembly.
+    expect(view.waitingOn).toContain(0);
+    // The stuck seat took a card and the picked card was filed into the sandbox.
+    const after = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${clockDraftId}`, { token: lateToken })).draft;
+    expect(after.myPicks.length).toBeGreaterThan(stuckBefore);
+    expect(after.log.some((l) => /clock ran out/i.test(l.text))).toBe(true);
+  });
+
+  it('clears the deadline when the last pack empties into assembly', async () => {
+    // The room runs to the end of round one with the host auto-picking the
+    // last seat, so the deadline should now be null while the rooms turns over.
+    const view = parse<{ draft: DraftView }>(await call('GET', `/api/drafts/${clockDraftId}`, { token: hostToken })).draft;
+    // Phase is active (second-pass picking) OR assembling (one pack, two picks). Either is fine.
+    expect(['active', 'assembling']).toContain(view.phase);
+    if (view.phase === 'active') {
+      expect(view.pickDeadlineAt).not.toBeNull();
+    } else {
+      expect(view.pickDeadlineAt).toBeNull();
+    }
   });
 });

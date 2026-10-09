@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { formatLabel, recordLabel, tournamentEraLabel } from '@cardball/shared';
 import type { MatchSlot, TournamentMatch, TournamentView } from '@cardball/shared';
 import { api } from '../api.js';
-import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useLoad } from '../components/ui.js';
+import { Button, ConfirmDialog, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useLoad } from '../components/ui.js';
 import { useSession } from '../session.js';
 
 const STATUS_LABEL: Record<TournamentView['status'], string> = {
@@ -47,6 +47,8 @@ export function TournamentPage() {
     await api.deleteTournament(id);
     navigate('/tournaments');
   });
+  const [askClose, setAskClose] = useState(false);
+  const [simulation, setSimulation] = useState<{ current: number; total: number; stage?: string; done?: boolean } | null>(null);
 
   // Live updates: the tournament room nudges, and while the draft is running so
   // does the draft room, so picks move the schedule along.
@@ -54,6 +56,7 @@ export function TournamentPage() {
     const socket: Socket = io({ path: '/socket.io', withCredentials: true });
     socket.on('connect', () => socket.emit('tournament:join', id, () => void room.reload()));
     socket.on('tournament:update', () => void room.reload());
+    socket.on('tournament:progress', (progress: { current: number; total: number; stage?: string; done?: boolean }) => setSimulation(progress));
     return () => {
       socket.emit('tournament:leave', id);
       socket.close();
@@ -163,9 +166,6 @@ export function TournamentPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" onClick={room.reload} disabled={room.loading}>
-            Refresh
-          </Button>
           {isHost && t.status === 'lobby' ? (
             <Button size="sm" variant="primary" disabled={start.busy || seatsFilled < t.config.seats} onClick={() => void start.execute()}>
               {start.busy ? 'Dealing…' : 'Deal the packs'}
@@ -182,19 +182,42 @@ export function TournamentPage() {
             </Button>
           ) : null}
           {isHost && t.status !== 'finished' ? (
-            <Button
-              size="sm"
-              variant="danger"
-              disabled={close.busy}
-              onClick={() => {
-                if (window.confirm('Close the tournament? The draft room goes with it; games already played stay.')) void close.execute();
-              }}
-            >
+            <Button size="sm" variant="danger" disabled={close.busy} onClick={() => setAskClose(true)}>
               Close the room
             </Button>
           ) : null}
         </div>
       </section>
+
+      {simulation && !simulation.done ? (
+        <div className="rounded-xl border border-gold/25 bg-black/20 px-4 py-3" role="status" aria-live="polite">
+          <div className="mb-2 flex items-center justify-between gap-3 text-sm text-chalk/80">
+            <span>Simulating match {simulation.current} of {simulation.total}{simulation.stage ? ` · ${simulation.stage}` : ''}</span>
+            <span className="font-mono text-xs text-chalk/55">{Math.round((simulation.current / simulation.total) * 100)}%</span>
+          </div>
+          <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div
+              className="h-full rounded-full bg-gold transition-[width] duration-300"
+              style={{ width: `${Math.round((simulation.current / simulation.total) * 100)}%` }}
+            />
+          </div>
+        </div>
+      ) : null}
+
+      <ConfirmDialog
+        open={askClose}
+        title="Close the tournament?"
+        danger
+        busy={close.busy}
+        confirmLabel="Close the room"
+        onConfirm={() => {
+          setAskClose(false);
+          void close.execute();
+        }}
+        onCancel={() => setAskClose(false)}
+      >
+        <p>The draft room goes with it; games already played stay.</p>
+      </ConfirmDialog>
 
       <ErrorNote error={room.error} />
       <ErrorNote error={start.error} />

@@ -23,7 +23,7 @@ import { LineupBuilder, lineupProblem } from '../components/LineupBuilder.js';
 import type { LineupCandidate } from '../components/LineupBuilder.js';
 import { PackArt, RevealCards, TearingPack } from '../components/PackArt.js';
 import { RarityBadge } from '../components/RarityBadge.js';
-import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useLoad } from '../components/ui.js';
+import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useFocusTrap, useLoad } from '../components/ui.js';
 import { pushCardToast } from '../components/Toasts.js';
 import { useSession } from '../session.js';
 
@@ -214,6 +214,8 @@ export function DraftPage() {
           </Button>
         ) : null}
       </section>
+
+      <PickClockBanner draft={draft} />
 
       <SeatStrip draft={draft} />
 
@@ -458,6 +460,49 @@ function SeatStrip({ draft }: { draft: DraftView }) {
   );
 }
 
+/**
+ * The host's pick clock reads from server state and ticks locally against the
+ * next REST refresh. The banner only appears while a fresh pass is open and a
+ * clock was set, so a no-clock room is just the seat strip.
+ */
+function PickClockBanner({ draft }: { draft: DraftView }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (draft.pickDeadlineAt === null) return;
+    if (draft.phase !== 'active') return;
+    const timer = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(timer);
+  }, [draft.pickDeadlineAt, draft.phase]);
+  if (draft.pickDeadlineAt === null || draft.phase !== 'active') return null;
+  const remaining = Math.max(0, Math.ceil((draft.pickDeadlineAt - now) / 1000));
+  const expiring = remaining <= 15;
+  const still = draft.waitingOn.length;
+  return (
+    <div
+      className={`rounded-xl border px-4 py-2.5 text-sm transition-colors ${
+        expiring ? 'border-crimson bg-crimson/10 text-chalk' : 'border-gold/30 bg-black/20 text-chalk/85'
+      }`}
+      role="status"
+      aria-live="polite"
+    >
+      <span className="font-mono font-semibold tabular-nums">{formatClock(remaining)}</span>
+      <span className="ml-2 text-chalk/65">
+        {still === 0
+          ? 'Seat is up next — the picks are in.'
+          : still === 1
+            ? '1 seat still picking — the server will auto-pick when the clock runs out.'
+            : `${still} seats still picking — the server will auto-pick any that miss the clock.`}
+      </span>
+    </div>
+  );
+}
+
+function formatClock(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 /** Every seat's construction, as it emerges — both teams visible during the draft. */
 function TheTable({ draft, meSeat, onPeek }: { draft: DraftView; meSeat: number; onPeek: (card: DraftCard) => void }) {
   return (
@@ -550,6 +595,7 @@ function PositionalRundown({ picks, onPeek }: { picks: DraftCard[]; onPeek: (car
 
 /** A compact read of a drafted pick, for a manager who wants the card details. */
 function PickPeekModal({ card, onClose }: { card: DraftCard | null; onClose: () => void }) {
+  const trap = useFocusTrap(card !== null);
   if (!card) return null;
   const positions = card.positions ?? [];
   return (
@@ -560,7 +606,7 @@ function PickPeekModal({ card, onClose }: { card: DraftCard | null; onClose: () 
       className="fixed inset-0 z-[85] flex items-center justify-center bg-black/70 p-4"
       onClick={onClose}
     >
-      <div className="panel w-full max-w-sm p-4" onClick={(e) => e.stopPropagation()}>
+      <div ref={trap} tabIndex={-1} className="panel w-full max-w-sm p-4 outline-none" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="font-display text-xl font-semibold text-chalk">{card.name}</h3>

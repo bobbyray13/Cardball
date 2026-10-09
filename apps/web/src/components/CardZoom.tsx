@@ -8,7 +8,7 @@ import type { EnginePlayer } from '@cardball/engine';
 import { api } from '../api.js';
 import { BallCard } from './BallCard.js';
 import type { CardFace } from './BallCard.js';
-import { ErrorNote, Spinner } from './ui.js';
+import { ErrorNote, Spinner, useFocusTrap } from './ui.js';
 
 export interface ZoomTarget {
   card: CardSnapshot;
@@ -29,6 +29,8 @@ export interface ZoomTarget {
  */
 export function CardZoom({ target, onClose }: { target: ZoomTarget | null; onClose: () => void }) {
   const [face, setFace] = useState<CardFace>('front');
+  // Keep Tab inside the dialog while it is up.
+  const trap = useFocusTrap(target !== null);
 
   useEffect(() => {
     if (!target) return;
@@ -65,7 +67,9 @@ export function CardZoom({ target, onClose }: { target: ZoomTarget | null; onClo
         >
           <div className="flex min-h-full items-start justify-center p-3 sm:items-center sm:p-6">
             <motion.div
-              className="grid w-full max-w-5xl items-start gap-5 md:grid-cols-[auto_minmax(16rem,1fr)]"
+              ref={trap}
+              tabIndex={-1}
+              className="grid w-full max-w-5xl items-start gap-5 outline-none md:grid-cols-[auto_minmax(16rem,1fr)]"
               initial={{ scale: 0.92, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0 }}

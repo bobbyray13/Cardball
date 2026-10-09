@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { createWriteStream } from 'node:fs';
-import { mkdir, stat, unlink } from 'node:fs/promises';
+import { mkdir, open, stat, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import { createReadStream } from 'node:fs';
@@ -19,6 +19,30 @@ import { env } from '../env.js';
 import { badRequest, idParam, notFound, parse } from '../http.js';
 
 const MIME_EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
+
+const PNG_HEADER = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+
+/** Signatures of the three image types we accept, checked against the first bytes on disk. */
+const IMAGE_SIGNATURES: { mime: string; matches: (head: Buffer) => boolean }[] = [
+  { mime: 'image/jpeg', matches: (h) => h[0] === 0xff && h[1] === 0xd8 && h[2] === 0xff },
+  { mime: 'image/png', matches: (h) => h.subarray(0, 8).equals(PNG_HEADER) },
+  {
+    mime: 'image/webp',
+    matches: (h) => h.subarray(0, 4).toString('latin1') === 'RIFF' && h.subarray(8, 12).toString('latin1') === 'WEBP',
+  },
+];
+
+/** Read the file's real signature. The client-declared MIME type is not evidence. */
+async function sniffImage(path: string): Promise<string | null> {
+  const handle = await open(path, 'r');
+  try {
+    const head = Buffer.alloc(12);
+    const { bytesRead } = await handle.read(head, 0, head.length, 0);
+    return IMAGE_SIGNATURES.find((sig) => sig.matches(head.subarray(0, bytesRead)))?.mime ?? null;
+  } finally {
+    await handle.close();
+  }
+}
 
 const addCardSchema = z.object({
   personId: z.number().int().positive(),
@@ -48,7 +72,7 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
   app.get('/api/people/search', async (request) => {
     requireUser(request);
     const q = parse(
-      z.object({ q: z.string().trim().min(2).max(60), limit: z.coerce.number().int().min(1).max(50).default(25) }),
+      z.object({ q: z.string().trim().min(2).max(60), limit: z.coerce.number().int().min(1).max(100).default(25) }),
       request.query,
     );
     const terms = q.q.split(/\s+/).filter(Boolean);
@@ -162,6 +186,13 @@ export function cardRoutes(app: FastifyInstance, ctx: Ctx): void {
     if (file.file.truncated) {
       await unlink(path);
       throw badRequest('Photo is too large (8 MB max)');
+    }
+    // Reject anything whose bytes are not the image it claims to be, before it
+    // gets a row in the database or a place in the game rooms.
+    const sniffed = await sniffImage(path);
+    if (!sniffed || sniffed !== file.mimetype) {
+      await unlink(path);
+      throw badRequest('That file is not a real JPEG, PNG, or WebP image');
     }
 
     const fields = file.fields as Record<string, { value?: string } | undefined>;

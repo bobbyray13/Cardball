@@ -82,8 +82,8 @@ export interface TeamState {
   yearRoll: number | null;
   /** index (0-8) of the next lineup spot due to bat */
   lineupCursor: number;
-  /** batting order: player ids by spot; null = vacated (substituted-out) spot */
-  lineup: (string | null)[];
+  /** batting order: player ids by spot — substitutions rewrite the slot in place */
+  lineup: string[];
   /** player currently on the mound */
   activePitcherId: string | null;
 }
@@ -92,9 +92,9 @@ export type Phase = 'lobby' | 'live' | 'finished';
 
 /** A question the engine needs answered before play continues. */
 export interface PendingDecision {
-  kind: 'dp-attempt' | 'send-runner' | 'pinch-runner' | 'pitcher-change' | 'lineup-fill' | 'batter-roll';
+  kind: 'dp-attempt' | 'send-runner' | 'pitcher-change' | 'batter-roll';
   side: Side;
-  /** runner being sent / needing a pinch-runner */
+  /** runner being sent */
   playerId?: string;
   /** human-readable context for the UI ("Rays lead runner Ichiro on 2nd — send him?") */
   prompt: string;
@@ -214,10 +214,8 @@ export type GameEventKind =
   | 'game-start'
   | 'inning-start'
   | 'year-roll'
-  | 'injury'
   | 'steal'
   | 'pitch'
-  | 'strikeout'
   | 'ball'
   | 'walk'
   | 'contact'

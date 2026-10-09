@@ -25,7 +25,7 @@ function betweenPitches(state: GameState): boolean {
  */
 export function canSubstituteNow(state: GameState): boolean {
   if (state.phase !== 'live') return false;
-  if (state.pendingDecision && state.pendingDecision.kind !== 'pinch-runner' && state.pendingDecision.kind !== 'lineup-fill') return false;
+  if (state.pendingDecision) return false;
   return betweenPitches(state);
 }
 
@@ -48,22 +48,12 @@ export function applySubstitute(
   if (incoming.status !== 'bench') throw new GameError(`${incoming.name} is not available on the bench`);
   if (incoming.positions.length === 0) throw new GameError(`${incoming.name} can't play the field or bat`);
 
-  const pending = state.pendingDecision;
-  let kind: 'pinch-runner' | 'lineup-fill' | 'pinch-hitter' | 'defensive';
-
-  if (pending && (pending.kind === 'pinch-runner' || pending.kind === 'lineup-fill')) {
-    if (pending.playerId !== outPlayerId) throw new GameError('Resolve the pending substitution first');
-    kind = pending.kind;
-  } else if (pending) {
-    throw new GameError('A decision is pending');
-  } else {
-    if (!betweenPitches(state)) throw new GameError('Substitutions happen between plate appearances');
-    if (outgoing.status !== 'active') throw new GameError(`${outgoing.name} is not in the game`);
-    if (outgoing.lineupSpot === null) throw new GameError('Use a pitching change to replace the pitcher');
-    if (state.currentPa?.batterId === outgoing.id) kind = 'pinch-hitter';
-    else if (outgoing.base !== null) kind = 'pinch-runner';
-    else kind = 'defensive';
-  }
+  if (state.pendingDecision) throw new GameError('A decision is pending');
+  if (!betweenPitches(state)) throw new GameError('Substitutions happen between plate appearances');
+  if (outgoing.status !== 'active') throw new GameError(`${outgoing.name} is not in the game`);
+  if (outgoing.lineupSpot === null) throw new GameError('Use a pitching change to replace the pitcher');
+  const kind: 'pinch-hitter' | 'pinch-runner' | 'defensive' =
+    state.currentPa?.batterId === outgoing.id ? 'pinch-hitter' : outgoing.base !== null ? 'pinch-runner' : 'defensive';
 
   const spot = outgoing.lineupSpot;
   if (spot === null) throw new GameError(`${outgoing.name} has no lineup spot to fill`);
@@ -95,7 +85,6 @@ export function applySubstitute(
 
   const label = {
     'pinch-runner': 'pinch-runs for',
-    'lineup-fill': 'replaces',
     'pinch-hitter': 'pinch-hits for',
     defensive: 'replaces',
   }[kind];
@@ -116,10 +105,6 @@ export function applySubstitute(
     );
   }
 
-  if (pending) {
-    state.pendingDecision = null;
-    openPlateAppearance(state, events);
-  }
   return events;
 }
 
