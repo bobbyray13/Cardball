@@ -113,7 +113,7 @@ function TeamBoxScore({ state, side, onZoom }: { state: GameState; side: Side; o
           <thead>
             <tr className="text-[10px] tracking-wide text-chalk/45 uppercase">
               <th className="text-left">Pitching</th>
-              {['IP', 'H', 'R', 'ER', 'BB', 'K', 'HR'].map((h) => (
+              {['IP', 'H', 'R', 'BB', 'K', 'HR'].map((h) => (
                 <th key={h} className="w-8 text-right">
                   {h}
                 </th>
@@ -125,7 +125,7 @@ function TeamBoxScore({ state, side, onZoom }: { state: GameState; side: Side; o
               <tr key={p.id} className="border-t border-white/5">
                 <td className="py-0.5 font-sans">{name(p, false)}</td>
                 <td className="text-right text-chalk">{inningsLabel(line.outs)}</td>
-                {[line.h, line.r, line.r, line.bb, line.k, line.hr].map((n, i) => (
+                {[line.h, line.r, line.bb, line.k, line.hr].map((n, i) => (
                   <td key={i} className={`text-right ${n ? 'text-chalk' : 'text-chalk/35'}`}>
                     {n}
                   </td>

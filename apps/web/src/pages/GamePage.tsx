@@ -24,7 +24,7 @@ import type { LineupCandidate } from '../components/LineupBuilder.js';
 import { zoomForPlayer } from '../components/gameZoom.js';
 import { LineScore } from '../components/LineScore.js';
 import { PlayByPlay } from '../components/PlayByPlay.js';
-import { Button, EmptyState, ErrorNote, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { Button, ConfirmDialog, EmptyState, ErrorNote, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 import { useSession } from '../session.js';
 
 export function GamePage() {
@@ -40,6 +40,8 @@ export function GamePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<unknown>(null);
   const [zoom, setZoom] = useState<ZoomTarget | null>(null);
+  // The concede dialog (hotseat has to pick which side gives it up).
+  const [askConcede, setAskConcede] = useState(false);
   // Bumped after a password opens the room, so the socket joins again.
   const [admitted, setAdmitted] = useState(0);
 
@@ -249,20 +251,59 @@ export function GamePage() {
                     </ErrorBoundary>
                     {mySides.length > 0 && state.phase === 'live' ? (
                       <div className="mt-4 border-t border-white/10 pt-3">
-                        <Button
-                          size="sm"
-                          variant="danger"
-                          disabled={busy}
-                          onClick={() => {
-                            if (confirm('Concede this game?')) {
-                              void runAction({ type: 'concede', ...(mySides.length === 2 ? { side: 'home' as const } : {}) });
-                            }
-                          }}
-                        >
+                        <Button size="sm" variant="danger" disabled={busy} onClick={() => setAskConcede(true)}>
                           Concede
                         </Button>
                       </div>
                     ) : null}
+                    {/* Hotseat manages both sides, so the concession has to
+                        name its team instead of defaulting to home. */}
+                    <ConfirmDialog
+                      open={askConcede}
+                      title="Concede this game?"
+                      danger
+                      busy={busy}
+                      confirmLabel="Concede"
+                      onConfirm={
+                        mySides.length === 2
+                          ? undefined
+                          : () => {
+                              setAskConcede(false);
+                              void runAction({ type: 'concede' });
+                            }
+                      }
+                      onCancel={() => setAskConcede(false)}
+                    >
+                      {mySides.length === 2 ? (
+                        <>
+                          <p>You have both sides tonight. Who gives it up?</p>
+                          <div className="flex flex-wrap gap-2">
+                            <Button
+                              variant="danger"
+                              disabled={busy}
+                              onClick={() => {
+                                setAskConcede(false);
+                                void runAction({ type: 'concede', side: 'home' });
+                              }}
+                            >
+                              {state.home.name} concede
+                            </Button>
+                            <Button
+                              variant="danger"
+                              disabled={busy}
+                              onClick={() => {
+                                setAskConcede(false);
+                                void runAction({ type: 'concede', side: 'away' });
+                              }}
+                            >
+                              {state.away.name} concede
+                            </Button>
+                          </div>
+                        </>
+                      ) : (
+                        <p>The game ends and the other side takes the win.</p>
+                      )}
+                    </ConfirmDialog>
                   </Panel>
                 </div>
 

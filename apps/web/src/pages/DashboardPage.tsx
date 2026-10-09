@@ -348,16 +348,12 @@ export function DashboardPage() {
             {myTeams.length === 0 ? (
               <p className="text-sm text-chalk/55">Build a team to join a game.</p>
             ) : (
-              <form
-                className="space-y-3"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const open = games.data?.games.find((g) => g.status === 'open' && !g.isMine);
-                  if (open) void join.execute(open);
-                }}
-              >
+              // Not a form on purpose: the buttons below join the game they
+              // name, and an implicit submit would silently join whichever
+              // open game happens to be first in the list.
+              <div className="space-y-3">
                 <Field label="Your team">
-                  <select name="joinTeamId" className={inputClass} value={joinTeamId} onChange={(e) => setJoinTeamId(Number(e.target.value))} required>
+                  <select name="joinTeamId" className={inputClass} value={joinTeamId} onChange={(e) => setJoinTeamId(Number(e.target.value))}>
                     <option value="">Pick a team…</option>
                     {myTeams.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -387,7 +383,7 @@ export function DashboardPage() {
                   )}
                 </div>
                 <ErrorNote error={join.error} />
-              </form>
+              </div>
             )}
           </Panel>
         </div>

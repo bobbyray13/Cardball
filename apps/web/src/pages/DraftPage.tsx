@@ -23,7 +23,7 @@ import { LineupBuilder, lineupProblem } from '../components/LineupBuilder.js';
 import type { LineupCandidate } from '../components/LineupBuilder.js';
 import { PackArt, RevealCards, TearingPack } from '../components/PackArt.js';
 import { RarityBadge } from '../components/RarityBadge.js';
-import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useLoad } from '../components/ui.js';
+import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useFocusTrap, useLoad } from '../components/ui.js';
 import { pushCardToast } from '../components/Toasts.js';
 import { useSession } from '../session.js';
 
@@ -550,6 +550,7 @@ function PositionalRundown({ picks, onPeek }: { picks: DraftCard[]; onPeek: (car
 
 /** A compact read of a drafted pick, for a manager who wants the card details. */
 function PickPeekModal({ card, onClose }: { card: DraftCard | null; onClose: () => void }) {
+  const trap = useFocusTrap(card !== null);
   if (!card) return null;
   const positions = card.positions ?? [];
   return (
@@ -560,7 +561,7 @@ function PickPeekModal({ card, onClose }: { card: DraftCard | null; onClose: () 
       className="fixed inset-0 z-[85] flex items-center justify-center bg-black/70 p-4"
       onClick={onClose}
     >
-      <div className="panel w-full max-w-sm p-4" onClick={(e) => e.stopPropagation()}>
+      <div ref={trap} tabIndex={-1} className="panel w-full max-w-sm p-4 outline-none" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <h3 className="font-display text-xl font-semibold text-chalk">{card.name}</h3>

@@ -6,7 +6,7 @@ import type { CollectionCard, DraftRarity, Position, RosterEntryView, SavedLineu
 import { api } from '../api.js';
 import { ZoomableCard } from '../components/CardZoom.js';
 import { RarityBadge } from '../components/RarityBadge.js';
-import { Button, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { Button, ConfirmDialog, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
 
 const FIELD: readonly { pos: string; label: string }[] = [
   { pos: 'C', label: 'Catcher' },
@@ -135,6 +135,7 @@ export function TeamPage() {
     await api.deleteTeam(teamId);
     navigate('/teams');
   });
+  const [askRemove, setAskRemove] = useState(false);
 
   if (team.loading && !view) return <Spinner label="Fetching the team…" />;
   if (team.error) return <ErrorNote error={team.error} />;
@@ -160,17 +161,26 @@ export function TeamPage() {
           <Link to="/">
             <Button variant="primary">Play a game</Button>
           </Link>
-          <Button
-            variant="danger"
-            disabled={remove.busy}
-            onClick={() => {
-              if (confirm(`Delete ${view.name}? Your cards stay in your collection.`)) void remove.execute();
-            }}
-          >
+          <Button variant="danger" disabled={remove.busy} onClick={() => setAskRemove(true)}>
             Delete
           </Button>
         </div>
       </div>
+
+      <ConfirmDialog
+        open={askRemove}
+        title={`Delete ${view.name}?`}
+        danger
+        busy={remove.busy}
+        confirmLabel="Delete team"
+        onConfirm={() => {
+          setAskRemove(false);
+          void remove.execute();
+        }}
+        onCancel={() => setAskRemove(false)}
+      >
+        <p>Your cards stay in your collection.</p>
+      </ConfirmDialog>
 
       <ErrorNote error={setRoster.error ?? auto.error} />
 

@@ -6,7 +6,7 @@ import { api } from '../api.js';
 import { PackArt } from './PackArt.js';
 import { ZoomableCard } from './CardZoom.js';
 import { pushCardToast } from './Toasts.js';
-import { Button, EmptyState, ErrorNote, Panel, useAction, useLoad } from './ui.js';
+import { Button, EmptyState, ErrorNote, Panel, useAction, useFocusTrap, useLoad } from './ui.js';
 
 /**
  * The pack shelf: sealed packs a manager has earned, ready to tear open. The
@@ -15,6 +15,8 @@ import { Button, EmptyState, ErrorNote, Panel, useAction, useLoad } from './ui.j
 export function PackShelf({ onCardsFiled }: { onCardsFiled?: () => void }) {
   const packs = useLoad(() => api.packs(), []);
   const [revealed, setRevealed] = useState<{ pack: PackView; cards: CollectionCard[] } | null>(null);
+  // The reveal is a modal too: keep keyboard focus inside it while it is up.
+  const trap = useFocusTrap(revealed !== null);
   const open = useAction(async (pack: PackView) => {
     const result = await api.openPack(pack.id);
     setRevealed(result);
@@ -122,7 +124,9 @@ export function PackShelf({ onCardsFiled }: { onCardsFiled?: () => void }) {
                 on a phone, where centering would push it off screen. */}
             <div className="flex min-h-full items-start justify-center p-3 sm:items-center sm:p-6">
               <motion.div
-                className="panel relative w-full max-w-5xl p-5"
+                ref={trap}
+                tabIndex={-1}
+                className="panel relative w-full max-w-5xl p-5 outline-none"
                 initial={{ y: 24, scale: 0.97 }}
                 animate={{ y: 0, scale: 1 }}
                 exit={{ y: 16, opacity: 0 }}

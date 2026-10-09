@@ -9,7 +9,7 @@ import { CardZoom, CareerSummary } from '../components/CardZoom.js';
 import { PackShelf } from '../components/PackShelf.js';
 import { RarityBadge } from '../components/RarityBadge.js';
 import { PhotoUploader } from '../components/PhotoUploader.js';
-import { Button, Chip, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useLoad } from '../components/ui.js';
+import { Button, Chip, ConfirmDialog, EmptyState, ErrorNote, Field, Panel, Spinner, inputClass, useAction, useFocusTrap, useLoad } from '../components/ui.js';
 
 type SortKey = 'rarity' | 'newest' | 'name' | 'year-desc' | 'year-asc';
 type RoleFilter = 'all' | 'hitters' | 'pitchers';
@@ -294,6 +294,8 @@ function CardDetail({
   const [notes, setNotes] = useState(entry.notes ?? '');
   const [quantity, setQuantity] = useState(entry.quantity);
   const [zoomed, setZoomed] = useState(false);
+  // The detail sheet is a modal: keep keyboard focus inside while it is up.
+  const trap = useFocusTrap(true);
 
   const save = useAction(async () => {
     const { card } = await api.updateCard(entry.id, { notes: notes.trim() || null, quantity });
@@ -307,6 +309,7 @@ function CardDetail({
     await api.deleteCard(entry.id);
     onDeleted();
   });
+  const [askRemove, setAskRemove] = useState(false);
 
   return (
     <motion.div
@@ -317,7 +320,9 @@ function CardDetail({
       onClick={onClose}
     >
       <motion.div
-        className="panel w-full max-w-4xl p-4 sm:p-6"
+        ref={trap}
+        tabIndex={-1}
+        className="panel w-full max-w-4xl p-4 outline-none sm:p-6"
         initial={{ y: 24, scale: 0.98 }}
         animate={{ y: 0, scale: 1 }}
         exit={{ y: 16, opacity: 0 }}
@@ -391,15 +396,29 @@ function CardDetail({
                 variant="danger"
                 className="ml-auto"
                 disabled={remove.busy}
-                onClick={() => {
-                  if (confirm(`Remove ${entry.card.name} from your collection?`)) void remove.execute();
-                }}
+                onClick={() => setAskRemove(true)}
               >
                 Remove
               </Button>
             </div>
           </div>
         </div>
+        <ConfirmDialog
+          open={askRemove}
+          title={`Remove ${entry.card.name}?`}
+          danger
+          busy={remove.busy}
+          confirmLabel="Remove card"
+          onConfirm={() => {
+            setAskRemove(false);
+            void remove.execute();
+          }}
+          onCancel={() => setAskRemove(false)}
+        >
+          <p>
+            All {entry.quantity} cop{entry.quantity === 1 ? 'y' : 'ies'} of this card leave the collection.
+          </p>
+        </ConfirmDialog>
         <CardZoom target={zoomed ? { card: entry.card, photoId: entry.photoId, rarity: entry.rarity } : null} onClose={() => setZoomed(false)} />
       </motion.div>
     </motion.div>

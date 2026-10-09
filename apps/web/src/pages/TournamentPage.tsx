@@ -1,11 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import type { Socket } from 'socket.io-client';
 import { formatLabel, recordLabel, tournamentEraLabel } from '@cardball/shared';
 import type { MatchSlot, TournamentMatch, TournamentView } from '@cardball/shared';
 import { api } from '../api.js';
-import { Button, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useLoad } from '../components/ui.js';
+import { Button, ConfirmDialog, EmptyState, ErrorNote, Notice, Panel, Spinner, useAction, useLoad } from '../components/ui.js';
 import { useSession } from '../session.js';
 
 const STATUS_LABEL: Record<TournamentView['status'], string> = {
@@ -47,6 +47,7 @@ export function TournamentPage() {
     await api.deleteTournament(id);
     navigate('/tournaments');
   });
+  const [askClose, setAskClose] = useState(false);
 
   // Live updates: the tournament room nudges, and while the draft is running so
   // does the draft room, so picks move the schedule along.
@@ -182,19 +183,27 @@ export function TournamentPage() {
             </Button>
           ) : null}
           {isHost && t.status !== 'finished' ? (
-            <Button
-              size="sm"
-              variant="danger"
-              disabled={close.busy}
-              onClick={() => {
-                if (window.confirm('Close the tournament? The draft room goes with it; games already played stay.')) void close.execute();
-              }}
-            >
+            <Button size="sm" variant="danger" disabled={close.busy} onClick={() => setAskClose(true)}>
               Close the room
             </Button>
           ) : null}
         </div>
       </section>
+
+      <ConfirmDialog
+        open={askClose}
+        title="Close the tournament?"
+        danger
+        busy={close.busy}
+        confirmLabel="Close the room"
+        onConfirm={() => {
+          setAskClose(false);
+          void close.execute();
+        }}
+        onCancel={() => setAskClose(false)}
+      >
+        <p>The draft room goes with it; games already played stay.</p>
+      </ConfirmDialog>
 
       <ErrorNote error={room.error} />
       <ErrorNote error={start.error} />

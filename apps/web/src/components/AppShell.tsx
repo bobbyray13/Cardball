@@ -51,8 +51,13 @@ export function AppShell() {
 
           <div className="ml-auto flex items-center gap-3">
             {user ? (
-              <NavLink to={`/players/${encodeURIComponent(user.displayName)}`} className="hidden text-sm text-chalk/60 hover:text-gold sm:inline">
-                {user.displayName}
+              <NavLink to={`/players/${encodeURIComponent(user.displayName)}`} className="text-sm text-chalk/60 hover:text-gold" aria-label="Your profile">
+                {/* Phones show a compact initial instead of the whole name,
+                    since the profile link used to be unreachable below sm. */}
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-gold/40 text-xs font-semibold text-gold sm:hidden">
+                  {user.displayName.charAt(0).toUpperCase()}
+                </span>
+                <span className="hidden sm:inline">{user.displayName}</span>
               </NavLink>
             ) : null}
             <button
